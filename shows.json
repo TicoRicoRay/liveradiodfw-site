@@ -1,0 +1,62 @@
+[
+  {
+    "date": "2026-04-25",
+    "day_name": "Sat",
+    "day_num": "25",
+    "month": "Apr",
+    "title": "Fresh in Fate",
+    "venue": "Fresh by Brookshires",
+    "address": "5100 I-30, Fate TX 75132",
+    "address_short": "5100 I-30, Fate TX",
+    "time": "6:00 PM",
+    "maps_url": "https://maps.google.com/?q=Fresh+by+Brookshires+5100+I-30+Fate+TX+75132"
+  },
+  {
+    "date": "2026-05-09",
+    "day_name": "Sat",
+    "day_num": "9",
+    "month": "May",
+    "title": "Frisco Rail Yard",
+    "venue": "Frisco Rail Yard",
+    "address": "9040 First St, Frisco TX 75033",
+    "address_short": "9040 First St, Frisco TX",
+    "time": "7:30 PM",
+    "maps_url": "https://maps.google.com/?q=Frisco+Rail+Yard+9040+First+St+Frisco+TX+75033"
+  },
+  {
+    "date": "2026-05-16",
+    "day_name": "Sat",
+    "day_num": "16",
+    "month": "May",
+    "title": "Fresh in Fate",
+    "venue": "Fresh by Brookshires",
+    "address": "5100 I-30, Fate TX 75132",
+    "address_short": "5100 I-30, Fate TX",
+    "time": "6:00 PM",
+    "maps_url": "https://maps.google.com/?q=Fresh+by+Brookshires+5100+I-30+Fate+TX+75132"
+  },
+  {
+    "date": "2026-06-06",
+    "day_name": "Sat",
+    "day_num": "6",
+    "month": "Jun",
+    "title": "Watters Creek Concert Series",
+    "venue": "Watters Creek Village",
+    "address": "970 Garden Park Dr, Allen TX 75013",
+    "address_short": "970 Garden Park Dr, Allen TX",
+    "time": "7:00 PM",
+    "maps_url": "https://maps.google.com/?q=Watters+Creek+Village+970+Garden+Park+Dr+Allen+TX+75013"
+  },
+  {
+    "date": "2026-09-12",
+    "day_name": "Sat",
+    "day_num": "12",
+    "month": "Sep",
+    "title": "Fresh in Fate TX",
+    "venue": "Fresh by Brookshires",
+    "address": "5100 I-30, Fate TX 75132",
+    "address_short": "5100 I-30, Fate TX",
+    "time": "7:00 PM",
+    "maps_url": "https://maps.google.com/?q=Fresh+by+Brookshires+5100+I-30+Fate+TX+75132"
+  }
+]

@@ -1,0 +1,44 @@
+{
+  "stations": [
+    {
+      "id": "80s",
+      "name": "The All 80s Hits Station",
+      "slug": "the-all-80s-hits-station",
+      "description": "Madonna, Bon Jovi, Duran Duran, synth-pop anthems & MTV-era power hits.",
+      "full_description": "From Madonna and Bon Jovi to Duran Duran and Tears for Fears — our All 80s Hits Station delivers the best of MTV-era synth-pop, power ballads, and arena anthems. Neon energy, sing-along choruses, and pure 80s nostalgia.",
+      "bandhelper_smart_list": "doTsnc",
+      "bandhelper_account": "13881",
+      "embed_src": "https://www.bandhelper.com/widget/smart_list/doTsnc/13881?layout=2&fields=artist&sections=0&labels=0"
+    },
+    {
+      "id": "70s",
+      "name": "The All 70s (No Disco) Hits Station",
+      "slug": "the-all-70s-no-disco-hits-station",
+      "description": "Fleetwood Mac, Eagles, ELO, free-form guitar rock & soulful grooves.",
+      "full_description": "Pure 70s rock and pop — no disco, just the guitar-driven classics that defined a generation. Fleetwood Mac, Eagles, ELO, Doobie Brothers, and more.",
+      "bandhelper_smart_list": "diw3wK",
+      "bandhelper_account": "13881",
+      "embed_src": "https://www.bandhelper.com/widget/smart_list/diw3wK/13881?layout=2&fields=artist&sections=0&labels=0"
+    },
+    {
+      "id": "classic-rock",
+      "name": "The Classic Rock Station",
+      "slug": "the-classic-rock-station",
+      "description": "Journey, Queen, Tom Petty, Doobie Brothers & timeless arena anthems.",
+      "full_description": "The songs that defined rock and roll across multiple decades — from the British Invasion through the arena rock era. Journey, Queen, Tom Petty, SRV, and more.",
+      "bandhelper_smart_list": "CJzlvQ",
+      "bandhelper_account": "13881",
+      "embed_src": "https://www.bandhelper.com/widget/smart_list/CJzlvQ/13881?layout=2&fields=artist&sections=0&labels=0"
+    },
+    {
+      "id": "oldies",
+      "name": "The All Oldies Hits Station",
+      "slug": "the-all-oldies-hits-station",
+      "description": "Beatles, Motown, British Invasion, Temptations & 60s/70s classics.",
+      "full_description": "The songs your grandparents danced to and your parents sang in the car. Beatles, Motown, British Invasion, and the golden era of American pop.",
+      "bandhelper_smart_list": "AEqwak",
+      "bandhelper_account": "13881",
+      "embed_src": "https://www.bandhelper.com/widget/smart_list/AEqwak/13881?layout=2&fields=artist&sections=0&labels=0"
+    }
+  ]
+}
