@@ -58,6 +58,15 @@ SCRIPT_DIR   = os.path.dirname(os.path.abspath(__file__))
 CACHE_DIR    = os.path.join(SCRIPT_DIR, "cache")
 HASH_FILE    = os.path.join(CACHE_DIR, "songs-hash.json")
 
+# Map cache keys to the HTML page that should be stamped
+PAGE_MAP = {
+    "all":     "songs.html",
+    "80s":     "the-all-80s-hits-station.html",
+    "70s":     "the-all-70s-no-disco-hits-station.html",
+    "classic": "the-classic-rock-station.html",
+    "oldies":  "the-all-oldies-hits-station.html",
+}
+
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (compatible; LiveRadioDFW-build/1.0)",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -177,6 +186,41 @@ def main():
     print(f"  Updated : {len(changed)}  ({', '.join(changed) if changed else 'none'})")
     print(f"  Cached  : {len(cache_hits)}  ({', '.join(cache_hits) if cache_hits else 'none'})")
     print(f"  Errors  : {len(errors)}  ({', '.join(k for k,_ in errors) if errors else 'none'})")
+
+    # Stamp cached HTML into song pages
+    print("\n[build_songs] Stamping cached HTML into song pages...")
+    for key, page_file in PAGE_MAP.items():
+        cache_file = os.path.join(CACHE_DIR, FILE_MAP[key])
+        page_path  = os.path.join(SCRIPT_DIR, page_file)
+        if not os.path.exists(cache_file):
+            print(f"  [{key}] SKIP — cache file missing: {cache_file}")
+            continue
+        if not os.path.exists(page_path):
+            print(f"  [{key}] SKIP — page not found: {page_file}")
+            continue
+
+        cached_html = open(cache_file, encoding="utf-8").read()
+        # Clean up br tags so CSS inline display works correctly
+        cached_html = cached_html.replace('<br />', '').replace('<br/>', '').replace('<br>', '')
+        # Remove the inline font-family style BandHelper injects (site CSS handles this)
+        cached_html = re.sub(r'<style[^>]*>.*?</style>', '', cached_html, flags=re.DOTALL)
+
+        page_content = open(page_path, encoding="utf-8").read()
+        if '<!-- BEGIN_SONGS -->' not in page_content:
+            print(f"  [{key}] SKIP — no BEGIN_SONGS marker in {page_file}")
+            continue
+
+        new_content = re.sub(
+            r'<!-- BEGIN_SONGS -->.*?<!-- END_SONGS -->',
+            '<!-- BEGIN_SONGS -->\n' + cached_html.strip() + '\n<!-- END_SONGS -->',
+            page_content,
+            flags=re.DOTALL
+        )
+        if new_content != page_content:
+            open(page_path, 'w', encoding="utf-8").write(new_content)
+            print(f"  [{key}] stamped → {page_file}")
+        else:
+            print(f"  [{key}] no change in {page_file}")
 
     if errors:
         sys.exit(1)
