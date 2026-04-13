@@ -556,7 +556,7 @@ button { cursor: pointer; background: none; border: none; }
 .mobile-overlay {
   display: none;
   position: fixed;
-  top: 0;
+  top: 64px; /* below the nav bar */
   left: 0;
   right: 0;
   bottom: 0;
@@ -564,8 +564,10 @@ button { cursor: pointer; background: none; border: none; }
   z-index: 999;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: var(--space-4);
+  overflow-y: auto;
+  padding: var(--space-8) 0 var(--space-10);
 }
 
 .mobile-overlay.open {
@@ -604,6 +606,7 @@ button { cursor: pointer; background: none; border: none; }
 @media (max-width: 1100px) {
   .nav-links { display: none; }
   .nav-cta { display: none; }
+  .nav-cta-dropdown { display: none; }
   .theme-toggle { display: none; }
   .hamburger { display: flex; }
   .mobile-overlay .theme-toggle-mobile {
