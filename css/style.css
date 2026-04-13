@@ -567,7 +567,7 @@ button { cursor: pointer; background: none; border: none; }
   justify-content: flex-start;
   gap: var(--space-4);
   overflow-y: auto;
-  padding: var(--space-8) 0 var(--space-10);
+  padding: var(--space-4) 0 var(--space-10);
 }
 
 .mobile-overlay.open {
@@ -606,7 +606,7 @@ button { cursor: pointer; background: none; border: none; }
 @media (max-width: 1100px) {
   .nav-links { display: none; }
   .nav-cta { display: none; }
-  .nav-cta-dropdown { display: none; }
+  .nav-cta-dropdown { display: none !important; }
   .theme-toggle { display: none; }
   .hamburger { display: flex; }
   .mobile-overlay .theme-toggle-mobile {
