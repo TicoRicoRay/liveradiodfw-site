@@ -75,12 +75,15 @@ def build_jsonld(shows):
     events = []
     for s in shows:
         dt = datetime.strptime(s["date"], "%Y-%m-%d")
-        time_parts = s["time"].replace(" PM", "").replace(" AM", "").split(":")
-        hour = int(time_parts[0])
-        minute = int(time_parts[1]) if len(time_parts) > 1 else 0
-        if "PM" in s["time"] and hour != 12:
-            hour += 12
-        start_dt = f'{s["date"]}T{hour:02d}:{minute:02d}:00'
+        try:
+            time_parts = s["time"].replace(" PM", "").replace(" AM", "").split(":")
+            hour = int(time_parts[0])
+            minute = int(time_parts[1]) if len(time_parts) > 1 else 0
+            if "PM" in s["time"] and hour != 12:
+                hour += 12
+            start_dt = f'{s["date"]}T{hour:02d}:{minute:02d}:00'
+        except (ValueError, IndexError):
+            start_dt = f'{s["date"]}T20:00:00'  # default 8pm if time is TBD
         event = {
             "@context": "https://schema.org",
             "@type": "MusicEvent",
