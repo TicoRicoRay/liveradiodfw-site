@@ -36,18 +36,6 @@
     "maps_url": "https://maps.google.com/?q=Fresh+by+Brookshires+5100+I-30+Fate+TX+75132"
   },
   {
-    "date": "2026-06-13",
-    "day_name": "Sat",
-    "day_num": "13",
-    "month": "Jun",
-    "title": "Sweetwater Grill",
-    "venue": "Sweetwater Grill",
-    "address": "Royse City, TX",
-    "address_short": "Royse City, TX",
-    "time": "Time TBD",
-    "maps_url": "https://maps.google.com/?q=Sweetwater+Grill+Royse+City+TX"
-  },
-  {
     "date": "2026-06-06",
     "day_name": "Sat",
     "day_num": "6",
@@ -60,16 +48,16 @@
     "maps_url": "https://maps.google.com/?q=Watters+Creek+Village+970+Garden+Park+Dr+Allen+TX+75013"
   },
   {
-    "date": "2026-09-26",
+    "date": "2026-06-13",
     "day_name": "Sat",
-    "day_num": "26",
-    "month": "Sep",
-    "title": "Uptown Rail Brewery",
-    "venue": "Uptown Rail Brewery",
-    "address": "204 Bolivar Street, Sanger TX 76266",
-    "address_short": "204 Bolivar St, Sanger TX",
-    "time": "8:00 PM",
-    "maps_url": "https://maps.google.com/?q=Uptown+Rail+Brewery+204+Bolivar+Street+Sanger+TX+76266"
+    "day_num": "13",
+    "month": "Jun",
+    "title": "Sweetwater Grill",
+    "venue": "Sweetwater Grill",
+    "address": "Royse City, TX",
+    "address_short": "Royse City, TX",
+    "time": "Time TBD",
+    "maps_url": "https://maps.google.com/?q=Sweetwater+Grill+Royse+City+TX"
   },
   {
     "date": "2026-09-12",
@@ -82,5 +70,17 @@
     "address_short": "5100 I-30, Fate TX",
     "time": "7:00 PM",
     "maps_url": "https://maps.google.com/?q=Fresh+by+Brookshires+5100+I-30+Fate+TX+75132"
+  },
+  {
+    "date": "2026-09-26",
+    "day_name": "Sat",
+    "day_num": "26",
+    "month": "Sep",
+    "title": "Uptown Rail Brewery",
+    "venue": "Uptown Rail Brewery",
+    "address": "204 Bolivar Street, Sanger TX 76266",
+    "address_short": "204 Bolivar St, Sanger TX",
+    "time": "8:00 PM",
+    "maps_url": "https://maps.google.com/?q=Uptown+Rail+Brewery+204+Bolivar+Street+Sanger+TX+76266"
   }
 ]
