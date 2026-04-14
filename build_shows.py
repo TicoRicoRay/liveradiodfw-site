@@ -24,10 +24,14 @@ BASE = Path(__file__).parent
 with open(BASE / "shows.json") as f:
     all_shows = json.load(f)
 
-# Sort by date, filter out past shows for upcoming display
+# Always sort the full list by date and write it back (prevents out-of-order JSON)
+all_shows.sort(key=lambda s: s["date"])
+with open(BASE / "shows.json", "w") as f:
+    json.dump(all_shows, f, indent=2)
+
+# Filter out past shows for upcoming display
 today = date.today()
 upcoming = [s for s in all_shows if datetime.strptime(s["date"], "%Y-%m-%d").date() >= today]
-upcoming.sort(key=lambda s: s["date"])
 
 # ── Build shows.html show-card-full blocks ────────────────────────────────────
 def build_full_cards(shows):
