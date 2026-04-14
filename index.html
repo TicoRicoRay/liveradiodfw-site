@@ -27,7 +27,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
   <!-- Styles -->
-  <link rel="stylesheet" href="css/style.css?v=22">
+  <link rel="stylesheet" href="css/style.css?v=23">
   <script type="application/ld+json">{
   "@context": "https://schema.org",
   "@type": "MusicGroup",
@@ -272,90 +272,200 @@
   <p style="color:#a0a8c8;margin-bottom:1.5rem;font-size:0.95rem;">Be the first to know when we're playing near you</p>
 
   <style>
-  .st-signupform{max-width:420px;margin:0 auto;}
-  .st-signupform input[type=text]{width:100%;padding:12px 16px;border:1px solid rgba(255,255,255,0.2);border-radius:6px;background:rgba(255,255,255,0.08);color:#fff;font-size:1rem;margin-bottom:12px;box-sizing:border-box;}
-  .st-signupform input[type=text]::placeholder{color:rgba(255,255,255,0.4);}
-  .st-terms-and-conditions{margin-bottom:12px;text-align:left;}
-  .st-checkbox{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;}
-  .st-checkbox input{margin-top:3px;flex-shrink:0;}
-  .st-terms-and-conditions-text{color:#a0a8c8;font-size:0.85rem;cursor:pointer;}
-  .st-font-caption{color:#7a8099;font-size:0.75rem;line-height:1.4;}
-  .st-font-caption a{color:#a0a8c8;}
-  .st-signupform button{background:#e63946;color:#fff;border:none;border-radius:9999px;padding:12px 32px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;width:100%;}
-  .st-signupform button:hover{background:#c8303c;}
-  .st-error-message,.st-color-red{color:#ff6b7a;font-size:0.8rem;margin-bottom:8px;}
-  .st-hidden{display:none;}
-  .step2-confirmationText p{color:#a0e8a8;font-size:1rem;margin-top:1rem;}
-  .st-signupform-terms-agreed-error{color:#ff6b7a;font-size:0.8rem;}
+  /* Override SimpleTexting defaults to match site dark theme */
+  #sms-signup .st-signupform { justify-content: center; }
+  #sms-signup .st-signupform-content {
+    max-width: 480px;
+    background: rgba(255,255,255,0.06);
+    box-shadow: none;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    color: #e0e0e8;
+  }
+  #sms-signup .st-signupform__label { color: #e0e0e8; font-size: 0.9rem; }
+  #sms-signup .st-signupform input[type="text"] {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.2);
+    color: #ffffff;
+    font-size: 1rem;
+  }
+  #sms-signup .st-signupform input[type="text"]::placeholder { color: rgba(255,255,255,0.4); }
+  #sms-signup .st-signupform input[type="text"]:focus {
+    border-color: #e63946;
+    box-shadow: 0 0 0 2px rgba(230,57,70,0.35);
+  }
+  #sms-signup .st-terms-and-conditions-text { color: #a0a8c8; font-size: 0.9rem; }
+  #sms-signup .st-font-caption, #sms-signup .st-font-caption a { color: #7a8099; }
+  #sms-signup .st-signupform button[type="submit"] {
+    background: #e63946;
+    border-radius: 9999px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 1rem 0 0.5rem;
+    padding: 12px 32px;
+  }
+  #sms-signup .st-signupform button[type="submit"]:hover { background: #c8303c; }
+  #sms-signup .st-signupform footer { color: #555; font-size: 0.7rem; margin-top: 0.75rem; }
+  #sms-signup .st-signupform footer a { color: #7a8099; }
+  #sms-signup .step2-confirmationText { color: #a0e8a8; }
+  #sms-signup .st-signupform-terms-agreed-error { color: #ff6b7a; }
+  #sms-signup .st-error-message { color: #ff6b7a; }
+  #sms-signup .st-signupform input[type="checkbox"]:checked { background-color: #e63946; border-color: #e63946; }
+  #sms-signup .st-signupform-server-error-message { color: #ff6b7a; }
+  .st-hidden { display: none !important; }
   </style>
 
   <script>
-  (function joinWebForm(win,doc,webFormId,formFields,DUPLICATE_EMAIL_EXCEPTION,DUPLICATE_PHONE_EXCEPTION,CUSTOM_FIELDS_VALIDATION_EXCEPTION){
-    function getFormElement(){return doc.getElementById('st-join-web-form-'+webFormId);}
-    function handleSubmit(e){
-      e.preventDefault();
-      var form=getFormElement();
-      var phone=form.querySelector('#phone');
-      var terms=form.querySelector('input[name="terms-agreed"]');
-      var termsError=form.querySelector('.st-signupform-terms-agreed-error');
-      var serverError=form.querySelector('.st-signupform-server-error-message');
-      var phoneError=form.querySelector('#js-error-phone');
-      phoneError.textContent='';
-      serverError.textContent='';
-      termsError.classList.add('st-hidden');
-      var valid=true;
-      if(!phone.value.trim()){phoneError.textContent='Phone number is required.';valid=false;}
-      if(!terms.checked){termsError.classList.remove('st-hidden');valid=false;}
-      if(!valid)return;
-      var data=new FormData(form);
-      fetch('https://app2.simpletexting.com/join/joinContact',{method:'POST',body:data})
-        .then(function(r){return r.json();})
-        .then(function(){
-          form.querySelector('.step1-form').style.display='none';
-          form.querySelector('.step2-confirmationText').style.display='block';
-        })
-        .catch(function(){serverError.textContent='Something went wrong. Please try again.';serverError.classList.remove('st-hidden');});
+  (function joinWebForm(
+    win, doc, webFormId, formFields,
+    DUPLICATE_EMAIL_EXCEPTION, DUPLICATE_PHONE_EXCEPTION, CUSTOM_FIELDS_VALIDATION_EXCEPTION
+  ) {
+    const XHR = ('onload' in new win.XMLHttpRequest()) ? win.XMLHttpRequest : win.XDomainRequest;
+    const fieldErrorClassName = 'st-signupform-validation-error';
+    function getFormServerErrorMessage(form){return form.querySelector('.st-signupform-server-error-message');}
+    function getFormTermsAgreedError(form){return form.querySelector('.st-signupform-terms-agreed-error');}
+    function getSubmitButton(form){return form.querySelector('#subscribeNow');}
+    function setServerErrorMessage(form,message){
+      const el=getFormServerErrorMessage(form);
+      el.innerText=message;
+      if(message){el.classList.add('st-hidden');}else{el.classList.remove('st-hidden');}
     }
-    doc.addEventListener('DOMContentLoaded',function(){
-      var form=getFormElement();
-      if(form)form.addEventListener('submit',handleSubmit);
-    });
+    function isTermsAgreedAccepted(form){return form.querySelector('input[name="terms-agreed"]').checked;}
+    function showTermsAgreedError(form){
+      getSubmitButton(form).disabled=false;
+      getFormTermsAgreedError(form).classList.remove('st-hidden');
+    }
+    function hideTermsAgreedError(form){getFormTermsAgreedError(form).classList.add('st-hidden');}
+    function clearFormErrors(form){
+      form.querySelectorAll('.'+fieldErrorClassName).forEach(function(f){
+        f.classList.remove(fieldErrorClassName);
+        const err=form.querySelector('#js-error-'+f.name);
+        if(err) err.innerText='';
+      });
+      setServerErrorMessage(form,'');
+      hideTermsAgreedError(form);
+    }
+    function collectFormData(form){
+      const formData=new FormData(form);
+      const data={webFormId,fieldValues:{},listIds:[]};
+      formData.forEach(function(value,name){
+        if(name==='list'){data.listIds.push(value);}
+        else if(name==='phone'){data.fieldValues[name]=value.replace(/\D/g,'');}
+        else if(!['terms-agreed','webFormId'].includes(name)){data.fieldValues[name]=value;}
+      });
+      return data;
+    }
+    function handleLoadForm(form){
+      const submitButton=getSubmitButton(form);
+      if(this.status===200){
+        form.querySelector('.step1-form').style.display='none';
+        form.querySelector('.step2-confirmationText').style.display='block';
+        form.reset();
+      } else {
+        submitButton.disabled=false;
+        setServerErrorMessage(form,'Something went wrong. Please try again.');
+      }
+    }
+    function handleErrorForm(form){
+      getSubmitButton(form).disabled=false;
+      setServerErrorMessage(form,'Internal Error. Please try later.');
+    }
+    function sendForm(form){
+      const data=collectFormData(form);
+      const url=form.action+'?r='+Date.now();
+      const request=new XHR();
+      request.open(form.method,url);
+      request.onload=function(){handleLoadForm.call(this,form);};
+      request.onerror=function(){handleErrorForm.call(this,form);};
+      request.ontimeout=function(){handleErrorForm.call(this,form);};
+      try{request.setRequestHeader('Content-Type','application/json; charset=UTF-8');}catch(_){}
+      request.send(win.JSON.stringify(data));
+    }
+    function handleSubmitForm(event){
+      event.preventDefault();
+      const form=event.target;
+      const submitButton=getSubmitButton(form);
+      try{
+        submitButton.disabled=true;
+        clearFormErrors(form);
+        if(!isTermsAgreedAccepted(form)){showTermsAgreedError(form);}
+        else{sendForm(form);}
+      }catch(e){
+        console.error(e);
+        setServerErrorMessage(form,'Internal Error. Please try later.');
+        submitButton.disabled=false;
+      }
+    }
+    function formatPhone(value){
+      const n=value.replace(/\D/g,'');
+      const a=n.substring(0,3),b=n.substring(3,6),c=n.substring(6,10);
+      let r='';
+      if(a){r+='('+a;}
+      if(b){r+=') '+b;}
+      if(c){r+='-'+c;}
+      return r;
+    }
+    function handleLoad(){
+      const forms=doc.querySelectorAll('#st-join-web-form-'+webFormId);
+      for(let i=0;i<forms.length;i++){
+        const form=forms[i];
+        if(!form.hasAttribute('data-form-initialized')){
+          form.setAttribute('data-form-initialized',true);
+          form.addEventListener('submit',handleSubmitForm);
+          form.querySelectorAll('input[data-type="phone"]').forEach(function(f){
+            f.addEventListener('input',function(e){e.currentTarget.value=formatPhone(e.currentTarget.value);});
+          });
+        }
+      }
+    }
+    win.addEventListener('load',handleLoad);
   })(window,document,'673bc3997cf5d407932e0516',[{"name":"phone","label":"Phone","placeholder":"(XXX) XXX-XXXX","type":"phone","value":"","required":true}],'DuplicateContactEmailException','DuplicateContactPhoneException','CustomFieldsValidationException');
   </script>
 
   <div class="st-signupform">
-    <form id="st-join-web-form-673bc3997cf5d407932e0516" class="st-signupform-content" action="https://app2.simpletexting.com/join/joinContact" method="POST">
-      <input type="hidden" name="webFormId" value="673bc3997cf5d407932e0516">
+    <form
+      id="st-join-web-form-673bc3997cf5d407932e0516"
+      class="st-signupform-content"
+      action="https://app2.simpletexting.com/join/joinContact"
+      method="POST"
+    >
       <div class="step1-form">
-        <div>
-          <input id="phone" name="phone" type="text" placeholder="Phone: (XXX) XXX-XXXX" maxlength="1600" data-type="phone">
+        <div class="required">
+          <label class="st-signupform__label" for="phone">Phone</label>
+          <input id="phone" name="phone" type="text" placeholder="(XXX) XXX-XXXX" maxlength="1600" data-type="phone">
         </div>
         <div id="js-error-phone" class="st-error-message"></div>
         <div class="st-terms-and-conditions">
-          <div class="st-checkbox">
+          <div class="st-checkbox terms-checkbox">
             <input id="terms-agreed-checkbox-673bc3997cf5d407932e0516" type="checkbox" name="terms-agreed">
-            <label for="terms-agreed-checkbox-673bc3997cf5d407932e0516" class="st-terms-and-conditions-text">I agree to Terms and Conditions</label>
+            <label class="st-terms-and-conditions-text" for="terms-agreed-checkbox-673bc3997cf5d407932e0516">Terms and conditions</label>
           </div>
-          <div class="st-font-caption">
-            I agree to receive promotional messages sent via an autodialer, and this agreement isn&rsquo;t a condition of any purchase. I also agree to the
+          <div class="st-terms-and-conditions-caption st-font-caption">
+            I agree to receive promotional messages from Live Radio DFW up to 4 Msgs/Month.
+            This agreement isn't a condition of any purchase. I also agree to the
             <a href="https://app2.simpletexting.com/web-forms/terms/673bc3997cf5d407932e0516" target="_blank" rel="noopener">Terms of Service</a> and
             <a href="https://app2.simpletexting.com/web-forms/privacy-policy/673bc3997cf5d407932e0516" target="_blank" rel="noopener">Privacy Policy</a>.
-            4 Msgs/Month. Msg &amp; Data rates may apply.
+            Msg &amp; Data rates may apply.
           </div>
-          <div class="st-signupform-terms-agreed-error st-hidden">You must agree to the terms to subscribe.</div>
+          <div class="st-signupform-terms-agreed-error st-hidden">
+            You have to agree on terms in order to proceed to the subscription.
+          </div>
         </div>
-        <div>
-          <button type="submit">Get Show Alerts</button>
+        <div class="st-join-web-form-submit-button-box">
+          <button id="subscribeNow" type="submit">Get Show Alerts</button>
           <p class="st-signupform-server-error-message st-color-red st-hidden"></p>
         </div>
       </div>
       <div class="step2-confirmationText" style="display:none;">
-        <p>You&rsquo;re in! You&rsquo;ll receive messages from Live Radio DFW.</p>
+        <p>You're in! You'll receive messages from Live Radio DFW.</p>
       </div>
+      <footer>SMS marketing powered by <a href="https://www.simpletexting.com">SimpleTexting</a></footer>
     </form>
   </div>
 </div>
-
 <footer class="footer">
   <div class="container">
     <div class="footer-inner">
