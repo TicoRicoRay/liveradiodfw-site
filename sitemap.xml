@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://liveradiodfw.com/</loc><priority>1.0</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://liveradiodfw.com/shows.html</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://liveradiodfw.com/songs.html</loc><priority>0.9</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://liveradiodfw.com/videos.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://liveradiodfw.com/about.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://liveradiodfw.com/book.html</loc><priority>0.9</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://liveradiodfw.com/corporate-events.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://liveradiodfw.com/private-parties.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://liveradiodfw.com/press-kit.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://liveradiodfw.com/members.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://liveradiodfw.com/contact.html</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://liveradiodfw.com/store.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://liveradiodfw.com/the-all-80s-hits-station.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://liveradiodfw.com/the-all-70s-no-disco-hits-station.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://liveradiodfw.com/the-classic-rock-station.html</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://liveradiodfw.com/the-all-oldies-hits-station.html</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+</urlset>
