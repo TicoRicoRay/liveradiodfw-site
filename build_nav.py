@@ -37,6 +37,7 @@ PAGE_ACTIVE = {
     'press-kit.html':                        None,
     'corporate-events.html':                 None,
     'private-parties.html':                  None,
+    'thanks.html':                             None,
 }
 
 # Load nav.html (no active classes — we set them per page)
