@@ -1115,7 +1115,11 @@ button { cursor: pointer; background: none; border: none; }
   font-weight: 400;
   color: #e63946;
   display: inline;
-  margin-left: 0.3rem;
+  margin-left: 0;
+}
+.bandhelper_songs .bandhelper_artist::before {
+  content: " - ";
+  color: var(--text-secondary, #666);
 }
 .bandhelper_songs br { display: none; }
 @media (max-width: 600px) {
