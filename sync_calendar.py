@@ -8,7 +8,8 @@ compares against shows.json, and:
   2. Auto-REMOVES shows deleted from calendar + emails info@ to confirm
   3. Auto-UPDATES changed details (time, location, title) + emails info@
   4. Emails info@liveradiodfw.com if required info is missing
-  5. Runs build_shows.py to regenerate HTML
+  5. Runs build_shows.py to regenerate show HTML
+  5b. Runs build_includes.py to stamp nav/footer into all pages
   6. Commits and pushes to GitHub if changes were made
 
 Designed to run as a daily cron job.
@@ -301,7 +302,7 @@ async def send_alert_email(subject, body):
 
 def git_commit_and_push(message):
     """Commit changes and push to GitHub."""
-    subprocess.run(["git", "add", "shows.json", "shows.html", "index.html"],
+    subprocess.run(["git", "add", "-A"],
                    cwd=BASE, check=True)
 
     result = subprocess.run(["git", "diff", "--cached", "--quiet"],
@@ -420,6 +421,7 @@ async def main():
             json.dump(current_shows, f, indent=2)
             f.write("\n")
         subprocess.run([sys.executable, str(BASE / "build_shows.py")], check=True)
+        subprocess.run([sys.executable, str(BASE / "build_includes.py")], check=True)
         commit_msg = "Auto-sync: " + "; ".join(commit_parts)
         changed = git_commit_and_push(commit_msg)
 
