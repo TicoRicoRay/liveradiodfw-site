@@ -244,8 +244,8 @@ def calendar_event_to_show(event):
     months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
               "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
-    # Parse ticket price from description
-    ticket_price = parse_ticket_price(event.get("description", ""))
+    # Parse ticket price from description (never show price on private events)
+    ticket_price = "" if private else parse_ticket_price(event.get("description", ""))
 
     return {
         "date": local_start.strftime("%Y-%m-%d"),

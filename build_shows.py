@@ -89,10 +89,11 @@ def build_compact_cards(shows):
         if is_private:
             lines.append(f'          <h3>Private Event</h3>')
             lines.append(f'          <p class="venue-address">{s["address_short"]}</p>')
+            lines.append(f'          <p class="show-time">{s["time"]}</p>')
         else:
             lines.append(f'          <h3>{s["title"]}</h3>')
             lines.append(f'          <p class="venue-address">{s["address_short"]}</p>')
-        lines.append(f'          <p class="show-time">{s["time"]} &middot; {price_html}</p>')
+            lines.append(f'          <p class="show-time">{s["time"]} &middot; {price_html}</p>')
         lines.append(f'        </div>')
         lines.append(f'      </div>')
     return "\n".join(lines)
