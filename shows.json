@@ -109,7 +109,7 @@
     "time": "6:00 PM",
     "maps_url": "",
     "private": true,
-    "ticket_price": "Free"
+    "ticket_price": ""
   },
   {
     "date": "2026-09-26",
@@ -137,6 +137,6 @@
     "time": "5:00 PM",
     "maps_url": "",
     "private": true,
-    "ticket_price": "Free"
+    "ticket_price": ""
   }
 ]
