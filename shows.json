@@ -11,7 +11,8 @@
     "time": "7:15 PM",
     "maps_url": "https://maps.google.com/?q=O+G+Cellars%2C+704+Co+Rd+1895%2C+Sunset%2C+TX+76270%2C+USA",
     "private": false,
-    "ticket_price": "$25"
+    "ticket_price": "$25",
+    "description": "Live Radio DFW brings the party to North Texas wine country. OG Cellars is a boutique winery set in the rolling hills of Sunset, TX \u2014 about an hour northwest of the Metroplex. Grab a glass of Texas wine, spread out a blanket on the lawn, and settle in for a night of all 80s hits under the open sky. Food vendors will be on-site for the concert, and the winery's tasting room will be pouring all evening. Gates open early, so come for the sunset and stay for the music."
   },
   {
     "date": "2026-04-25",
@@ -25,7 +26,8 @@
     "time": "6:00 PM",
     "maps_url": "https://maps.google.com/?q=FRESH+by+Brookshire's%2C+5100+I-30%2C+Fate%2C+TX+75189%2C+USA",
     "private": false,
-    "ticket_price": "Free"
+    "ticket_price": "Free",
+    "description": "Join us on the patio at FRESH by Brookshire's in Fate for a free Saturday evening of live music. The outdoor grill and patio area makes for a relaxed, family-friendly atmosphere right off I-30. Grab dinner from the patio grill, pick up a craft beer or glass of wine, and enjoy the show \u2014 no tickets needed. FRESH hosts live music every weekend on the patio, and it's become one of the go-to hangouts for the Rockwall, Heath, and Fate communities."
   },
   {
     "date": "2026-05-09",
@@ -39,7 +41,8 @@
     "time": "7:30 PM",
     "maps_url": "https://maps.google.com/?q=Frisco+Rail+Yard%2C+9040+First+St%2C+Frisco%2C+TX+75034%2C+USA",
     "private": false,
-    "ticket_price": "Free"
+    "ticket_price": "Free",
+    "description": "Live Radio DFW takes over the Frisco Rail Yard in Downtown Frisco's Rail District. This open-air food truck park is the perfect spot for a Saturday night out \u2014 rotating food trucks, a full bar, and plenty of room to spread out. Bring the crew (dogs welcome too) and grab a table or post up near the stage. No cover charge. The Rail District is walkable and worth exploring before and after the show."
   },
   {
     "date": "2026-05-16",
@@ -53,7 +56,8 @@
     "time": "6:00 PM",
     "maps_url": "https://maps.google.com/?q=FRESH+by+Brookshire's%2C+5100+I-30%2C+Fate%2C+TX+75189%2C+USA",
     "private": false,
-    "ticket_price": "Free"
+    "ticket_price": "Free",
+    "description": "We're back at FRESH by Brookshire's in Fate for another free evening of live music on the patio. Same great setup \u2014 outdoor grill, cold drinks, and a laid-back family-friendly vibe right off I-30. The patio grill serves food until 8:45 PM, and the wine and craft beer selection inside is worth browsing before you settle in. No tickets, no cover \u2014 just show up and enjoy the music."
   },
   {
     "date": "2026-06-06",
@@ -67,7 +71,8 @@
     "time": "7:00 PM",
     "maps_url": "https://maps.google.com/?q=Watters+Creek+Village%2C+970+Garden+Park+Dr%2C+Allen%2C+TX+75013%2C+USA",
     "private": false,
-    "ticket_price": "Free"
+    "ticket_price": "Free",
+    "description": "Live Radio DFW joins the Concerts by the Creek series at Watters Creek Village in Allen. Bring a blanket or lawn chair and stake out a spot on the Village Green \u2014 the creek-side setting is one of the best outdoor music venues in Collin County. Restaurants surrounding the green offer patio dining if you'd rather grab a table. Free admission, family-friendly, and a great way to kick off a summer Saturday evening in North Allen."
   },
   {
     "date": "2026-06-13",
@@ -81,7 +86,8 @@
     "time": "8:30 PM",
     "maps_url": "https://maps.google.com/?q=Sweetwater+Grill%2C+Royse+City%2C+TX",
     "private": false,
-    "ticket_price": "Free"
+    "ticket_price": "Free",
+    "description": "Catch Live Radio DFW on the outdoor stage at Sweetwater Grill, nestled between Royse City and Union Valley on Hwy 276. This locally owned grill and bar has one of the best back patios in the I-30 corridor \u2014 full bar, yard games, and plenty of space to enjoy a summer night of live music. The kitchen serves solid American comfort food, and the drinks are strong and affordable. No cover charge. A great night out for folks in Royse City, Rockwall, Heath, Fate, and the surrounding communities \u2014 about 30 minutes east of Dallas."
   },
   {
     "date": "2026-09-12",
@@ -95,7 +101,8 @@
     "time": "6:00 PM",
     "maps_url": "https://maps.google.com/?q=FRESH+by+Brookshire's%2C+5100+I-30%2C+Fate%2C+TX+75189%2C+USA",
     "private": false,
-    "ticket_price": "Free"
+    "ticket_price": "Free",
+    "description": "Live Radio DFW returns to FRESH by Brookshire's in Fate for another free Saturday evening show on the patio. Food, drinks, and great music \u2014 no tickets needed. If you haven't been to FRESH yet, it's more than a grocery store: craft beer, wine, a full patio grill, and live music every weekend. A perfect stop for the Rockwall, Heath, Fate, and Royse City crowd."
   },
   {
     "date": "2026-09-18",
@@ -123,7 +130,8 @@
     "time": "8:00 PM",
     "maps_url": "https://maps.google.com/?q=Uptown+Rail+Brewery%2C+204+Bolivar+St%2C+Sanger+TX+76266",
     "private": false,
-    "ticket_price": "Free"
+    "ticket_price": "Free",
+    "description": "Live Radio DFW heads to Uptown Rail Brewery in historic Downtown Sanger. This craft brewery has 30+ beers on tap, artisanal pizza, and a stage that puts you right in the action. About 45 minutes north of the Metroplex on I-35, it's worth the drive for the beer alone \u2014 add live music and you've got a full Saturday night. No cover charge. Weather permitting, the show moves to the outdoor stage. A fun night out for folks in Sanger, Denton, Lake Dallas, Corinth, and the I-35 corridor."
   },
   {
     "date": "2026-10-31",
