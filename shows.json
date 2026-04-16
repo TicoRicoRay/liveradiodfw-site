@@ -10,7 +10,8 @@
     "address_short": "Sunset, TX",
     "time": "7:15 PM",
     "maps_url": "https://maps.google.com/?q=O+G+Cellars%2C+704+Co+Rd+1895%2C+Sunset%2C+TX+76270%2C+USA",
-    "private": false
+    "private": false,
+    "ticket_price": "$25"
   },
   {
     "date": "2026-04-25",
@@ -23,7 +24,8 @@
     "address_short": "Fate, TX",
     "time": "6:00 PM",
     "maps_url": "https://maps.google.com/?q=FRESH+by+Brookshire's%2C+5100+I-30%2C+Fate%2C+TX+75189%2C+USA",
-    "private": false
+    "private": false,
+    "ticket_price": "Free"
   },
   {
     "date": "2026-05-09",
@@ -36,7 +38,8 @@
     "address_short": "Frisco, TX",
     "time": "7:30 PM",
     "maps_url": "https://maps.google.com/?q=Frisco+Rail+Yard%2C+9040+First+St%2C+Frisco%2C+TX+75034%2C+USA",
-    "private": false
+    "private": false,
+    "ticket_price": "Free"
   },
   {
     "date": "2026-05-16",
@@ -49,7 +52,8 @@
     "address_short": "Fate, TX",
     "time": "6:00 PM",
     "maps_url": "https://maps.google.com/?q=FRESH+by+Brookshire's%2C+5100+I-30%2C+Fate%2C+TX+75189%2C+USA",
-    "private": false
+    "private": false,
+    "ticket_price": "Free"
   },
   {
     "date": "2026-06-06",
@@ -62,7 +66,8 @@
     "address_short": "Allen, TX",
     "time": "7:00 PM",
     "maps_url": "https://maps.google.com/?q=Watters+Creek+Village%2C+970+Garden+Park+Dr%2C+Allen%2C+TX+75013%2C+USA",
-    "private": false
+    "private": false,
+    "ticket_price": "Free"
   },
   {
     "date": "2026-06-13",
@@ -75,7 +80,8 @@
     "address_short": "Royse City, TX",
     "time": "8:30 PM",
     "maps_url": "https://maps.google.com/?q=Sweetwater+Grill%2C+Royse+City%2C+TX",
-    "private": false
+    "private": false,
+    "ticket_price": "Free"
   },
   {
     "date": "2026-09-12",
@@ -88,7 +94,8 @@
     "address_short": "Fate, TX",
     "time": "6:00 PM",
     "maps_url": "https://maps.google.com/?q=FRESH+by+Brookshire's%2C+5100+I-30%2C+Fate%2C+TX+75189%2C+USA",
-    "private": false
+    "private": false,
+    "ticket_price": "Free"
   },
   {
     "date": "2026-09-18",
@@ -101,7 +108,8 @@
     "address_short": "DFW Area",
     "time": "6:00 PM",
     "maps_url": "",
-    "private": true
+    "private": true,
+    "ticket_price": "Free"
   },
   {
     "date": "2026-09-26",
@@ -114,7 +122,8 @@
     "address_short": "Sanger, TX",
     "time": "8:00 PM",
     "maps_url": "https://maps.google.com/?q=Uptown+Rail+Brewery%2C+204+Bolivar+St%2C+Sanger+TX+76266",
-    "private": false
+    "private": false,
+    "ticket_price": "Free"
   },
   {
     "date": "2026-10-31",
@@ -127,6 +136,7 @@
     "address_short": "Rockwall, TX",
     "time": "5:00 PM",
     "maps_url": "",
-    "private": true
+    "private": true,
+    "ticket_price": "Free"
   }
 ]
