@@ -52,11 +52,16 @@ def build_full_cards(shows):
     for s in shows:
         is_private = s.get("private", False)
         lines.append(f'      <div class="show-card-full fade-in" data-show-date="{s["date"]}">')
-        lines.append(f'        <div class="show-date-badge">')
+        if not is_private:
+            slug = slugify(s['venue'])
+            show_page_url = f'shows/{slug}-{s["date"]}.html'
+            lines.append(f'        <a href="{show_page_url}" class="show-date-badge">')
+        else:
+            lines.append(f'        <div class="show-date-badge">')
         lines.append(f'          <span class="day-name">{s["day_name"]}</span>')
         lines.append(f'          <span class="day-num">{s["day_num"]}</span>')
         lines.append(f'          <span class="month">{s["month"]}</span>')
-        lines.append(f'        </div>')
+        lines.append(f'        </{'a' if not is_private else 'div'}>')
         lines.append(f'        <div class="show-details">')
         ticket_price = s.get("ticket_price", "Free")
         price_label = "Free" if ticket_price == "Free" else ticket_price
@@ -68,8 +73,6 @@ def build_full_cards(shows):
             lines.append(f'          <p class="show-time">{s["time"]}</p>')
             lines.append(f'          {PRIVATE_BADGE}')
         else:
-            slug = slugify(s['venue'])
-            show_page_url = f'shows/{slug}-{s["date"]}.html'
             lines.append(f'          <h3><a href="{show_page_url}">{s["title"]}</a></h3>')
             lines.append(f'          <p class="venue-address">{s["venue"]}, {s["address"]}</p>')
             lines.append(f'          <p class="show-time">{s["time"]} &middot; {price_html}</p>')
@@ -89,11 +92,16 @@ def build_compact_cards(shows):
     for s in shows[:3]:
         is_private = s.get("private", False)
         lines.append(f'      <div class="show-card fade-in">')
-        lines.append(f'        <div class="show-date-badge">')
+        if not is_private:
+            slug = slugify(s['venue'])
+            show_page_url = f'shows/{slug}-{s["date"]}.html'
+            lines.append(f'        <a href="{show_page_url}" class="show-date-badge">')
+        else:
+            lines.append(f'        <div class="show-date-badge">')
         lines.append(f'          <span class="day-name">{s["day_name"]}</span>')
         lines.append(f'          <span class="day-num">{s["day_num"]}</span>')
         lines.append(f'          <span class="month">{s["month"]}</span>')
-        lines.append(f'        </div>')
+        lines.append(f'        </{'a' if not is_private else 'div'}>')
         lines.append(f'        <div class="show-details">')
         ticket_price = s.get("ticket_price", "Free")
         price_label = "Free" if ticket_price == "Free" else ticket_price
@@ -104,8 +112,6 @@ def build_compact_cards(shows):
             lines.append(f'          <p class="venue-address">{s["address_short"]}</p>')
             lines.append(f'          <p class="show-time">{s["time"]}</p>')
         else:
-            slug = slugify(s['venue'])
-            show_page_url = f'shows/{slug}-{s["date"]}.html'
             lines.append(f'          <h3><a href="{show_page_url}">{s["title"]}</a></h3>')
             lines.append(f'          <p class="venue-address">{s["address_short"]}</p>')
             lines.append(f'          <p class="show-time">{s["time"]} &middot; {price_html}</p>')
