@@ -6,10 +6,9 @@ Built April 2026. Deployed on GitHub Pages.
 ---
 
 ## Quick Links
-- **Staging URL:** https://ticoricoray.github.io/liveradiodfw-marketing/
-- **Production URL:** https://liveradiodfw.com (after DNS cutover)
-- **GitHub repo (website):** https://github.com/TicoRicoRay/liveradiodfw-site
-- **GitHub repo (marketing scripts):** https://github.com/TicoRicoRay/liveradiodfw-marketing
+- **Production URL:** https://liveradiodfw.com
+- **GitHub repo (website):** https://github.com/TicoRicoRay/liveradiodfw-site (gh-pages branch)
+- **GitHub repo (marketing assets):** https://github.com/TicoRicoRay/liveradiodfw-marketing (master only — gh-pages deleted Apr 16)
 
 ---
 
@@ -60,6 +59,7 @@ liveradiodfw-site/
 ├── shows.json              SHOWS SOURCE OF TRUTH
 ├── build_nav.py            Stamps nav.html into all 16 pages
 ├── build_shows.py          Stamps shows.json into shows.html + index.html
+├── sync_calendar.py        AUTO-SYNC: Google Calendar → shows.json → website (daily cron)
 ├── build_songs.py          Fetches BandHelper, caches song HTML, stamps into song pages
 ├── css/
 │   └── style.css           Single global stylesheet (bump ?v=N on changes)
@@ -86,9 +86,24 @@ liveradiodfw-site/
 
 ## Maintenance Guide
 
-### Adding a New Show
+### Adding/Updating/Removing Shows (AUTOMATED)
 
-1. Edit `shows.json` — add a new entry in this format:
+**Shows are now managed automatically via `sync_calendar.py`.** The Google Calendar (info@liveradiodfw.com) is the source of truth.
+
+**How it works:**
+1. A daily cron (8 AM CDT) runs `sync_calendar.py`
+2. The script fetches all events from Google Calendar via iCal feed
+3. It compares against `shows.json` and:
+   - **Adds** new shows found on the calendar
+   - **Removes** shows deleted from the calendar
+   - **Updates** shows whose details changed (time, venue, address)
+4. If any changes are detected, it runs `build_shows.py`, commits, and pushes to gh-pages
+5. An email is sent to info@liveradiodfw.com summarizing all changes
+6. Deletions trigger a separate alert email (deletions are unusual and may be accidental)
+
+**Manual override:** You can still edit `shows.json` directly and run `python build_shows.py` + push, but changes may be overwritten by the next sync if they don't match the calendar.
+
+**Show entry format in shows.json:**
 ```json
 {
   "date": "2026-MM-DD",
@@ -103,10 +118,6 @@ liveradiodfw-site/
   "maps_url": "https://maps.google.com/?q=Venue+Name+City+TX"
 }
 ```
-2. Run: `python build_shows.py`
-3. Push: `git add shows.json shows.html index.html && git commit -m "Add show: Venue Date" && git push origin gh-pages`
-
-The script automatically sorts by date and stamps both `shows.html` and `index.html` (home page shows 3 upcoming).
 
 ---
 
@@ -161,30 +172,22 @@ python build_songs.py --force
 
 ### Pushing Changes
 
-Always push to BOTH repos:
+Push to `liveradiodfw-site` only (the `-marketing` repo no longer has a gh-pages branch):
 
 ```bash
-# 1. Marketing repo (staging)
 cd /path/to/liveradiodfw-site
 git add -A
 git commit -m "Description of change"
-git push origin gh-pages
-
-# 2. Site repo (production after DNS cutover)
-cd /path/to/liveradiodfw-site-deploy
-rsync -a --exclude='.git' /path/to/liveradiodfw-site/ .
-git add -A
-git commit -m "Sync: description"
 git push origin gh-pages
 ```
 
 ---
 
-### DNS Cutover (when ready to go live)
+### DNS (LIVE — completed Apr 16, 2026)
 
-The `CNAME` file already contains `liveradiodfw.com`. Set these DNS records at your registrar:
+DNS is configured at GoDaddy:
 
-**For apex domain (liveradiodfw.com):**
+**Apex domain (liveradiodfw.com):**
 ```
 A    @    185.199.108.153
 A    @    185.199.109.153
@@ -192,20 +195,19 @@ A    @    185.199.110.153
 A    @    185.199.111.153
 ```
 
-**For www subdomain:**
+**www subdomain:**
 ```
 CNAME    www    ticoricoray.github.io
 ```
 
-After DNS propagates (15 min - 48 hrs), GitHub Pages will automatically provision SSL.
+**GitHub domain verification:**
+```
+TXT    _github-pages-challenge-TicoRicoRay    <value in GoDaddy>
+```
 
-**Post-cutover checklist:**
-- [ ] Add `liveradiodfw.com` to SimpleTexting allowed domains (if required)
-- [ ] Submit sitemap to Google Search Console: https://liveradiodfw.com/sitemap.xml
-- [ ] Update Google Business Profile website URL
-- [ ] Update Mailchimp campaign links from staging URL to liveradiodfw.com
-- [ ] Update Formspree confirmation message (currently generic)
-- [ ] Set up Cloudflare in front of GitHub Pages for cache control
+**SSL status (as of Apr 16):**
+- [x] `https://liveradiodfw.com` — working, valid cert
+- [ ] `https://www.liveradiodfw.com` — cert still pending (hourly monitoring cron active)
 
 ---
 
@@ -215,11 +217,15 @@ These run automatically via Perplexity Computer:
 
 | Cron | Schedule | What it does |
 |------|----------|-------------|
-| Show Calendar Check | Every Monday 10am CDT | Checks band calendar vs shows.json, flags missing shows |
-| Availability Check Reminder | Every Tuesday 9am CDT | Reminds Ray to check availability output on last Tuesday of month |
-| Pre-Send Warning | Sat day 22-28 9am CDT | Warning before monthly Mailchimp availability send |
-| Monthly Setlist Review | First Saturday 10am CDT | Reviews BandHelper setlist for new theme opportunities |
-| Monthly Venue Discovery | First Saturday 9am CDT | Searches for new DFW venues, adds to Mailchimp |
+| **Daily Calendar Sync** | **Every day 8 AM CDT** | **Runs `sync_calendar.py` — syncs Google Calendar → shows.json → website. Auto-adds, auto-deletes, auto-updates. Emails info@ on changes. Pushes to gh-pages.** |
+| HTTPS Cert Check (temp) | Hourly (until resolved) | Checks `https://www.liveradiodfw.com` cert. Emails info@ on success or after 5 failures, then self-deletes. |
+
+**Calendar sync details:**
+- Source of truth: Google Calendar (info@liveradiodfw.com)
+- iCal feed URL: private (stored in sync_calendar.py)
+- Google Calendar webhook: used for dual-write (create/update events), NOT for sync reads
+- Events are dual-written to both Outlook (connector) and Google Calendar (webhook)
+- Do NOT add info@liveradiodfw.com as an Outlook event attendee (causes duplicate cross-sync to Google)
 
 ---
 
@@ -236,9 +242,27 @@ These run automatically via Perplexity Computer:
 
 ## Marketing Style Guide
 
-See `MARKETING_STYLE_GUIDE.md` in the `liveradiodfw-marketing` repo for:
+See `MARKETING_STYLE_GUIDE.md` in the `liveradiodfw-marketing` repo (master branch) for:
 - Band name formatting rules (LiveRadioDFW camelCase)
 - Approved key phrases
 - Tone of voice
 - What NOT to say
 - Consistency checklist
+
+---
+
+## Band Members & Calendar Access
+
+| Member | Role | Email |
+|--------|------|-------|
+| Ray | Marketing/Website | rmyers@futurebright.com + info@liveradiodfw.com |
+| Donna | Social/Events | lady.heavenly77@gmail.com |
+| Buck | Guitar | buck.buchanan@verizon.net / buckb5068@gmail.com |
+| Kyle | Drums | dcoleman1061@gmail.com |
+| Don | Bass | DonMouck@gmail.com |
+
+**Calendar rules:**
+- Google Calendar is source of truth for website sync
+- All band events must include rmyers@futurebright.com as attendee
+- Do NOT add info@liveradiodfw.com as Outlook attendee (causes cross-sync duplicates)
+- Do NOT change how band members use the calendar — some are technophobic
