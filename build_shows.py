@@ -20,6 +20,16 @@ from pathlib import Path
 
 BASE = Path(__file__).parent
 
+
+def slugify(text):
+    """Convert text to URL-friendly slug (matches build_show_pages.py)."""
+    text = text.lower().strip()
+    text = re.sub(r"[''`]", "", text)
+    text = re.sub(r"[^a-z0-9]+", "-", text)
+    text = re.sub(r"-+", "-", text)
+    return text.strip("-")
+
+
 # ── Load shows ────────────────────────────────────────────────────────────────
 with open(BASE / "shows.json") as f:
     all_shows = json.load(f)
@@ -58,11 +68,14 @@ def build_full_cards(shows):
             lines.append(f'          <p class="show-time">{s["time"]}</p>')
             lines.append(f'          {PRIVATE_BADGE}')
         else:
-            lines.append(f'          <h3>{s["title"]}</h3>')
+            slug = slugify(s['venue'])
+            show_page_url = f'shows/{slug}-{s["date"]}.html'
+            lines.append(f'          <h3><a href="{show_page_url}">{s["title"]}</a></h3>')
             lines.append(f'          <p class="venue-address">{s["venue"]}, {s["address"]}</p>')
             lines.append(f'          <p class="show-time">{s["time"]} &middot; {price_html}</p>')
             lines.append(f'          <div class="show-links">')
-            lines.append(f'            <a href="{s["maps_url"]}" target="_blank" rel="noopener">View on Google Maps</a>')
+            lines.append(f'            <a href="{show_page_url}">Show Details</a>')
+            lines.append(f'            <a href="{s["maps_url"]}" target="_blank" rel="noopener">Directions</a>')
             share_text = f'Live Radio DFW at {s["title"]}'
             lines.append(f'            <button data-share="{share_text}" style="background:none;border:none;color:var(--text-secondary);font-size:var(--text-xs);cursor:pointer;text-decoration:underline;">Share</button>')
             lines.append(f'          </div>')
@@ -91,7 +104,9 @@ def build_compact_cards(shows):
             lines.append(f'          <p class="venue-address">{s["address_short"]}</p>')
             lines.append(f'          <p class="show-time">{s["time"]}</p>')
         else:
-            lines.append(f'          <h3>{s["title"]}</h3>')
+            slug = slugify(s['venue'])
+            show_page_url = f'shows/{slug}-{s["date"]}.html'
+            lines.append(f'          <h3><a href="{show_page_url}">{s["title"]}</a></h3>')
             lines.append(f'          <p class="venue-address">{s["address_short"]}</p>')
             lines.append(f'          <p class="show-time">{s["time"]} &middot; {price_html}</p>')
         lines.append(f'        </div>')

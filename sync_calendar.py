@@ -9,7 +9,8 @@ compares against shows.json, and:
   3. Auto-UPDATES changed details (time, location, title) + emails info@
   4. Emails info@liveradiodfw.com if required info is missing
   5. Runs build_shows.py to regenerate show HTML
-  5b. Runs build_includes.py to stamp nav/footer into all pages
+  5b. Runs build_show_pages.py to regenerate individual show pages
+  5c. Runs build_includes.py to stamp nav/footer into all pages
   6. Commits and pushes to GitHub if changes were made
 
 Designed to run as a daily cron job.
@@ -421,6 +422,7 @@ async def main():
             json.dump(current_shows, f, indent=2)
             f.write("\n")
         subprocess.run([sys.executable, str(BASE / "build_shows.py")], check=True)
+        subprocess.run([sys.executable, str(BASE / "build_show_pages.py")], check=True)
         subprocess.run([sys.executable, str(BASE / "build_includes.py")], check=True)
         commit_msg = "Auto-sync: " + "; ".join(commit_parts)
         changed = git_commit_and_push(commit_msg)

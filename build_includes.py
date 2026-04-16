@@ -35,13 +35,10 @@ nav_html = (INCLUDES / "nav.html").read_text()
 footer_html = (INCLUDES / "footer.html").read_text()
 
 # ── Regex patterns for replacement ────────────────────────────────────────────
-# Nav: everything between BEGIN_NAV and END_NAV comments (inclusive)
 NAV_PATTERN = re.compile(
     r"<!-- BEGIN_NAV -->.*?<!-- END_NAV -->",
     re.DOTALL
 )
-
-# Footer: everything between BEGIN_FOOTER and END_FOOTER comments (inclusive)
 FOOTER_PATTERN = re.compile(
     r"<!-- BEGIN_FOOTER -->.*?<!-- END_FOOTER -->",
     re.DOTALL
@@ -49,31 +46,69 @@ FOOTER_PATTERN = re.compile(
 
 verbose = "-v" in sys.argv
 
+
+def rewrite_paths_for_subdir(html_text):
+    """Rewrite root-relative paths to ../  for pages in subdirectories.
+
+    Converts href="index.html" → href="../index.html"
+    Converts src="img/logo.jpg" → src="../img/logo.jpg"
+    Does NOT touch absolute URLs (http://, https://, //, #, mailto:, tel:).
+    """
+    def _fix(match):
+        attr = match.group(1)   # href= or src=
+        quote = match.group(2)  # " or '
+        path = match.group(3)   # the path value
+        # Skip absolute URLs, anchors, javascript:, mailto:, tel:
+        if path.startswith(("http://", "https://", "//", "#", "mailto:", "tel:", "javascript:", "data:")):
+            return match.group(0)
+        # Skip already-relative paths (starts with ../)
+        if path.startswith("../"):
+            return match.group(0)
+        return f'{attr}{quote}../{path}{quote}'
+
+    return re.sub(r'((?:href|src|action)=)(["\'])([^"\']*)\2', _fix, html_text)
+
+
+# ── Collect all HTML files (root + subdirectories) ────────────────────────────
+html_files = sorted(BASE.glob("*.html"))
+# Add subdirectory pages (shows/, etc.) but exclude includes/
+for subdir in sorted(BASE.iterdir()):
+    if subdir.is_dir() and subdir.name not in ("includes", "css", "js", "img", ".git", "node_modules"):
+        html_files.extend(sorted(subdir.glob("*.html")))
+
 # ── Process all HTML files ────────────────────────────────────────────────────
 updated = []
 skipped = []
 
-for html_file in sorted(BASE.glob("*.html")):
+for html_file in html_files:
     original = html_file.read_text()
     content = original
 
+    # Determine if file is in a subdirectory
+    is_subdir = html_file.parent != BASE
+
+    # Prepare include content (rewrite paths for subdirs)
+    nav_content = rewrite_paths_for_subdir(nav_html.strip()) if is_subdir else nav_html.strip()
+    footer_content = rewrite_paths_for_subdir(footer_html.strip()) if is_subdir else footer_html.strip()
+
     # Replace nav
     if "<!-- BEGIN_NAV -->" in content:
-        content = NAV_PATTERN.sub(nav_html.strip(), content)
+        content = NAV_PATTERN.sub(nav_content, content)
 
     # Replace footer
     if "<!-- BEGIN_FOOTER -->" in content:
-        content = FOOTER_PATTERN.sub(footer_html.strip(), content)
+        content = FOOTER_PATTERN.sub(footer_content, content)
 
+    rel_path = html_file.relative_to(BASE)
     if content != original:
         html_file.write_text(content)
-        updated.append(html_file.name)
+        updated.append(str(rel_path))
         if verbose:
-            print(f"  ✓ {html_file.name}")
+            print(f"  ✓ {rel_path}")
     else:
-        skipped.append(html_file.name)
+        skipped.append(str(rel_path))
         if verbose:
-            print(f"  · {html_file.name} (no change)")
+            print(f"  · {rel_path} (no change)")
 
 print(f"build_includes: {len(updated)} updated, {len(skipped)} unchanged")
 if updated:
