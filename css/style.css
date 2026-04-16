@@ -1766,38 +1766,41 @@ textarea.form-input {
   font-size: var(--text-sm);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  border: 2px solid var(--red);
   border-radius: var(--radius-full);
-  transition: background var(--transition);
+  transition: background var(--transition), border-color var(--transition);
   text-decoration: none;
 }
 .btn-primary:hover {
   background: var(--red-hover);
+  border-color: var(--red-hover);
 }
 .btn-secondary {
   display: inline-block;
   padding: var(--space-3) var(--space-6);
   background: transparent;
-  color: var(--text-primary);
+  color: var(--navy, #1a1a2e);
   font-family: var(--font-display);
   font-weight: 700;
   font-size: var(--text-sm);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  border: 1px solid var(--border, #e5e5e5);
+  border: 2px solid var(--navy, #1a1a2e);
   border-radius: var(--radius-full);
-  transition: border-color var(--transition), color var(--transition);
+  transition: background var(--transition), color var(--transition);
   text-decoration: none;
 }
 .btn-secondary:hover {
-  border-color: var(--navy);
-  color: var(--navy);
+  background: var(--navy, #1a1a2e);
+  color: var(--white);
 }
 [data-theme="dark"] .btn-secondary {
-  color: var(--white);
-  border-color: #555;
+  color: #ffffff;
+  border-color: #ffffff;
 }
 [data-theme="dark"] .btn-secondary:hover {
-  border-color: var(--white);
+  background: #ffffff;
+  color: #1a1a2e;
 }
 
 .show-page-description {
