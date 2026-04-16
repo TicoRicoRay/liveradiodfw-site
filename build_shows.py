@@ -28,15 +28,19 @@ with open(BASE / "shows.json") as f:
 all_shows.sort(key=lambda s: s["date"])
 with open(BASE / "shows.json", "w") as f:
     json.dump(all_shows, f, indent=2)
+    f.write("\n")
 
 # Filter out past shows for upcoming display
 today = date.today()
 upcoming = [s for s in all_shows if datetime.strptime(s["date"], "%Y-%m-%d").date() >= today]
 
+PRIVATE_BADGE = '<p class="show-private-badge" style="display:inline-block;margin-top:0.25rem;padding:2px 10px;font-size:var(--text-xs);font-weight:600;color:#e63946;border:1px solid #e63946;border-radius:999px;text-transform:uppercase;letter-spacing:0.05em;">Private Event</p>'
+
 # ── Build shows.html show-card-full blocks ────────────────────────────────────
 def build_full_cards(shows):
     lines = []
     for s in shows:
+        is_private = s.get("private", False)
         lines.append(f'      <div class="show-card-full fade-in" data-show-date="{s["date"]}">')
         lines.append(f'        <div class="show-date-badge">')
         lines.append(f'          <span class="day-name">{s["day_name"]}</span>')
@@ -44,14 +48,20 @@ def build_full_cards(shows):
         lines.append(f'          <span class="month">{s["month"]}</span>')
         lines.append(f'        </div>')
         lines.append(f'        <div class="show-details">')
-        lines.append(f'          <h3>{s["title"]}</h3>')
-        lines.append(f'          <p class="venue-address">{s["venue"]}, {s["address"]}</p>')
-        lines.append(f'          <p class="show-time">{s["time"]}</p>')
-        lines.append(f'          <div class="show-links">')
-        lines.append(f'            <a href="{s["maps_url"]}" target="_blank" rel="noopener">View on Google Maps</a>')
-        share_text = f'Live Radio DFW at {s["title"]}'
-        lines.append(f'            <button data-share="{share_text}" style="background:none;border:none;color:var(--text-secondary);font-size:var(--text-xs);cursor:pointer;text-decoration:underline;">Share</button>')
-        lines.append(f'          </div>')
+        if is_private:
+            lines.append(f'          <h3>Private Event</h3>')
+            lines.append(f'          <p class="venue-address">{s["address_short"]}</p>')
+            lines.append(f'          <p class="show-time">{s["time"]}</p>')
+            lines.append(f'          {PRIVATE_BADGE}')
+        else:
+            lines.append(f'          <h3>{s["title"]}</h3>')
+            lines.append(f'          <p class="venue-address">{s["venue"]}, {s["address"]}</p>')
+            lines.append(f'          <p class="show-time">{s["time"]}</p>')
+            lines.append(f'          <div class="show-links">')
+            lines.append(f'            <a href="{s["maps_url"]}" target="_blank" rel="noopener">View on Google Maps</a>')
+            share_text = f'Live Radio DFW at {s["title"]}'
+            lines.append(f'            <button data-share="{share_text}" style="background:none;border:none;color:var(--text-secondary);font-size:var(--text-xs);cursor:pointer;text-decoration:underline;">Share</button>')
+            lines.append(f'          </div>')
         lines.append(f'        </div>')
         lines.append(f'      </div>')
     return "\n".join(lines)
@@ -60,6 +70,7 @@ def build_full_cards(shows):
 def build_compact_cards(shows):
     lines = []
     for s in shows[:3]:
+        is_private = s.get("private", False)
         lines.append(f'      <div class="show-card fade-in">')
         lines.append(f'        <div class="show-date-badge">')
         lines.append(f'          <span class="day-name">{s["day_name"]}</span>')
@@ -67,8 +78,12 @@ def build_compact_cards(shows):
         lines.append(f'          <span class="month">{s["month"]}</span>')
         lines.append(f'        </div>')
         lines.append(f'        <div class="show-details">')
-        lines.append(f'          <h3>{s["title"]}</h3>')
-        lines.append(f'          <p class="venue-address">{s["address_short"]}</p>')
+        if is_private:
+            lines.append(f'          <h3>Private Event</h3>')
+            lines.append(f'          <p class="venue-address">{s["address_short"]}</p>')
+        else:
+            lines.append(f'          <h3>{s["title"]}</h3>')
+            lines.append(f'          <p class="venue-address">{s["address_short"]}</p>')
         lines.append(f'          <p class="show-time">{s["time"]}</p>')
         lines.append(f'        </div>')
         lines.append(f'      </div>')
@@ -78,16 +93,24 @@ def build_compact_cards(shows):
 def build_jsonld(shows):
     events = []
     for s in shows:
-        dt = datetime.strptime(s["date"], "%Y-%m-%d")
+        # Skip private events — no SEO benefit
+        if s.get("private", False):
+            continue
         try:
-            time_parts = s["time"].replace(" PM", "").replace(" AM", "").split(":")
+            time_str = s["time"].upper().strip()
+            is_pm = "PM" in time_str
+            is_am = "AM" in time_str
+            clean = time_str.replace("PM", "").replace("AM", "").strip()
+            time_parts = clean.split(":")
             hour = int(time_parts[0])
             minute = int(time_parts[1]) if len(time_parts) > 1 else 0
-            if "PM" in s["time"] and hour != 12:
+            if is_pm and hour != 12:
                 hour += 12
+            if is_am and hour == 12:
+                hour = 0
             start_dt = f'{s["date"]}T{hour:02d}:{minute:02d}:00'
         except (ValueError, IndexError):
-            start_dt = f'{s["date"]}T20:00:00'  # default 8pm if time is TBD
+            start_dt = f'{s["date"]}T20:00:00'  # default 8pm if time is unparseable
         event = {
             "@context": "https://schema.org",
             "@type": "MusicEvent",
@@ -149,4 +172,5 @@ print("✓ index.html updated")
 
 print(f"\nShows in JSON: {len(all_shows)} total, {len(upcoming)} upcoming")
 for s in upcoming:
-    print(f"  {s['date']}  {s['title']}")
+    flag = " [PRIVATE]" if s.get("private", False) else ""
+    print(f"  {s['date']}  {s['title']}{flag}")
