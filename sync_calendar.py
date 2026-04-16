@@ -137,6 +137,31 @@ def is_private_event(title):
     return "private party" in t or "private event" in t or "gathering" in t
 
 
+def parse_ticket_price(description):
+    """Extract ticket price from event description.
+    Looks for patterns like:
+      Tickets: $25
+      Ticket Price: $15
+      Tickets: Free
+      Ticket: $10
+    Returns the matched string (e.g. '$25', 'Free') or 'Free' if not found.
+    """
+    if not description:
+        return "Free"
+    # Match "Tickets:", "Ticket Price:", "Ticket:" followed by a price or "Free"
+    match = re.search(
+        r'tickets?(?:\s*price)?\s*:\s*(\$[\d,.]+|free)',
+        description,
+        re.IGNORECASE
+    )
+    if match:
+        val = match.group(1).strip()
+        if val.lower() == "free":
+            return "Free"
+        return val
+    return "Free"
+
+
 def calendar_event_to_show(event):
     """Convert a calendar event to a shows.json entry."""
     start_utc = datetime.fromisoformat(event["start"].replace("Z", "+00:00"))
@@ -219,6 +244,9 @@ def calendar_event_to_show(event):
     months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
               "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
+    # Parse ticket price from description
+    ticket_price = parse_ticket_price(event.get("description", ""))
+
     return {
         "date": local_start.strftime("%Y-%m-%d"),
         "day_name": day_names[local_start.weekday()],
@@ -231,6 +259,7 @@ def calendar_event_to_show(event):
         "time": time_str,
         "maps_url": maps_url,
         "private": private,
+        "ticket_price": ticket_price,
     }
 
 
@@ -292,7 +321,7 @@ def git_commit_and_push(message):
 def _detail_diffs(old_show, new_show):
     """Compare two show dicts and return list of (field, old_val, new_val) tuples."""
     diffs = []
-    for field in ["time", "venue", "address", "address_short", "title", "maps_url", "private"]:
+    for field in ["time", "venue", "address", "address_short", "title", "maps_url", "private", "ticket_price"]:
         old_val = old_show.get(field, "")
         new_val = new_show.get(field, "")
         if str(old_val) != str(new_val):

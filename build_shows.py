@@ -48,6 +48,10 @@ def build_full_cards(shows):
         lines.append(f'          <span class="month">{s["month"]}</span>')
         lines.append(f'        </div>')
         lines.append(f'        <div class="show-details">')
+        ticket_price = s.get("ticket_price", "Free")
+        price_label = "Free" if ticket_price == "Free" else ticket_price
+        price_class = "show-price-free" if ticket_price == "Free" else "show-price-paid"
+        price_html = f'<span class="show-ticket-price {price_class}">{price_label}</span>'
         if is_private:
             lines.append(f'          <h3>Private Event</h3>')
             lines.append(f'          <p class="venue-address">{s["address_short"]}</p>')
@@ -56,7 +60,7 @@ def build_full_cards(shows):
         else:
             lines.append(f'          <h3>{s["title"]}</h3>')
             lines.append(f'          <p class="venue-address">{s["venue"]}, {s["address"]}</p>')
-            lines.append(f'          <p class="show-time">{s["time"]}</p>')
+            lines.append(f'          <p class="show-time">{s["time"]} &middot; {price_html}</p>')
             lines.append(f'          <div class="show-links">')
             lines.append(f'            <a href="{s["maps_url"]}" target="_blank" rel="noopener">View on Google Maps</a>')
             share_text = f'Live Radio DFW at {s["title"]}'
@@ -78,13 +82,17 @@ def build_compact_cards(shows):
         lines.append(f'          <span class="month">{s["month"]}</span>')
         lines.append(f'        </div>')
         lines.append(f'        <div class="show-details">')
+        ticket_price = s.get("ticket_price", "Free")
+        price_label = "Free" if ticket_price == "Free" else ticket_price
+        price_class = "show-price-free" if ticket_price == "Free" else "show-price-paid"
+        price_html = f'<span class="show-ticket-price {price_class}">{price_label}</span>'
         if is_private:
             lines.append(f'          <h3>Private Event</h3>')
             lines.append(f'          <p class="venue-address">{s["address_short"]}</p>')
         else:
             lines.append(f'          <h3>{s["title"]}</h3>')
             lines.append(f'          <p class="venue-address">{s["address_short"]}</p>')
-        lines.append(f'          <p class="show-time">{s["time"]}</p>')
+        lines.append(f'          <p class="show-time">{s["time"]} &middot; {price_html}</p>')
         lines.append(f'        </div>')
         lines.append(f'      </div>')
     return "\n".join(lines)
