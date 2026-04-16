@@ -104,6 +104,19 @@
     "private": true
   },
   {
+    "date": "2026-09-19",
+    "day_name": "Sat",
+    "day_num": "19",
+    "month": "Sep",
+    "title": "Private Event",
+    "venue": "Private Event",
+    "address": "5608 Chalice Dr, Plano, TX 75024, USA",
+    "address_short": "Plano, TX",
+    "time": "7:00 PM",
+    "maps_url": "",
+    "private": true
+  },
+  {
     "date": "2026-09-26",
     "day_name": "Sat",
     "day_num": "26",
