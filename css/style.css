@@ -1704,8 +1704,8 @@ textarea.form-input {
   align-items: center;
   min-width: 72px;
   padding: var(--space-3);
-  background: var(--navy);
-  color: var(--white);
+  background: var(--red);
+  color: #ffffff;
   border-radius: var(--radius-md);
   text-transform: uppercase;
   font-family: var(--font-display);
