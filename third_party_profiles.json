@@ -42,6 +42,26 @@
       "action_items": ["Add band description", "Add photos", "Add website link (liveradiodfw.com)", "Verify Facebook event feed is populating correctly"]
     },
     {
+      "platform": "Bandsintown",
+      "url": "https://artists.bandsintown.com/artists/15643524/home",
+      "status": "active — artist page created 2026-04-16",
+      "owner": "Ray",
+      "category": "event_discovery",
+      "notes": "Artist account on artists.bandsintown.com (info@liveradiodfw.com). Separate fan account also exists. 95M+ users. Add shows manually or via bulk upload. May auto-import from Eventbrite once that's set up. Has embeddable widget for liveradiodfw.com.",
+      "backlink": true,
+      "action_items": ["Add upcoming shows", "Complete artist bio and photos", "Add website link (liveradiodfw.com)", "Explore embeddable events widget for website", "Connect Music Sync if applicable"]
+    },
+    {
+      "platform": "Eventbrite",
+      "url": null,
+      "status": "blocked — organization not provisioned (retry 2026-04-17)",
+      "owner": "Ray",
+      "category": "event_discovery",
+      "notes": "Account created with info@liveradiodfw.com but organization failed to provision (known Eventbrite issue with re-used emails). Retry tomorrow. Once working, can automate event creation from Google Calendar via connector. Free events only — no ticket fees.",
+      "backlink": true,
+      "action_items": ["Retry organization setup 2026-04-17", "Set up organizer profile once org exists", "Wire into sync_calendar.py for automated event creation"]
+    },
+    {
       "platform": "TheBash",
       "url": "https://www.thebash.com",
       "status": "cancelled",
@@ -118,13 +138,7 @@
       "priority": "high",
       "notes": "Appears in search results for '80s cover band Dallas' and 'cover bands Frisco TX'. Create under 'Musician' category."
     },
-    {
-      "platform": "Bandsintown",
-      "url": "https://www.bandsintown.com",
-      "category": "event_discovery",
-      "priority": "high",
-      "notes": "Major event discovery platform. Fans track bands and get notified of shows. Free for artists."
-    },
+
     {
       "platform": "Songkick",
       "url": "https://www.songkick.com",
