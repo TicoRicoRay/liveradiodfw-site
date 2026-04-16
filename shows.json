@@ -95,13 +95,13 @@
     "day_name": "Fri",
     "day_num": "18",
     "month": "Sep",
-    "title": "The Gathering in Allen",
-    "venue": "Gatherings® at Twin Creeks, Building G",
-    "address": "651 North Watters Road, Allen, TX",
-    "address_short": "651 N Watters Rd, Allen TX",
-    "time": "TBA",
-    "maps_url": "https://maps.google.com/?q=651+North+Watters+Road+Allen+TX",
-    "private": false
+    "title": "Private Event",
+    "venue": "Private Event",
+    "address": "Allen, TX",
+    "address_short": "Allen, TX",
+    "time": "6:00 PM",
+    "maps_url": "",
+    "private": true
   },
   {
     "date": "2026-09-26",
@@ -125,7 +125,7 @@
     "venue": "Private Event",
     "address": "1115 Vista Wy, Rockwall, TX 75087",
     "address_short": "Rockwall, TX",
-    "time": "TBA",
+    "time": "5:00 PM",
     "maps_url": "",
     "private": true
   }
