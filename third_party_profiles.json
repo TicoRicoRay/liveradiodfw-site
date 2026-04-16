@@ -1,0 +1,143 @@
+{
+  "last_updated": "2026-04-16",
+  "profiles": [
+    {
+      "platform": "Google Business Profile",
+      "url": "https://business.google.com",
+      "status": "submitted — pending approval",
+      "owner": "Ray",
+      "category": "local_seo",
+      "notes": "Full keyword-rich description, all categories, service area set. Critical for local search rankings.",
+      "backlink": true,
+      "action_items": ["Check approval status", "Add photos once approved", "Post weekly GBP updates"]
+    },
+    {
+      "platform": "GigSalad",
+      "url": "https://www.gigsalad.com",
+      "status": "submitted — pending approval",
+      "owner": "Buck (leads) / Ray (profile setup)",
+      "category": "booking_leads",
+      "notes": "Free PromoKit. Profile draft saved to Dropbox (LiveRadioDFW/gigsalad_profile_draft.md). Old band profiles (Jackson Crossing, Risky Business) need cleanup — Ray handling. Only 1 free PromoKit allowed; must delete or upgrade old ones.",
+      "backlink": true,
+      "action_items": ["Check approval status", "Clean up Jackson Crossing & Risky Business profiles", "Fill in profile once approved"]
+    },
+    {
+      "platform": "Bark.com",
+      "url": "https://www.bark.com",
+      "status": "active (Buck manages)",
+      "owner": "Buck",
+      "category": "booking_leads",
+      "notes": "Buck handles third-party leads from Bark.",
+      "backlink": false,
+      "action_items": ["Verify profile has current website URL and phone (469) 606-0798"]
+    },
+    {
+      "platform": "AllEvents.in",
+      "url": "https://allevents.in/profile/dfw-cover-band-liveradiodfw/24797256",
+      "status": "active — needs content",
+      "owner": "Ray",
+      "category": "event_discovery",
+      "notes": "Created 2026-04-16. Pulling events from Facebook feed. Currently missing: description, photos, links. 0 followers.",
+      "backlink": true,
+      "action_items": ["Add band description", "Add photos", "Add website link (liveradiodfw.com)", "Verify Facebook event feed is populating correctly"]
+    },
+    {
+      "platform": "TheBash",
+      "url": "https://www.thebash.com",
+      "status": "cancelled",
+      "owner": "n/a",
+      "category": "booking_leads",
+      "notes": "Cancelled ~2025. 90%+ leads were spam or mystery shopping. Not worth maintaining.",
+      "backlink": false,
+      "action_items": []
+    },
+    {
+      "platform": "Facebook",
+      "url": null,
+      "status": "active",
+      "owner": "Donna (social media)",
+      "category": "social_media",
+      "notes": "Donna handles social media posts. Facebook feed is source for AllEvents.in event sync.",
+      "backlink": true,
+      "action_items": ["Verify website URL and phone are current"]
+    },
+    {
+      "platform": "Instagram",
+      "url": null,
+      "status": "active",
+      "owner": "Donna (social media)",
+      "category": "social_media",
+      "notes": "Donna handles social media posts.",
+      "backlink": true,
+      "action_items": ["Verify website URL and phone are current"]
+    },
+    {
+      "platform": "YouTube",
+      "url": "https://youtu.be/1oqs2MaY1Cs",
+      "status": "active",
+      "owner": "Ray",
+      "category": "social_media",
+      "notes": "Overview video linked from GigSalad draft. Embedded videos improve SEO dwell time.",
+      "backlink": true,
+      "action_items": ["Name video files with keywords: '80s Cover Band Dallas Live Radio DFW'"]
+    }
+  ],
+  "not_yet_created": [
+    {
+      "platform": "LiveBandSchedules.com",
+      "url": "https://livebandschedules.com",
+      "category": "citation_directory",
+      "priority": "medium",
+      "notes": "Dallas-specific band schedule site, free listing"
+    },
+    {
+      "platform": "Eventective",
+      "url": "https://www.eventective.com",
+      "category": "citation_directory",
+      "priority": "medium",
+      "notes": "Dallas live musicians section"
+    },
+    {
+      "platform": "EntertainersWorldwide",
+      "url": "https://www.entertainersworldwide.com",
+      "category": "citation_directory",
+      "priority": "medium",
+      "notes": "'80s tribute bands Dallas' section"
+    },
+    {
+      "platform": "DanceBands.com",
+      "url": "https://www.dancebands.com/dallas-tx",
+      "category": "citation_directory",
+      "priority": "medium",
+      "notes": "Dallas band directory"
+    },
+    {
+      "platform": "Yelp Business",
+      "url": "https://biz.yelp.com",
+      "category": "local_seo",
+      "priority": "high",
+      "notes": "Appears in search results for '80s cover band Dallas' and 'cover bands Frisco TX'. Create under 'Musician' category."
+    },
+    {
+      "platform": "Bandsintown",
+      "url": "https://www.bandsintown.com",
+      "category": "event_discovery",
+      "priority": "high",
+      "notes": "Major event discovery platform. Fans track bands and get notified of shows. Free for artists."
+    },
+    {
+      "platform": "Songkick",
+      "url": "https://www.songkick.com",
+      "category": "event_discovery",
+      "priority": "low",
+      "notes": "Event discovery — less relevant for cover bands but still a citation source."
+    },
+    {
+      "platform": "ReverbNation",
+      "url": "https://www.reverbnation.com",
+      "category": "artist_profile",
+      "priority": "low",
+      "notes": "Artist platform. More relevant for originals bands but provides a backlink."
+    }
+  ]
+}
