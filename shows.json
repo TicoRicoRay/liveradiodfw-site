@@ -9,7 +9,8 @@
     "address": "704 Co Rd 1895, Sunset, TX  76270",
     "address_short": "704 Co Rd 1895, Sunset, TX",
     "time": "7:15 PM",
-    "maps_url": "https://maps.google.com/?q=OG+Cellars"
+    "maps_url": "https://maps.google.com/?q=OG+Cellars",
+    "private": false
   },
   {
     "date": "2026-04-25",
@@ -21,7 +22,8 @@
     "address": "5100 I-30, Fate TX 75132",
     "address_short": "5100 I-30, Fate TX",
     "time": "6:00 PM",
-    "maps_url": "https://maps.google.com/?q=Fresh+by+Brookshires+5100+I-30+Fate+TX+75132"
+    "maps_url": "https://maps.google.com/?q=Fresh+by+Brookshires+5100+I-30+Fate+TX+75132",
+    "private": false
   },
   {
     "date": "2026-05-09",
@@ -33,7 +35,8 @@
     "address": "9040 First St, Frisco TX 75033",
     "address_short": "9040 First St, Frisco TX",
     "time": "7:30 PM",
-    "maps_url": "https://maps.google.com/?q=Frisco+Rail+Yard+9040+First+St+Frisco+TX+75033"
+    "maps_url": "https://maps.google.com/?q=Frisco+Rail+Yard+9040+First+St+Frisco+TX+75033",
+    "private": false
   },
   {
     "date": "2026-05-16",
@@ -45,7 +48,8 @@
     "address": "5100 I-30, Fate TX 75132",
     "address_short": "5100 I-30, Fate TX",
     "time": "6:00 PM",
-    "maps_url": "https://maps.google.com/?q=Fresh+by+Brookshires+5100+I-30+Fate+TX+75132"
+    "maps_url": "https://maps.google.com/?q=Fresh+by+Brookshires+5100+I-30+Fate+TX+75132",
+    "private": false
   },
   {
     "date": "2026-06-06",
@@ -57,7 +61,8 @@
     "address": "970 Garden Park Dr, Allen TX 75013",
     "address_short": "970 Garden Park Dr, Allen TX",
     "time": "7:00 PM",
-    "maps_url": "https://maps.google.com/?q=Watters+Creek+Village+970+Garden+Park+Dr+Allen+TX+75013"
+    "maps_url": "https://maps.google.com/?q=Watters+Creek+Village+970+Garden+Park+Dr+Allen+TX+75013",
+    "private": false
   },
   {
     "date": "2026-06-13",
@@ -69,7 +74,8 @@
     "address": "Royse City, TX",
     "address_short": "Royse City, TX",
     "time": "8:30 PM",
-    "maps_url": "https://maps.google.com/?q=Sweetwater+Grill+Royse+City+TX"
+    "maps_url": "https://maps.google.com/?q=Sweetwater+Grill+Royse+City+TX",
+    "private": false
   },
   {
     "date": "2026-09-12",
@@ -81,7 +87,21 @@
     "address": "5100 I-30, Fate TX 75132",
     "address_short": "5100 I-30, Fate TX",
     "time": "7:00 PM",
-    "maps_url": "https://maps.google.com/?q=Fresh+by+Brookshires+5100+I-30+Fate+TX+75132"
+    "maps_url": "https://maps.google.com/?q=Fresh+by+Brookshires+5100+I-30+Fate+TX+75132",
+    "private": false
+  },
+  {
+    "date": "2026-09-18",
+    "day_name": "Fri",
+    "day_num": "18",
+    "month": "Sep",
+    "title": "The Gathering in Allen",
+    "venue": "Gatherings® at Twin Creeks, Building G",
+    "address": "651 North Watters Road, Allen, TX",
+    "address_short": "651 N Watters Rd, Allen TX",
+    "time": "TBA",
+    "maps_url": "https://maps.google.com/?q=651+North+Watters+Road+Allen+TX",
+    "private": false
   },
   {
     "date": "2026-09-26",
@@ -93,6 +113,20 @@
     "address": "204 Bolivar Street, Sanger TX 76266",
     "address_short": "204 Bolivar St, Sanger TX",
     "time": "8:00 PM",
-    "maps_url": "https://maps.google.com/?q=Uptown+Rail+Brewery+204+Bolivar+Street+Sanger+TX+76266"
+    "maps_url": "https://maps.google.com/?q=Uptown+Rail+Brewery+204+Bolivar+Street+Sanger+TX+76266",
+    "private": false
+  },
+  {
+    "date": "2026-10-31",
+    "day_name": "Sat",
+    "day_num": "31",
+    "month": "Oct",
+    "title": "Private Event",
+    "venue": "Private Event",
+    "address": "1115 Vista Wy, Rockwall, TX 75087",
+    "address_short": "Rockwall, TX",
+    "time": "TBA",
+    "maps_url": "",
+    "private": true
   }
 ]
