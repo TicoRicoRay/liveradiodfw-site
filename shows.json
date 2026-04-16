@@ -98,7 +98,7 @@
     "title": "Private Event",
     "venue": "Private Event",
     "address": "Gatherings\u00ae at Twin Creeks, Building G 651 North Watters Road",
-    "address_short": "Gatherings\u00ae at Twin Creeks, Building G 651 North Watters Road",
+    "address_short": "DFW Area",
     "time": "6:00 PM",
     "maps_url": "",
     "private": true
@@ -124,7 +124,7 @@
     "title": "Uptown Rail Brewery",
     "venue": "Uptown Rail Brewery",
     "address": "Uptown Rail Brewery, 204 Bolivar St, Sanger TX 76266",
-    "address_short": "Uptown Rail Brewery, TX",
+    "address_short": "Sanger, TX",
     "time": "8:00 PM",
     "maps_url": "https://maps.google.com/?q=Uptown+Rail+Brewery%2C+204+Bolivar+St%2C+Sanger+TX+76266",
     "private": false
