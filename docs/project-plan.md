@@ -1,6 +1,6 @@
 # Live Radio DFW — Project Plan
 
-_Last updated: 2026-04-17_
+_Last updated: 2026-04-17 (afternoon)_
 
 ## Open items
 
@@ -41,9 +41,14 @@ Bandzoogle staging (https://liveradiodfw.bandzoogle.com) plus The Bash profile s
 - Request re-indexing of `/home` redirect + `/lander`
 - Use URL inspection to force refresh on cached dead URLs
 
+### 5. Verify GitHub Pages domain challenge TXT
+The `_github-pages-challenge-TicoRicoRay` TXT record that was in the original DNS checklist is no longer present (may have been dropped during the Cloudflare migration). Low-urgency because the site is working and Cloudflare proxy protects against most takeover scenarios, but GitHub may eventually require re-verification.
+
+**Action:** Pull fresh challenge value from `liveradiodfw-site` → Settings → Pages, and add as a TXT record in Cloudflare.
+
 ## Recently completed
 
-### 2026-04-17
+### 2026-04-17 (morning)
 - ✅ Site back online via Cloudflare → GitHub Pages
 - ✅ `/lander` page built from Bandzoogle staging copy (merger announcement) + hero image
 - ✅ `/home` meta-refresh redirect to `/` (covers Google-cached /home URL)
@@ -55,7 +60,16 @@ Bandzoogle staging (https://liveradiodfw.bandzoogle.com) plus The Bash profile s
   - Strict ticket-price parser (blank + alert instead of silent "Free")
 - ✅ Dry-run verification: 10 shows, 10 events, 0 drift, 0 alerts
 - ✅ Postmortem written (Chapter 2: Apr 16-17 outage + Cloudflare fix, plus sync-wipe incident)
-- ✅ `docs` branch established on `liveradiodfw-site` repo
+
+### 2026-04-17 (afternoon)
+- ✅ `docs` branch established on `liveradiodfw-site` (README, project plan, runbooks, architecture, postmortem)
+- ✅ `architecture/sources-of-truth.md` — canonical map of where each data type lives (calendar, Mailchimp, etc.)
+- ✅ `architecture/marketing-automation.md` — monthly availability-email data flow
+- ✅ `architecture/calendar-sync.md` — show-sync data flow
+- ✅ `runbooks/edit-ticket-prices.md` — how to edit ticket prices via Google Calendar
+- ✅ `runbooks/dns-and-pages.md` — rewritten from stale `-marketing/GITHUB_PAGES_CHECKLIST.md` to match current Cloudflare→GH Pages architecture
+- ✅ Removed stale `CNAME` and stale `GITHUB_PAGES_CHECKLIST.md` from `-marketing`
+- ✅ `-marketing/README.md` rewritten — clarifies repo roles, cross-links to docs branch
 
 ## Architecture notes
 
