@@ -1050,8 +1050,12 @@ a.show-date-badge:hover {
 }
 
 .show-card-full .show-date-badge {
+  width: 80px;
+  height: 80px;
   min-width: 80px;
-  padding: var(--space-3) var(--space-4);
+  aspect-ratio: 1 / 1;
+  padding: var(--space-2);
+  align-self: flex-start;
 }
 
 .show-card-full .show-details {
