@@ -13,7 +13,7 @@ Google Apps Script Webhook
          │
          │  returns JSON {events: [...]}
          ▼
-sync_calendar.py (runs daily at 8 AM CDT via cron)
+sync_calendar.py (runs daily at 8 AM Central via cron)
          │
          ├── parses event description for ticket price
          ├── filters out non-gigs (rehearsals, personal, etc.)
@@ -53,7 +53,7 @@ r'tickets?(?:\s*price)?\s*:\s*(\$[\d,.]+|free)'
 Case-insensitive. Matches `Tickets: $25`, `Ticket Price: $15`, `Tickets: Free`, etc.
 
 ### Cron
-Runs daily at 8 AM CDT. Cron config lives on the server hosting the sync, not in this repo.
+Runs daily at 8 AM Central. Cron config lives on the server hosting the sync, not in this repo.
 
 ## Failure Modes & History
 
