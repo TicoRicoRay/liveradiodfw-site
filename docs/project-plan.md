@@ -1,6 +1,6 @@
 # Live Radio DFW — Project Plan
 
-_Last updated: 2026-04-17 · 1:53 PM Central_
+_Last updated: 2026-04-17 · 2:14 PM Central_
 
 **This file is the session-to-session handoff.** For active defects see [bugs.md](bugs.md). For planned work see [roadmap.md](roadmap.md).
 
@@ -26,17 +26,21 @@ Perplexity threads are disposable. This repo is the durable memory. To get a new
 
 _Put this at the top so next-session-me reads it first._
 
-**Context:** We spent today (2026-04-17) fixing the sync-wipe bug (non-destructive merge + strict parser), grandfathering "Tickets: Free" into the calendar, moving docs to a `docs` branch on `liveradiodfw-site`, cleaning up the `-marketing` repo, and rewriting the DNS/Pages runbook.
+**Context:** 2026-04-17 PM session was a foundation-building session, not a feature-building session. We split `project-plan.md` into three files (project-plan handoff / bugs / roadmap), hardened the "How to add" templates in `bugs.md` and `roadmap.md`, created `architecture/scheduled-tasks.md` as the durable cron inventory, logged J1-J8 (Jarvis's own blind spots) as bugs, logged B4 (calendar-host identity, deferred) and B6 (videos two-click), parked D1 (ChatGPT site audit), and closed B5 (GitHub Pages challenge TXT restored in Cloudflare).
+
+**Heads-up for the NEXT thread specifically:** Ray is opening a fresh thread to stress-test whether the foundation work actually holds up on a cold start. Expect Ray to be terse and to watch whether you (a) self-identify as Jarvis, (b) start the 60-min timer automatically, (c) read the docs before acting, (d) follow the "How to add" templates for any new bug/roadmap entry, and (e) remember the cardinal rules without being told (Central time, no em-dashes, never touch EOS calendar, GCal is source of truth for shows, Mailchimp for venue contacts, Cloudflare for DNS, no "15 minutes" estimates). If any of those fail, that is itself a bug worth logging as a new J-entry.
 
 **Top priorities right now:**
 
 1. **B1 - DST-safe sync cron.** See [bugs.md#b1](bugs.md). Ray needs to find the owning thread in Perplexity's scheduled-tasks view.
-2. **R1 - Cancel Bandzoogle.** See [roadmap.md#r1](roadmap.md). Legacy domains are already redirected; just needs Bandzoogle Domain Manager cleanup + cancellation.
-3. **B2 / R8 - Regina as attendee.** See [bugs.md#b2](bugs.md). Decision pending: manual in GCal UI vs. extending `Code.gs`.
-4. **R4 - Wildcard 301s.** See [roadmap.md#r4](roadmap.md). Waiting on Search Console export from Ray.
+2. **D1 - ChatGPT site audit.** See "Pending discussion" below. Ray has audit findings to walk through before they become bugs or roadmap items.
+3. **R1 - Cancel Bandzoogle.** See [roadmap.md#r1](roadmap.md). Legacy domains are already redirected; just needs Bandzoogle Domain Manager cleanup + cancellation.
+4. **B2 / R8 - Regina as attendee.** See [bugs.md#b2](bugs.md). Decision pending: manual in GCal UI vs. extending `Code.gs`.
+5. **R4 - Wildcard 301s.** See [roadmap.md#r4](roadmap.md). Waiting on Search Console export from Ray.
+6. **B6 - Videos two-click bug.** See [bugs.md#b6](bugs.md). Investigation-heavy; not a quick fix.
 
-**New additions (2026-04-17 PM):**
-- Bug **B4** logged: the calendar-host identity in docs (`rmyers@futurebright.com` in 4 places) is likely wrong; real canonical should probably be Outlook on `info@liveradiodfw.com`. Intentionally deferred - every calendar change turns into a multi-hour rabbit hole.
+**Recently closed:**
+- **B5 - GitHub Pages challenge TXT:** restored in Cloudflare 2026-04-17 PM, verified on three resolvers.
 
 ## 📋 Pending discussion (not yet triaged into bugs or roadmap)
 
