@@ -78,6 +78,32 @@ Bugs are prefixed by category: **B** = band/system defects, **J** = Jarvis (AI-a
 
 ---
 
+## B6. Videos on site require two clicks to play
+
+**Symptom:** Every embedded video on `liveradiodfw.com` requires two clicks to start playing. First click registers but does not initiate playback; second click plays the video.
+
+**Where:** All video players on the live site. Exact file(s) and player component not yet identified in this thread.
+
+**Impact:** Poor UX. Likely causes visitors to abandon before seeing video content. Affects fan engagement and booking-lead conversion.
+
+**Prior work:** Worked on this in a prior thread; did not reach resolution. Details of what was tried are in that thread, not yet captured here.
+
+**Likely causes to investigate:**
+- Autoplay policy interaction: many browsers require a user gesture AND muted+inline attrs before programmatic `.play()` succeeds. A first click that triggers an unmuted `.play()` can fail silently, leaving the second click to hit the native control.
+- Overlay / poster element intercepting the first click. Common pattern: a `<div>` poster layer covers the player, first click dismisses the overlay, second click actually hits the video element.
+- Event handler attached to a wrapper that calls `.play()` on the video but something else (iOS/Safari gesture chain, CORS on the video source, a Promise rejection on `.play()`) blocks playback on the first gesture.
+- Lazy-loaded `<iframe>` (e.g. YouTube embed) where first click triggers the iframe load and second click actually starts playback.
+
+**Next steps:**
+1. Identify which page(s) and which player component is used (native `<video>`, YouTube iframe, Vimeo embed, custom player)
+2. Capture console output and Network tab on first click vs. second click in Chrome DevTools
+3. Check for a poster/overlay element intercepting the first click
+4. Open the prior thread (if locatable) to recover what was already tried, to avoid re-treading
+
+**Status:** Open. Reproducible on live site. Priority TBD - nuisance level, not outage.
+
+---
+
 ## B5. Missing `_github-pages-challenge-TicoRicoRay` TXT record
 
 **Symptom:** The GitHub Pages domain-verification TXT record that was in the original DNS checklist is no longer present in Cloudflare. May have been dropped during the Cloudflare migration.
