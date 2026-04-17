@@ -25,7 +25,7 @@ Mailchimp → Venues audience → inboxes
 
 ## Cadence
 
-- **Trigger:** Windows Task Scheduler runs `run_availability.bat` every Tuesday at 9:00 AM CDT
+- **Trigger:** Windows Task Scheduler runs `run_availability.bat` every Tuesday at 9:00 AM Central
 - **Gate:** scripts internally check for "last Tuesday of the month" and exit otherwise
 - **Effective cadence:** once per month
 
