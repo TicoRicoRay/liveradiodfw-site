@@ -14,7 +14,15 @@ compares against shows.json, and:
   6. Commits and pushes to GitHub if changes were made
 
 Designed to run as a daily cron job.
-Calendar is the source of truth — all changes flow from calendar to website.
+Calendar is the source of truth — FOR CALENDAR-OWNED FIELDS ONLY.
+
+⚠️  NON-DESTRUCTIVE SYNC (updated 2026-04-17):
+  Calendar owns ONLY the fields listed in CALENDAR_OWNED_FIELDS below.
+  Any other field on a show entry (e.g. "description", future hand-curated
+  fields) is PRESERVED by the sync. When updating an existing show we
+  merge calendar-owned fields over the existing entry instead of replacing
+  the whole dict. This prevents the sync from silently wiping hand-written
+  copy on every run.
 
 GIG DETECTION RULES:
   - "LR -" prefix = confirmed LiveRadioDFW gig → auto-add to website
@@ -38,6 +46,25 @@ PASSPHRASE = "El3QSCjanehlVwDpTOO_TBS-JGC9v7nW"
 BASE = Path(__file__).parent
 ALERT_EMAIL = "info@liveradiodfw.com"
 CDT = ZoneInfo("America/Chicago")
+
+# Fields that are populated from the Google Calendar event.
+# These are the ONLY fields the sync is allowed to overwrite on existing shows.
+# Anything else on a show dict (e.g. "description") is hand-curated and must
+# be preserved across sync runs.
+CALENDAR_OWNED_FIELDS = [
+    "date",
+    "day_name",
+    "day_num",
+    "month",
+    "title",
+    "venue",
+    "address",
+    "address_short",
+    "time",
+    "maps_url",
+    "private",
+    "ticket_price",
+]
 
 # Events with these patterns in the title are NEVER gigs
 SKIP_PATTERNS = [
@@ -71,6 +98,12 @@ KNOWN_VENUES = [
     "watters creek", "sweetwater grill", "uptown rail",
     "the gathering", "3 nations",
 ]
+
+# Sentinel value returned by parse_ticket_price when no price is found.
+# We default to "" (blank) instead of "Free" so the website shows no price
+# rather than a potentially wrong one. The missing-info pathway notifies
+# info@liveradiodfw.com so a human can add "Tickets: $XX" to the calendar.
+TICKET_PRICE_MISSING = ""
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -146,10 +179,12 @@ def parse_ticket_price(description):
       Ticket Price: $15
       Tickets: Free
       Ticket: $10
-    Returns the matched string (e.g. '$25', 'Free') or 'Free' if not found.
+    Returns the matched string (e.g. '$25', 'Free') OR TICKET_PRICE_MISSING ('')
+    if no price directive is found in the description. Callers can treat
+    TICKET_PRICE_MISSING as "needs human attention" and surface an alert.
     """
     if not description:
-        return "Free"
+        return TICKET_PRICE_MISSING
     # Match "Tickets:", "Ticket Price:", "Ticket:" followed by a price or "Free"
     match = re.search(
         r'tickets?(?:\s*price)?\s*:\s*(\$[\d,.]+|free)',
@@ -161,7 +196,7 @@ def parse_ticket_price(description):
         if val.lower() == "free":
             return "Free"
         return val
-    return "Free"
+    return TICKET_PRICE_MISSING
 
 
 def calendar_event_to_show(event):
@@ -272,6 +307,14 @@ def check_missing_info(show, event):
         missing.append("Venue address/location")
     if show["time"] == "TBA":
         missing.append("Start time (calendar event has no specific time set)")
+    # Ticket price is required on PUBLIC events. Private events intentionally
+    # have no price displayed. TICKET_PRICE_MISSING ('') means the parser
+    # couldn't find "Tickets: $XX" (or "Tickets: Free") in the description.
+    if not show.get("private") and show.get("ticket_price", "") == TICKET_PRICE_MISSING:
+        missing.append(
+            "Ticket price (add a line like 'Tickets: $25' or 'Tickets: Free' "
+            "to the calendar event description)"
+        )
     return missing
 
 
@@ -321,14 +364,31 @@ def git_commit_and_push(message):
 # ── Main Sync ─────────────────────────────────────────────────────────────────
 
 def _detail_diffs(old_show, new_show):
-    """Compare two show dicts and return list of (field, old_val, new_val) tuples."""
+    """Compare two show dicts across calendar-owned fields only.
+    Returns list of (field, old_val, new_val) tuples.
+    Hand-curated fields (anything outside CALENDAR_OWNED_FIELDS) are
+    intentionally ignored — they can't drift out of sync because the
+    sync never touches them.
+    """
     diffs = []
-    for field in ["time", "venue", "address", "address_short", "title", "maps_url", "private", "ticket_price"]:
+    for field in CALENDAR_OWNED_FIELDS:
         old_val = old_show.get(field, "")
         new_val = new_show.get(field, "")
         if str(old_val) != str(new_val):
             diffs.append((field, old_val, new_val))
     return diffs
+
+
+def _merge_calendar_fields(existing, fresh):
+    """Return a copy of `existing` with only CALENDAR_OWNED_FIELDS overwritten
+    by values from `fresh`. Preserves every other key on `existing`
+    (descriptions, flyer paths, or any future hand-curated fields).
+    """
+    merged = dict(existing)  # start with EVERYTHING the user/site has
+    for field in CALENDAR_OWNED_FIELDS:
+        if field in fresh:
+            merged[field] = fresh[field]
+    return merged
 
 
 async def main():
@@ -353,7 +413,7 @@ async def main():
 
     # 4. Convert to show entries and compare
     adds = []
-    updates = []       # list of (old_show, new_show, diffs)
+    updates = []       # list of (old_show, merged_show, diffs)
     missing_info = []
 
     cal_dates = set()  # track all calendar gig dates for deletion check
@@ -372,11 +432,13 @@ async def main():
             adds.append(show)
             print(f"  + NEW: {show['title']} on {show['date']}")
         else:
-            # Existing show — check for detail changes
+            # Existing show — check for detail changes in calendar-owned fields.
+            # Merge instead of replace so we don't wipe hand-curated fields.
             old_show = current_by_date[show["date"]]
             diffs = _detail_diffs(old_show, show)
             if diffs:
-                updates.append((old_show, show, diffs))
+                merged = _merge_calendar_fields(old_show, show)
+                updates.append((old_show, merged, diffs))
                 print(f"  ~ UPDATED: {show['title']} on {show['date']}")
                 for field, old_val, new_val in diffs:
                     print(f"      {field}: '{old_val}' → '{new_val}'")
@@ -406,15 +468,16 @@ async def main():
         current_shows = [s for s in current_shows if s["date"] not in removal_dates]
         commit_parts.extend(f"Removed {s['title']} ({s['date']})" for s in removals)
 
-    # 6c. Updates (overwrite old show with new calendar data)
+    # 6c. Updates — merge calendar-owned fields into existing entry,
+    #     preserving all hand-curated fields (description, etc.).
     if updates:
-        for old_show, new_show, diffs in updates:
+        for old_show, merged_show, diffs in updates:
             for i, s in enumerate(current_shows):
-                if s["date"] == new_show["date"]:
-                    current_shows[i] = new_show
+                if s["date"] == merged_show["date"]:
+                    current_shows[i] = merged_show
                     break
             changed_fields = ", ".join(f[0] for f in diffs)
-            commit_parts.append(f"Updated {new_show['title']} ({new_show['date']}): {changed_fields}")
+            commit_parts.append(f"Updated {merged_show['title']} ({merged_show['date']}): {changed_fields}")
 
     if adds or removals or updates:
         current_shows.sort(key=lambda s: s["date"])
@@ -469,8 +532,11 @@ async def main():
             "The daily calendar sync made the following changes:\n\n"
             + "\n\n".join(email_parts)
             + "\n\n"
-            "Calendar is the source of truth — all changes flow automatically.\n"
-            "If anything looks wrong, update the calendar and it will\n"
+            "Calendar is the source of truth for scheduling fields (time, venue,\n"
+            "address, title, maps_url, private, ticket_price). All other fields on\n"
+            "show pages (e.g. marketing descriptions) are hand-curated and are\n"
+            "preserved across every sync.\n\n"
+            "If anything above looks wrong, update the calendar and it will\n"
             "be corrected at the next sync (daily at 8 AM CDT).\n\n"
             "— Jarvis (LiveRadioDFW Calendar Sync)"
         )
