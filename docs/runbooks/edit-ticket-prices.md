@@ -24,7 +24,7 @@ Do NOT edit `shows.json` or individual show HTML pages by hand — the nightly s
    ```
 
 5. Save.
-6. The site updates automatically on the next daily sync (**8 AM CDT**). To push it sooner, run `sync_calendar.py` manually.
+6. The site updates automatically on the next daily sync (**8 AM Central**). To push it sooner, run `sync_calendar.py` manually.
 
 ## Accepted formats
 
