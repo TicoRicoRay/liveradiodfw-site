@@ -1,6 +1,42 @@
 # Live Radio DFW — Project Plan
 
-_Last updated: 2026-04-17 (late morning Central)_
+_Last updated: 2026-04-17 · 11:30 AM Central_
+
+## 🔖 Pick up here next session
+
+_Put this at the top so next-session-me reads it first._
+
+**Context:** We spent today (2026-04-17) fixing the sync-wipe bug (non-destructive merge + strict parser), grandfathering "Tickets: Free" into the calendar, moving docs to a `docs` branch on `liveradiodfw-site`, cleaning up the `-marketing` repo, and rewriting the DNS/Pages runbook.
+
+**Top priority open items (in order):**
+
+1. **Locate the auto-sync trigger** (open item #6). A GitHub identity `LiveRadioDFW <info@liveradiodfw.com>` pushes auto-sync commits around 13:11 UTC daily (≈ 8:11 AM Central). NOT a GitHub Action (verified — only `pages-build-deployment` runs in Actions). NOT on Ray's manual trigger. Therefore: some external machine runs `sync_calendar.py` on a schedule via HTTPS+PAT. Likely candidates (check in this order):
+   - Ray's Windows box (same one that runs the availability email via Task Scheduler — see `-marketing/setup_task_scheduler.ps1`)
+   - A Linux/Mac box Ray used to set this up
+   - A small VPS
+   Once located, document in [architecture/calendar-sync.md](architecture/calendar-sync.md) and verify DST-safety.
+
+2. **Bandzoogle domain migrations** (open item #1). Still blocks canceling Bandzoogle subscription.
+
+3. **Wildcard 301s for cached URLs** (open item #2). Waiting on Google Search Console list from Ray.
+
+**Don't break:**
+- The band Google Calendar is the source of truth for shows. Never hand-edit `shows.json` or `shows/*.html`.
+- The EOS calendar is NOT band-related. Never touch it. Ever.
+- Venue contacts live in **Mailchimp**, not this repo.
+- DNS lives in **Cloudflare**, not GoDaddy.
+- `liveradiodfw.com` is served from the `gh-pages` branch (with CNAME → `www.liveradiodfw.com`). The `docs` branch is never served.
+
+**Nomenclature:** Always say "Central" / "America/Chicago". Never CDT/CST.
+
+**Ray's pet peeves that matter:**
+- "Not EOS" (don't read his EOS calendar looking for band stuff)
+- "Fix foundation before wall decorations" (don't add features until the base is solid)
+- "We're doing surgery here" (be precise, no guessing)
+- Never promise "15 minutes"
+
+---
+
 
 ## Open items
 
@@ -46,8 +82,8 @@ The `_github-pages-challenge-TicoRicoRay` TXT record that was in the original DN
 
 **Action:** Pull fresh challenge value from `liveradiodfw-site` → Settings → Pages, and add as a TXT record in Cloudflare.
 
-### 6. Locate the `sync_calendar.py` cron and verify DST-safety
-A GitHub identity named `LiveRadioDFW` commits auto-sync updates to `gh-pages` daily around 13:11 UTC (≈ 8:11 AM Central in summer). Owner/location of this cron is unknown as of 2026-04-17 — possibly on Ray's Windows box, possibly on a VPS, possibly a GitHub Action.
+### 6. Locate the `sync_calendar.py` auto-trigger and verify DST-safety
+A GitHub identity `LiveRadioDFW <info@liveradiodfw.com>` (**not** a GitHub user account — verified via API: `author: null`, commits are `unsigned`) pushes auto-sync commits to `gh-pages` around 13:11 UTC daily (≈ 8:11 AM Central in summer). **Confirmed NOT a GitHub Action** — only `pages-build-deployment` runs in Actions. Therefore the script runs on an external machine via HTTPS+PAT, using git config `user.name=LiveRadioDFW` and `user.email=info@liveradiodfw.com`.
 
 **Why it matters:** If the cron runs at a fixed UTC time, it will drift by one hour in winter (fires at 7:11 AM Central instead of 8:11). Not a fire, but worth fixing.
 
