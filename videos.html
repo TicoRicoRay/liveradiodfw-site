@@ -64,6 +64,7 @@
       background-position: center;
       background-size: 32px 32px;
       transition: background-color 0.2s;
+      pointer-events: none;
     }
     .lite-yt:hover::after {
       background-color: rgba(200,48,60,0.97);
@@ -225,6 +226,7 @@
     // Click-to-load lite YouTube embeds
     document.querySelectorAll('.lite-yt').forEach(function(el) {
       el.addEventListener('click', function() {
+        if (el.classList.contains('playing')) return;
         var vid = el.getAttribute('data-vid');
         var iframe = document.createElement('iframe');
         iframe.src = 'https://www.youtube.com/embed/' + vid + '?autoplay=1&rel=0';
