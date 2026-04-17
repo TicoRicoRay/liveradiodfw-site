@@ -2,13 +2,65 @@
 
 _Last updated: 2026-04-17_
 
-Current known defects and correctness issues. Each bug lists symptom, where it manifests, workaround, fix options, and status.
+Current known defects and correctness issues. Fixed bugs move to [postmortems/](postmortems/) or the "Recently completed" section of [project-plan.md](project-plan.md). For planned work that isn't a defect, see [roadmap.md](roadmap.md).
 
-This is the live bug list. Fixed bugs move to [postmortems/](postmortems/) or to the "Recently completed" section of [project-plan.md](project-plan.md).
+---
 
-For planned work that isn't a defect, see [roadmap.md](roadmap.md).
+## How to add a bug (READ BEFORE ADDING)
 
-Bugs are prefixed by category: **B** = band/system defects, **J** = Jarvis (AI-agent) blind spots and tool limitations that affect this project.
+All new bug entries must follow these rules. No exceptions - consistency is the whole point of this file.
+
+### 1. Pick the correct prefix
+
+| Prefix | Meaning |
+|---|---|
+| **B** | Band/system defect. Something about the site, sync, email, DNS, webhook, data, or any other non-AI part of the project is broken or wrong. |
+| **J** | Jarvis (AI-agent) blind spot or tool limitation that affects this project. Use only when the defect is in how Jarvis or Perplexity operates. |
+
+Planned work (enhancements, new features, migrations) does NOT go here. It goes to [roadmap.md](roadmap.md) with an **R** prefix. Items awaiting Ray+Jarvis discussion go to the "Pending discussion" section of [project-plan.md](project-plan.md) with a **D** prefix.
+
+### 2. Pick the next sequential number
+
+Scan the existing headings **and** find the highest number for that prefix. Add 1. Do not reuse numbers. Do not skip numbers. The B-series and J-series are numbered independently (B7 and J9 can coexist).
+
+### 3. Use this entry template
+
+```
+## B<n>. <Short imperative title, no period>
+
+**Symptom:** One or two sentences describing what's observed.
+
+**Where:** Specific file(s), page(s), component(s), or system(s) where the bug manifests. Be precise.
+
+**Impact:** What breaks for users, Ray, or operations. Why it matters.
+
+**Workaround:** What to do today to avoid the bug, if anything. "None" is a valid answer.
+
+**Fix options:** Proposed approaches, ordered from simplest to most invasive. Include trade-offs.
+
+**Status:** Open / Decision-pending / Intentionally deferred / Fixed (<date>).
+```
+
+All six sections are required. Use "Unknown" or "TBD" if a field genuinely cannot be filled yet, but do not omit the field.
+
+### 4. Commit message format
+
+```
+docs: log B<n> - <short title>
+```
+
+Example: `docs: log B7 - newsletter signup fails on iOS Safari`
+
+### 5. After adding
+
+- Commit to the `docs` branch
+- Push
+- Reply to Ray with the bug ID and commit link
+- If the bug is top-priority, also update the "Top priorities right now" list in [project-plan.md](project-plan.md)
+
+### 6. If in doubt, ask Ray
+
+A half-complete bug entry is worse than no entry. If symptom or impact aren't clear, ask before writing.
 
 ---
 

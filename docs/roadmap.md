@@ -4,8 +4,47 @@ _Last updated: 2026-04-17_
 
 Future plans, grouped by theme. Things we've decided or want to do but haven't scheduled.
 
-For live defects, see [bugs.md](bugs.md).
-For session-to-session handoff and "pick up here next time", see [project-plan.md](project-plan.md).
+For live defects, see [bugs.md](bugs.md). For session-to-session handoff and "pick up here next time", see [project-plan.md](project-plan.md).
+
+---
+
+## How to add a roadmap item (READ BEFORE ADDING)
+
+### 1. This list is for PLANNED WORK only
+
+Not defects. Not urgent patches. If it's broken, it belongs in [bugs.md](bugs.md) with a **B** prefix (or **J** if it's a Jarvis limitation). If it's something Ray wants to discuss before deciding, it belongs in [project-plan.md](project-plan.md) under "Pending discussion" with a **D** prefix.
+
+### 2. Pick the next sequential R number
+
+Scan all existing `### R<n>.` headings in this file, find the highest number, add 1. No reuse, no skipping.
+
+### 3. Use this entry template
+
+```
+### R<n>. <Short title, no period>
+
+<1-3 sentences of context: what's the goal and why.>
+
+**Plan:** (or **Action:** / bullet list of steps)
+
+**Depends on:** Anything that must happen first. "None" is valid.
+
+**Priority:** High / Medium / Low / Parked.
+```
+
+Group under the right theme heading (Ops / infrastructure, SEO / content, Marketing automation, Decisions pending, Parked / someday-maybe). Create a new theme section only if the item genuinely doesn't fit an existing one.
+
+### 4. Commit message format
+
+```
+docs: add R<n> - <short title>
+```
+
+### 5. After adding
+
+- Commit to the `docs` branch, push
+- Reply to Ray with the R ID and commit link
+- If this item is high-priority and actionable now, also mention it in the "Top priorities right now" list in [project-plan.md](project-plan.md)
 
 ---
 
