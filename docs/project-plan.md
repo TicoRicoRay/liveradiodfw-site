@@ -1,6 +1,6 @@
 # Live Radio DFW — Project Plan
 
-_Last updated: 2026-04-17 (afternoon)_
+_Last updated: 2026-04-17 (late morning Central)_
 
 ## Open items
 
@@ -46,6 +46,21 @@ The `_github-pages-challenge-TicoRicoRay` TXT record that was in the original DN
 
 **Action:** Pull fresh challenge value from `liveradiodfw-site` → Settings → Pages, and add as a TXT record in Cloudflare.
 
+### 6. Locate the `sync_calendar.py` cron and verify DST-safety
+A GitHub identity named `LiveRadioDFW` commits auto-sync updates to `gh-pages` daily around 13:11 UTC (≈ 8:11 AM Central in summer). Owner/location of this cron is unknown as of 2026-04-17 — possibly on Ray's Windows box, possibly on a VPS, possibly a GitHub Action.
+
+**Why it matters:** If the cron runs at a fixed UTC time, it will drift by one hour in winter (fires at 7:11 AM Central instead of 8:11). Not a fire, but worth fixing.
+
+**Action:**
+- Locate where the sync runs (check Ray's Windows Task Scheduler, any Linux boxes, GitHub Actions in the repo, etc.)
+- If on Linux cron: add `CRON_TZ=America/Chicago` at top of crontab so `0 8 * * *` stays DST-correct
+- If on Windows Task Scheduler: already tracks local time, just verify trigger is set to Central
+- If GitHub Actions: use a timezone-aware action or accept the winter shift
+- Once located, document in [architecture/calendar-sync.md](architecture/calendar-sync.md)
+
+### 7. Timezone convention
+Going forward: all documentation uses **"Central"** or **"America/Chicago"**, never "CDT" or "CST". The DST-named variants cause ambiguity and silent off-by-an-hour bugs.
+
 ## Recently completed
 
 ### 2026-04-17 (morning)
@@ -70,6 +85,10 @@ The `_github-pages-challenge-TicoRicoRay` TXT record that was in the original DN
 - ✅ `runbooks/dns-and-pages.md` — rewritten from stale `-marketing/GITHUB_PAGES_CHECKLIST.md` to match current Cloudflare→GH Pages architecture
 - ✅ Removed stale `CNAME` and stale `GITHUB_PAGES_CHECKLIST.md` from `-marketing`
 - ✅ `-marketing/README.md` rewritten — clarifies repo roles, cross-links to docs branch
+
+### 2026-04-17 (late morning)
+- ✅ Swept all docs-branch files to use "Central" instead of CDT/CST (DST-safe terminology)
+- ✅ Identified that `LiveRadioDFW` GitHub identity owns the daily auto-sync cron (location TBD — see open item #6)
 
 ## Architecture notes
 
