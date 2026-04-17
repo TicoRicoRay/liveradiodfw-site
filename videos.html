@@ -11,10 +11,10 @@
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Watch Live Radio DFW | 70s & 80s Cover Band Videos</title>
-  <meta name="description" content="See Live Radio DFW in action — watch live performance videos of your favorite 70s and 80s hits covered by DFW's top variety cover band.">
+  <meta name="description" content="See Live Radio DFW in action - watch live performance videos of your favorite 70s and 80s hits covered by DFW's top variety cover band.">
   <link rel="canonical" href="https://liveradiodfw.com/videos">
-  <meta property="og:title" content="Watch Live Radio DFW — Cover Band Performance Videos | DFW">
-  <meta property="og:description" content="Watch Live Radio DFW perform live — 5-piece 80s/90s cover band based in DFW Texas.">
+  <meta property="og:title" content="Watch Live Radio DFW - Cover Band Performance Videos | DFW">
+  <meta property="og:description" content="Watch Live Radio DFW perform live - 5-piece 80s/90s cover band based in DFW Texas.">
   <meta property="og:image" content="img/logo.jpg">
   <meta property="og:url" content="https://liveradiodfw.com/videos">
   <meta property="og:type" content="website">
@@ -67,6 +67,12 @@
     }
     .lite-yt:hover::after {
       background-color: rgba(200,48,60,0.97);
+    }
+    .lite-yt.playing::after {
+      display: none;
+    }
+    .lite-yt.playing {
+      cursor: default;
     }
     .lite-yt iframe {
       position: absolute;
@@ -175,7 +181,7 @@
         <div class="lite-yt" data-vid="1oqs2MaY1Cs">
           <img class="yt-thumb" src="https://i.ytimg.com/vi/1oqs2MaY1Cs/hqdefault.jpg" alt="Live Radio DFW Overview" loading="eager">
         </div>
-        <p class="video-embed-label">Live Radio DFW &mdash; Band Overview</p>
+        <p class="video-embed-label">Live Radio DFW - Band Overview</p>
       </div>
 
       <div class="video-embed-item">
@@ -203,7 +209,7 @@
         <div class="lite-yt" data-vid="W7J7dZP-0iI">
           <img class="yt-thumb" src="https://i.ytimg.com/vi/W7J7dZP-0iI/hqdefault.jpg" alt="Rio covered by Live Radio DFW" loading="lazy">
         </div>
-        <p class="video-embed-label">Rio &mdash; Duran Duran</p>
+        <p class="video-embed-label">Rio - Duran Duran</p>
       </div>
 
       <div class="video-embed-item">
@@ -225,9 +231,9 @@
         iframe.allow = 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture';
         iframe.allowFullscreen = true;
         iframe.title = el.querySelector('img').alt;
-        // Remove thumbnail and play button, insert iframe
+        // Remove thumbnail, hide play-button overlay, insert iframe
         el.innerHTML = '';
-        el.style.cursor = 'default';
+        el.classList.add('playing');
         el.appendChild(iframe);
       });
     });
