@@ -173,15 +173,15 @@
       </div>
     </div>
     <script>
+    var tag=document.createElement('script');tag.src='https://www.youtube.com/iframe_api';document.head.appendChild(tag);
+    var ytReady=new Promise(function(r){window.onYouTubeIframeAPIReady=r;});
     document.querySelectorAll('.press-kit-videos .lite-yt, .video-grid .lite-yt').forEach(function(el){
       if(el.dataset.listenerAdded) return; el.dataset.listenerAdded=1;
       el.addEventListener('click',function(){if(el.classList.contains('playing'))return;
         var vid=el.getAttribute('data-vid');
-        var iframe=document.createElement('iframe');
-        iframe.src='https://www.youtube.com/embed/'+vid+'?autoplay=1&rel=0';
-        iframe.allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture';
-        iframe.allowFullscreen=true;
-        el.innerHTML=''; el.classList.add('playing'); el.appendChild(iframe);
+        el.innerHTML=''; el.classList.add('playing');
+        var ph=document.createElement('div');ph.id='yt-'+vid;el.appendChild(ph);
+        ytReady.then(function(){new YT.Player(ph.id,{videoId:vid,playerVars:{autoplay:1,rel:0,playsinline:1},events:{onReady:function(e){e.target.playVideo();}}});});
       });
     });
     </script>

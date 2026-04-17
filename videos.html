@@ -223,20 +223,34 @@
     </div>
 
     <script>
+    // Load YouTube IFrame API
+    var tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    document.head.appendChild(tag);
+    var ytReady = new Promise(function(resolve) {
+      window.onYouTubeIframeAPIReady = resolve;
+    });
+
     // Click-to-load lite YouTube embeds
     document.querySelectorAll('.lite-yt').forEach(function(el) {
       el.addEventListener('click', function() {
         if (el.classList.contains('playing')) return;
         var vid = el.getAttribute('data-vid');
-        var iframe = document.createElement('iframe');
-        iframe.src = 'https://www.youtube.com/embed/' + vid + '?autoplay=1&rel=0';
-        iframe.allow = 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture';
-        iframe.allowFullscreen = true;
-        iframe.title = el.querySelector('img').alt;
-        // Remove thumbnail, hide play-button overlay, insert iframe
+        var title = el.querySelector('img').alt;
         el.innerHTML = '';
         el.classList.add('playing');
-        el.appendChild(iframe);
+        var placeholder = document.createElement('div');
+        placeholder.id = 'yt-' + vid;
+        el.appendChild(placeholder);
+        ytReady.then(function() {
+          new YT.Player(placeholder.id, {
+            videoId: vid,
+            playerVars: { autoplay: 1, rel: 0, playsinline: 1 },
+            events: {
+              onReady: function(e) { e.target.playVideo(); }
+            }
+          });
+        });
       });
     });
     </script>
