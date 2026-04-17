@@ -52,3 +52,23 @@ Band fees, splits, 1099s, tax records — stored outside this repo. Nothing fina
 
 - Runbooks, postmortems, architecture notes, project plan
 - Public — nothing sensitive
+
+## Marketing Automation & Assets
+
+**Source of truth: the [`liveradiodfw-marketing`](https://github.com/TicoRicoRay/liveradiodfw-marketing) repo** (`master` branch)
+
+- Monthly venue-availability email automation (`liveradiodfw_availability.py`, `send_availability_email.py`, `run_availability.bat`, `setup_task_scheduler.ps1`)
+- Mailchimp email templates (`email_template_draft.html`, `new_template.html`)
+- Marketing style guide
+- Setlist/theme analysis
+- Merger intro campaign drafts
+
+**Does NOT serve the website.** See [architecture/marketing-automation.md](marketing-automation.md) for the availability-email data flow.
+
+## Repo map
+
+| Repo | Branch | Role |
+|------|--------|------|
+| `liveradiodfw-site` | `gh-pages` | Live website (liveradiodfw.com) |
+| `liveradiodfw-site` | `docs` | This branch — docs, runbooks, postmortems, architecture notes |
+| `liveradiodfw-marketing` | `master` | Monthly availability-email automation + marketing assets |
