@@ -1,6 +1,24 @@
 # Live Radio DFW — Project Plan
 
-_Last updated: 2026-04-17 · 11:35 AM Central_
+_Last updated: 2026-04-17 · 11:38 AM Central_
+
+
+## 🚀 Starting a new session
+
+Perplexity threads are disposable. This repo is the durable memory. To get a new agent up to speed fast, paste this as your first message:
+
+> **Band marketing work on Live Radio DFW. Before anything else, read https://github.com/TicoRicoRay/liveradiodfw-site/tree/docs — start with `docs/project-plan.md` (especially "Pick up here next session"), then skim `docs/architecture/sources-of-truth.md` and `docs/runbooks/`. Then [today's task].**
+
+**Rules of engagement you should remind the agent of if they slip:**
+- Google Calendar is the source of truth for shows. Never hand-edit `shows.json` or `shows/*.html`.
+- Venue contacts + negotiations live in **Mailchimp**.
+- DNS is on **Cloudflare** (GoDaddy is registrar only).
+- **Never read the EOS calendar** — it's personal and unrelated to the band.
+- Always say **"Central"** or **"America/Chicago"** — never CDT/CST.
+- Fix the foundation before the wall decorations.
+
+---
+
 
 ## 🔖 Pick up here next session
 
