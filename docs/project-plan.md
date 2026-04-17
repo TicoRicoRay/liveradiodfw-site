@@ -1,6 +1,6 @@
 # Live Radio DFW — Project Plan
 
-_Last updated: 2026-04-17 · 1:38 PM Central_
+_Last updated: 2026-04-17 · 1:53 PM Central_
 
 **This file is the session-to-session handoff.** For active defects see [bugs.md](bugs.md). For planned work see [roadmap.md](roadmap.md).
 
@@ -37,6 +37,21 @@ _Put this at the top so next-session-me reads it first._
 
 **New additions (2026-04-17 PM):**
 - Bug **B4** logged: the calendar-host identity in docs (`rmyers@futurebright.com` in 4 places) is likely wrong; real canonical should probably be Outlook on `info@liveradiodfw.com`. Intentionally deferred - every calendar change turns into a multi-hour rabbit hole.
+
+## 📋 Pending discussion (not yet triaged into bugs or roadmap)
+
+Things Ray has surfaced that need a Ray+Jarvis conversation before they become specific bug entries or roadmap items. Do NOT auto-action these - they are the input side of the prioritize / root-cause / discuss / solve workflow.
+
+### D1. ChatGPT site audit findings (2026-04-17)
+Ray ran a site audit through ChatGPT and it surfaced useful observations. Ray wants to discuss the findings with Jarvis before triaging them into specific bugs (defects) or roadmap items (enhancements). When this gets picked up:
+
+- Ray pastes or summarizes the audit output
+- Jarvis and Ray walk through each finding: is it a real defect, a nice-to-have, or noise?
+- Real defects go to [bugs.md](bugs.md) with a B-prefix
+- Enhancements go to [roadmap.md](roadmap.md) with an R-prefix
+- Any that are noise or duplicates of existing items get explicitly noted and closed out
+
+**Status:** Awaiting Ray to bring the findings into a session.
 
 **Don't break:**
 - The band Google Calendar is the source of truth for shows. Never hand-edit `shows.json` or `shows/*.html`.
