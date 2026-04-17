@@ -94,21 +94,7 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   // --- Share Buttons ---
-  document.querySelectorAll('[data-share]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var text = btn.getAttribute('data-share');
-      var url = window.location.href;
-      if (navigator.share) {
-        navigator.share({ title: text, url: url });
-      } else {
-        navigator.clipboard.writeText(url).then(function () {
-          var original = btn.textContent;
-          btn.textContent = 'Link Copied!';
-          setTimeout(function () { btn.textContent = original; }, 2000);
-        });
-      }
-    });
-  });
+  // Handled by show-actions.js (enhanced share with dropdown + Add to Calendar)
 
   // --- Scroll animations ---
   // Immediately reveal any fade-in elements already in viewport on load

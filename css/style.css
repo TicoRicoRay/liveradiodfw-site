@@ -1834,6 +1834,130 @@ textarea.form-input {
   line-height: 1.7;
 }
 
+/* --- Add to Calendar button --- */
+.btn-calendar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: var(--space-3) var(--space-6);
+  background: transparent;
+  color: var(--navy, #1a1a2e);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 2px solid var(--navy, #1a1a2e);
+  border-radius: var(--radius-full);
+  transition: background var(--transition), color var(--transition);
+  text-decoration: none;
+  cursor: pointer;
+}
+.btn-calendar:hover {
+  background: var(--navy, #1a1a2e);
+  color: #ffffff;
+}
+[data-theme="dark"] .btn-calendar {
+  color: #ffffff;
+  border-color: #ffffff;
+}
+[data-theme="dark"] .btn-calendar:hover {
+  background: #ffffff;
+  color: #1a1a2e;
+}
+.btn-calendar svg {
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+}
+
+/* --- Share button (show cards) --- */
+.btn-share-inline {
+  position: relative;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  text-decoration: underline;
+  font-family: var(--font-body);
+}
+
+/* --- Share button (show page) --- */
+.btn-share {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: var(--space-3) var(--space-6);
+  background: transparent;
+  color: var(--navy, #1a1a2e);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 2px solid var(--navy, #1a1a2e);
+  border-radius: var(--radius-full);
+  transition: background var(--transition), color var(--transition);
+  cursor: pointer;
+  position: relative;
+}
+.btn-share:hover {
+  background: var(--navy, #1a1a2e);
+  color: #ffffff;
+}
+[data-theme="dark"] .btn-share {
+  color: #ffffff;
+  border-color: #ffffff;
+}
+[data-theme="dark"] .btn-share:hover {
+  background: #ffffff;
+  color: #1a1a2e;
+}
+.btn-share svg {
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+}
+
+/* --- Share dropdown --- */
+.share-dropdown {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  z-index: 100;
+  min-width: 140px;
+  overflow: hidden;
+}
+[data-theme="dark"] .share-dropdown {
+  background: #252540;
+  border-color: #3a3a55;
+}
+.share-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  font-size: var(--text-sm);
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  transition: background 120ms;
+}
+.share-dropdown-item:hover {
+  background: var(--light-bg);
+}
+[data-theme="dark"] .share-dropdown-item:hover {
+  background: #1e1e30;
+}
+
 @media (max-width: 640px) {
   .show-page-hero {
     flex-direction: column;
@@ -1845,5 +1969,9 @@ textarea.form-input {
     gap: var(--space-2);
     min-width: auto;
     justify-content: center;
+  }
+  .share-dropdown {
+    left: 0;
+    transform: none;
   }
 }

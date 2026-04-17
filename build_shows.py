@@ -16,6 +16,7 @@ Usage:
 import json
 import re
 from datetime import date, datetime
+from html import escape as html_escape
 from pathlib import Path
 
 BASE = Path(__file__).parent
@@ -79,8 +80,14 @@ def build_full_cards(shows):
             lines.append(f'          <div class="show-links">')
             lines.append(f'            <a href="{show_page_url}">Show Details</a>')
             lines.append(f'            <a href="{s["maps_url"]}" target="_blank" rel="noopener">Directions</a>')
-            share_text = f'Live Radio DFW at {s["title"]}'
-            lines.append(f'            <button data-share="{share_text}" style="background:none;border:none;color:var(--text-secondary);font-size:var(--text-xs);cursor:pointer;text-decoration:underline;">Share</button>')
+            venue_esc = html_escape(s['venue'], quote=True)
+            addr_esc = html_escape(s['address'], quote=True)
+            title_esc = html_escape(s['title'], quote=True)
+            cal_title = f'Live Radio DFW at {venue_esc}'
+            lines.append(f'            <button class="btn-share-inline" data-cal-title="{cal_title}" data-cal-date="{s["date"]}" data-cal-time="{s["time"]}" data-cal-venue="{venue_esc}" data-cal-address="{addr_esc}">Add to Calendar</button>')
+            share_text = f'Live Radio DFW at {title_esc}'
+            share_url = f'https://liveradiodfw.com/{show_page_url}'
+            lines.append(f'            <button class="btn-share-inline" data-share="{share_text}" data-share-url="{share_url}">Share</button>')
             lines.append(f'          </div>')
         lines.append(f'        </div>')
         lines.append(f'      </div>')
