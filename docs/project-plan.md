@@ -1,6 +1,6 @@
 # Live Radio DFW — Project Plan
 
-_Last updated: 2026-04-17 · 2:14 PM Central_
+_Last updated: 2026-04-17 · 2:19 PM Central_
 
 **This file is the session-to-session handoff.** For active defects see [bugs.md](bugs.md). For planned work see [roadmap.md](roadmap.md).
 
@@ -28,7 +28,7 @@ _Put this at the top so next-session-me reads it first._
 
 **Context:** 2026-04-17 PM session was a foundation-building session, not a feature-building session. We split `project-plan.md` into three files (project-plan handoff / bugs / roadmap), hardened the "How to add" templates in `bugs.md` and `roadmap.md`, created `architecture/scheduled-tasks.md` as the durable cron inventory, logged J1-J8 (Jarvis's own blind spots) as bugs, logged B4 (calendar-host identity, deferred) and B6 (videos two-click), parked D1 (ChatGPT site audit), and closed B5 (GitHub Pages challenge TXT restored in Cloudflare).
 
-**Heads-up for the NEXT thread specifically:** Ray is opening a fresh thread to stress-test whether the foundation work actually holds up on a cold start. Expect Ray to be terse and to watch whether you (a) self-identify as Jarvis, (b) start the 60-min timer automatically, (c) read the docs before acting, (d) follow the "How to add" templates for any new bug/roadmap entry, and (e) remember the cardinal rules without being told (Central time, no em-dashes, never touch EOS calendar, GCal is source of truth for shows, Mailchimp for venue contacts, Cloudflare for DNS, no "15 minutes" estimates). If any of those fail, that is itself a bug worth logging as a new J-entry.
+**Heads-up for the NEXT thread specifically:** Ray is opening a fresh thread to stress-test whether the foundation work actually holds up on a cold start. Ray is trying a short startup prompt first ("Band marketing work on Live Radio DFW. Your name is Jarvis. My name is Ray. Start the 60-min timer. Read docs/ on the docs branch, then the public site. Cardinal rules apply. Then: [today's task].") — it leans on memory + this file's own embedded startup prompt to carry the cold agent. If the short prompt fails, Ray has three longer fallback versions stored in his notepad. Watch whether you (a) self-identify as Jarvis, (b) start the 60-min timer automatically, (c) read the docs before acting, (d) follow the "How to add" templates for any new bug/roadmap entry, and (e) remember the cardinal rules without being told (Central time, no em-dashes, never touch EOS calendar, GCal is source of truth for shows, Mailchimp for venue contacts, Cloudflare for DNS, no "15 minutes" estimates). If any of those fail, that is itself a bug worth logging as a new J-entry — and it means the short prompt isn't durable enough yet.
 
 **Top priorities right now:**
 
