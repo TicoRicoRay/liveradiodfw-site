@@ -1,6 +1,6 @@
 # Live Radio DFW — Project Plan
 
-_Last updated: 2026-04-17 · 2:19 PM Central_
+_Last updated: 2026-04-17 · 6:14 PM Central_
 
 **This file is the session-to-session handoff.** For active defects see [bugs.md](bugs.md). For planned work see [roadmap.md](roadmap.md).
 
@@ -41,6 +41,7 @@ _Put this at the top so next-session-me reads it first._
 
 **Recently closed:**
 - **B5 - GitHub Pages challenge TXT:** restored in Cloudflare 2026-04-17 PM, verified on three resolvers.
+- **CSS polish - square date badges on /shows:** `.show-card-full .show-date-badge` now renders 80x80 square, top-aligned to card (not stretched to full card height). Commit `4d3edc9` on `gh-pages`. Not logged as a bug since it was cosmetic refinement, not a defect.
 
 ## 📋 Pending discussion (not yet triaged into bugs or roadmap)
 
