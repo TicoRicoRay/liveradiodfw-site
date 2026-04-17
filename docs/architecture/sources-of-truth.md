@@ -46,6 +46,18 @@ Band fees, splits, 1099s, tax records — stored outside this repo. Nothing fina
 - Served through Cloudflare (Free plan)
 - Nameservers: summer.ns.cloudflare.com + titan.ns.cloudflare.com
 
+## Band-Facing Facts (genre, lineup, songs, positioning, social, bios)
+
+**Source of truth: the public site** at https://www.liveradiodfw.com
+
+If an agent needs to know what the band actually _is_ — genre, era focus, number of vocalists, themed "Station" shows, song count, years together, insurance status, in-ear monitors, tagline, upcoming shows, social handles, mailing list — read the site. The `docs` branch deliberately does not duplicate this content. Treat the site as canonical; if it's not on the site, assume it's not a public fact.
+
+Key pages:
+- `/` — hero, positioning, upcoming shows, Stations overview
+- `/about` — band identity and history
+- `/shows/` — generated per-show pages (see calendar-sync.md)
+- `/lander` — merger-announcement landing page for legacy domain traffic
+
 ## Documentation
 
 **Source of truth: this `docs` branch** of `TicoRicoRay/liveradiodfw-site`

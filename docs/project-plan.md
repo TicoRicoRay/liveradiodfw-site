@@ -1,13 +1,13 @@
 # Live Radio DFW — Project Plan
 
-_Last updated: 2026-04-17 · 11:52 AM Central_
+_Last updated: 2026-04-17 · 1:15 PM Central_
 
 
 ## 🚀 Starting a new session
 
 Perplexity threads are disposable. This repo is the durable memory. To get a new agent up to speed fast, paste this as your first message:
 
-> **Band marketing work on Live Radio DFW. Before anything else, read https://github.com/TicoRicoRay/liveradiodfw-site/tree/docs — start with `docs/project-plan.md` (especially "Pick up here next session"), then skim `docs/architecture/sources-of-truth.md` and `docs/runbooks/`. Then [today's task].**
+> **Band marketing work on Live Radio DFW. Before anything else, read https://github.com/TicoRicoRay/liveradiodfw-site/tree/docs — start with `docs/project-plan.md` (especially "Pick up here next session"), then skim `docs/architecture/sources-of-truth.md` and `docs/runbooks/`. For band-facing facts (genre, lineup, songs, upcoming shows, positioning, social handles), read the public site at https://www.liveradiodfw.com — that's the source of truth for anything the public sees. Then [today's task].**
 
 **Rules of engagement you should remind the agent of if they slip:**
 - Google Calendar is the source of truth for shows. Never hand-edit `shows.json` or `shows/*.html`.
@@ -30,7 +30,7 @@ _Put this at the top so next-session-me reads it first._
 
 1. **Make the sync schedule DST-safe** (open item #6). **Resolved where it runs:** it's a Perplexity scheduled task (schedule_cron) created by a prior-session me. Each run costs credits. Fires at fixed UTC (13:11 UTC), so it's 8:11 AM Central in summer but 7:11 AM Central in winter — 1-hour drift twice a year. Fix: Ray opens Perplexity scheduled tasks view, finds the sync task, we update it to a Central-aware schedule from whichever thread owns it.
 
-2. **Bandzoogle domain migrations** (open item #1). Still blocks canceling Bandzoogle subscription.
+2. **Cancel Bandzoogle subscription** (open item #1). Both legacy domains (jacksoncrossingdallas.com, riskybusinessdfw.com) are now Cloudflare-redirected to /lander; remaining work is removing them from Bandzoogle Domain Manager (if still listed there) and canceling the plan.
 
 3. **Wildcard 301s for cached URLs** (open item #2). Waiting on Google Search Console list from Ray.
 
@@ -60,16 +60,15 @@ _Put this at the top so next-session-me reads it first._
 ## Open items
 
 ### 1. Migrate old band domains off Bandzoogle (BLOCKS Bandzoogle cancellation)
-Bandzoogle Domain Manager shows 3 domains currently attached:
-- `liveradiodfw.com` (PRIMARY) — **already moved** to Cloudflare → GitHub Pages
-- `jacksoncrossingdallas.com` — still pointed at Bandzoogle
-- `riskybusinessdfw.com` — still pointed at Bandzoogle
+Bandzoogle Domain Manager previously held 3 domains:
+- `liveradiodfw.com` (PRIMARY) — **moved** to Cloudflare → GitHub Pages
+- `jacksoncrossingdallas.com` (Jackson Crossing, legacy) — **moved**, Cloudflare-redirected to `/lander`
+- `riskybusinessdfw.com` (Risky Business, legacy) — **moved**, Cloudflare-redirected to `/lander`
 
-**Action:**
-- Add both old domains as sites in Cloudflare (same nameserver swap pattern as liveradiodfw.com)
-- Create Cloudflare Bulk Redirects (or Page Rules) sending all traffic to `https://www.liveradiodfw.com/lander`
-- Remove both domains from Bandzoogle Domain Manager
-- Then cancel Bandzoogle subscription
+**Remaining action:**
+- Remove both legacy domains from Bandzoogle Domain Manager (if still listed)
+- Cancel Bandzoogle subscription
+- Verify Cloudflare redirect rules for both legacy domains land on `https://www.liveradiodfw.com/lander` (HTTP 301, preserving path optional)
 
 ### 2. Wildcard 301 for other cached URLs (non-`/home`, non-`/lander`)
 Google has cached individual old show pages.
