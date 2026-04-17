@@ -8,7 +8,7 @@ Where each type of data lives. If you're ever confused about where to look or wh
 
 - Event details (title, venue, date, time, location) live on the calendar
 - Ticket prices live in the event **description** (see [runbooks/edit-ticket-prices.md](../runbooks/edit-ticket-prices.md))
-- The site (`shows.json` + per-show HTML pages) is derived automatically by `sync_calendar.py` running daily at 8 AM CDT
+- The site (`shows.json` + per-show HTML pages) is derived automatically by `sync_calendar.py` running daily at 8 AM Central
 - **Never** hand-edit `shows.json` or `shows/*.html` — the sync will overwrite them
 
 **Not the source of truth:** Outlook calendar (even though the same events exist there via sync). The sync reads from Google only.
