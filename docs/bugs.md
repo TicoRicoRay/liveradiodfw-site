@@ -8,6 +8,8 @@ This is the live bug list. Fixed bugs move to [postmortems/](postmortems/) or to
 
 For planned work that isn't a defect, see [roadmap.md](roadmap.md).
 
+Bugs are prefixed by category: **B** = band/system defects, **J** = Jarvis (AI-agent) blind spots and tool limitations that affect this project.
+
 ---
 
 ## B1. Calendar sync cron drifts across DST
@@ -85,6 +87,96 @@ For planned work that isn't a defect, see [roadmap.md](roadmap.md).
 **Fix:** Pull fresh challenge value from `liveradiodfw-site` → Settings → Pages, add as TXT record in Cloudflare.
 
 **Status:** Open, low urgency.
+
+---
+
+---
+
+# Jarvis blind spots (AI-agent limitations that affect this project)
+
+These aren't band bugs - they're limitations in how Jarvis (the AI assistant) can operate across threads. Logged here because they cause real band-work failures, so Ray and Jarvis can prioritize and address them the same way as any other defect. Mitigations live in the `docs` branch, startup prompt, and memory.
+
+## J1. Scheduled tasks are invisible across threads
+
+**Symptom:** `schedule_cron(list)` is thread-scoped. A task created in thread A is invisible from thread B, even to the same user. A future Jarvis cannot see or modify a cron set up by a prior Jarvis unless the owning thread is reopened.
+
+**Impact:** This is the direct cause of bug B1. We spent ~2 hours on 2026-04-17 AM hunting for a daily sync that fires real credits we could not see from the active thread.
+
+**Mitigation in place:** [architecture/scheduled-tasks.md](architecture/scheduled-tasks.md) is the durable inventory. New tasks must be documented there the same session they're created. Startup prompt tells new threads to read it.
+
+**Residual risk:** Jarvis can still forget to log a new task before the session ends. Ray's pushback ("what scheduled tasks are running?") is the safety net.
+
+**Status:** Open, mitigated.
+
+## J2. Memory saves can silently soften wording
+
+**Symptom:** When Jarvis calls `memory_update` with a strong directive (e.g. "ALWAYS start the timer"), the memory system sometimes saves a softer form ("sometimes asks for the timer") and sometimes drops phrases entirely. Confirmed live on 2026-04-17 during the work-session timer discussion.
+
+**Impact:** Preferences and rules can quietly weaken across threads without Jarvis or Ray knowing.
+
+**Mitigation:** After important memory saves, Jarvis reads the memory system's response to verify the save wording, and re-saves with stronger language if it was softened. Ray can ask "what did you save?" to audit.
+
+**Status:** Open, mitigated but not solved. External limitation.
+
+## J3. Perplexity Spaces cannot reach connectors
+
+**Symptom:** Threads opened inside a Perplexity Space lack access to the external-tool connectors that normal threads have. Attempts to read the GitHub repo from inside a Space failed on 2026-04-17.
+
+**Impact:** The otherwise-natural way to persist a project's system prompt (put it in the Space) doesn't work for LiveRadioDFW because the band-work startup requires reading the `docs` branch via the GitHub connector.
+
+**Mitigation:** Do NOT use Spaces for band work. Instead: (a) Ray pastes a one-liner startup prompt from a desktop notepad, OR (b) memory trigger rule fires on the words "Live Radio DFW / the band / band marketing" and loads the docs.
+
+**Status:** Open, external limitation. Design around it.
+
+## J4. Memory is not guaranteed to load correctly in every thread
+
+**Symptom:** A new thread should auto-load Ray's background, preferences, and project rules, but occasionally threads act amnesiac on specific facts.
+
+**Impact:** Cardinal rules like "never read the EOS calendar" or "no em-dashes" or project separation can be silently missed by a fresh Jarvis until Ray notices and pushes back.
+
+**Mitigation:** Triple redundancy - same rules in memory, in `docs/project-plan.md` rules of engagement, and in `docs/architecture/sources-of-truth.md`. The startup prompt forces a read of the project plan, so even memory-amnesiac threads pick up rules from the repo.
+
+**Status:** Open, mitigated with redundancy.
+
+## J5. `pause_and_wait` is the wrong tool for work-session timers
+
+**Symptom:** `pause_and_wait` ends Jarvis's response and waits silently for the full duration. Using it for a 60-minute timer creates a 60-minute silence where Ray can't interact. Misused three times on 2026-04-17.
+
+**Impact:** Broken conversation flow; Ray sees "Jarvis stopped responding" instead of working sessions.
+
+**Mitigation:** Track timer state mentally (start + hard-stop timestamps), check the clock on every response, warn at 50 min and hard-stop at 60 min. Saved to memory as the correct approach.
+
+**Status:** Fixed by behavior change. Left on the list as a reminder for future Jarvises.
+
+## J6. Under pressure, Jarvis can theorize past contrary evidence
+
+**Symptom:** On 2026-04-16 PM, Jarvis saw the `*.github.io` wildcard fallback cert on `www.liveradiodfw.com`, knew that GitHub uses it as a redirector fallback, and told Ray the live monitor was a false positive. Ray provided a browser screenshot proving the monitor right. Jarvis's theory ("the 301 redirect rescues the bad cert") ignored that TLS happens before HTTP.
+
+**Impact:** Extended the outage by an entire afternoon and evening. Burned credits.
+
+**Mitigation:** Postmortem lesson 6: "Trust the monitor, not your interpretation of 'it's fine.'" When evidence contradicts theory, evidence wins. Written into the postmortem and reinforced in the project-plan rules.
+
+**Status:** Open behaviorally. Ray's pushback remains the primary safety net.
+
+## J7. Jarvis can cross project boundaries under ambiguity
+
+**Symptom:** Multiple times during band work, Jarvis searched the Gmail/GCal connector (which is EOS Worldwide, unrelated to the band) looking for band email, in violation of the clearly-stated rule.
+
+**Impact:** Lost context, burned credits, risk of contaminating cardinal separation between projects.
+
+**Mitigation:** Rule is now in memory, in `project-plan.md` rules of engagement, in `sources-of-truth.md` ("Never touch: the EOS calendar"), and in the startup prompt. Triple redundancy.
+
+**Status:** Open behaviorally. External platform feature request: per-project connector allow-lists would solve this structurally.
+
+## J8. Jarvis makes time estimates despite Ray's rule against it
+
+**Symptom:** Jarvis has promised "15 minutes" at least once despite Ray's explicit pet peeve against it.
+
+**Impact:** Sets wrong expectations, erodes trust.
+
+**Mitigation:** Rule in memory ("never promise 15 minutes") and in `project-plan.md`. Jarvis simply does the work without estimating.
+
+**Status:** Behavioral rule. Must re-surface at thread start.
 
 ---
 

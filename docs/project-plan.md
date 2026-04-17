@@ -9,7 +9,7 @@ _Last updated: 2026-04-17 · 1:38 PM Central_
 
 Perplexity threads are disposable. This repo is the durable memory. To get a new agent up to speed fast, paste this as your first message:
 
-> **Band marketing work on Live Radio DFW. Before anything else, read https://github.com/TicoRicoRay/liveradiodfw-site/tree/docs — start with `docs/project-plan.md` (especially "Pick up here next session"), then `docs/bugs.md` (active defects) and `docs/roadmap.md` (planned work), then skim `docs/architecture/sources-of-truth.md` and `docs/runbooks/`. For band-facing facts (genre, lineup, songs, upcoming shows, positioning, social handles), read the public site at https://www.liveradiodfw.com — that's the source of truth for anything the public sees. Then [today's task].**
+> **Band marketing work on Live Radio DFW. Before anything else, read https://github.com/TicoRicoRay/liveradiodfw-site/tree/docs — start with `docs/project-plan.md` (especially "Pick up here next session"), then `docs/bugs.md` (active defects, including Jarvis's own blind spots in the J-series), `docs/roadmap.md` (planned work), and `docs/architecture/scheduled-tasks.md` (every running cron). Skim `docs/architecture/sources-of-truth.md` and `docs/runbooks/`. For band-facing facts (genre, lineup, songs, upcoming shows, positioning, social handles), read the public site at https://www.liveradiodfw.com — that's the source of truth for anything the public sees. Then [today's task].**
 
 **Rules of engagement you should remind the agent of if they slip:**
 - Google Calendar is the source of truth for shows. Never hand-edit `shows.json` or `shows/*.html`.

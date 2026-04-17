@@ -58,6 +58,12 @@ Key pages:
 - `/shows/` — generated per-show pages (see calendar-sync.md)
 - `/lander` — merger-announcement landing page for legacy domain traffic
 
+## Scheduled Tasks
+
+**Source of truth: [architecture/scheduled-tasks.md](scheduled-tasks.md)**
+
+Every recurring job that touches the band - what it does, where it runs, when it fires. Perplexity `schedule_cron` tasks are thread-scoped, so this doc is the only durable inventory. If an agent creates a new scheduled task, it must be documented there the same session.
+
 ## Documentation
 
 **Source of truth: this `docs` branch** of `TicoRicoRay/liveradiodfw-site`
