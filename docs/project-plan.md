@@ -1,6 +1,6 @@
 # Live Radio DFW — Project Plan
 
-_Last updated: 2026-04-17 · 11:38 AM Central_
+_Last updated: 2026-04-17 · 11:52 AM Central_
 
 
 ## 🚀 Starting a new session
@@ -33,6 +33,11 @@ _Put this at the top so next-session-me reads it first._
 2. **Bandzoogle domain migrations** (open item #1). Still blocks canceling Bandzoogle subscription.
 
 3. **Wildcard 301s for cached URLs** (open item #2). Waiting on Google Search Console list from Ray.
+
+4. **Add Regina (sound engineer) as attendee on future gig events.** Email: `falkor79@duck.com`. **Known-failed approach:** sending `attendees: ["falkor79@duck.com"]` to the webhook's `update` action returns `status: updated` but silently does NOT add the attendee (confirmed by Ray on OG Cellars 2026-04-18). **Next options:**
+   - (a) Ray adds her manually in Google Calendar UI on each recurring/future event — simplest, no code.
+   - (b) Extend the webhook (`Code.gs` in the Apps Script project) to actually honor the `attendees` field via `event.setAttendees([...])` or `event.addGuest(email)`, then add a post-sync step in `sync_calendar.py` to ensure Regina is on every future public event.
+   - Pick an approach with Ray before touching anything. Do NOT loop through events with the webhook until the webhook is verified to honor attendees.
 
 **Don't break:**
 - The band Google Calendar is the source of truth for shows. Never hand-edit `shows.json` or `shows/*.html`.
