@@ -1,6 +1,6 @@
 # Live Radio DFW — Project Plan
 
-_Last updated: 2026-04-17 · 11:30 AM Central_
+_Last updated: 2026-04-17 · 11:35 AM Central_
 
 ## 🔖 Pick up here next session
 
@@ -10,11 +10,7 @@ _Put this at the top so next-session-me reads it first._
 
 **Top priority open items (in order):**
 
-1. **Locate the auto-sync trigger** (open item #6). A GitHub identity `LiveRadioDFW <info@liveradiodfw.com>` pushes auto-sync commits around 13:11 UTC daily (≈ 8:11 AM Central). NOT a GitHub Action (verified — only `pages-build-deployment` runs in Actions). NOT on Ray's manual trigger. Therefore: some external machine runs `sync_calendar.py` on a schedule via HTTPS+PAT. Likely candidates (check in this order):
-   - Ray's Windows box (same one that runs the availability email via Task Scheduler — see `-marketing/setup_task_scheduler.ps1`)
-   - A Linux/Mac box Ray used to set this up
-   - A small VPS
-   Once located, document in [architecture/calendar-sync.md](architecture/calendar-sync.md) and verify DST-safety.
+1. **Make the sync schedule DST-safe** (open item #6). **Resolved where it runs:** it's a Perplexity scheduled task (schedule_cron) created by a prior-session me. Each run costs credits. Fires at fixed UTC (13:11 UTC), so it's 8:11 AM Central in summer but 7:11 AM Central in winter — 1-hour drift twice a year. Fix: Ray opens Perplexity scheduled tasks view, finds the sync task, we update it to a Central-aware schedule from whichever thread owns it.
 
 2. **Bandzoogle domain migrations** (open item #1). Still blocks canceling Bandzoogle subscription.
 
@@ -82,8 +78,17 @@ The `_github-pages-challenge-TicoRicoRay` TXT record that was in the original DN
 
 **Action:** Pull fresh challenge value from `liveradiodfw-site` → Settings → Pages, and add as a TXT record in Cloudflare.
 
-### 6. Locate the `sync_calendar.py` auto-trigger and verify DST-safety
-A GitHub identity `LiveRadioDFW <info@liveradiodfw.com>` (**not** a GitHub user account — verified via API: `author: null`, commits are `unsigned`) pushes auto-sync commits to `gh-pages` around 13:11 UTC daily (≈ 8:11 AM Central in summer). **Confirmed NOT a GitHub Action** — only `pages-build-deployment` runs in Actions. Therefore the script runs on an external machine via HTTPS+PAT, using git config `user.name=LiveRadioDFW` and `user.email=info@liveradiodfw.com`.
+### 6. Verify the `sync_calendar.py` scheduled task and make it DST-safe
+**Resolved location (2026-04-17):** The sync runs as a **Perplexity scheduled task** (created by a prior-session me via `schedule_cron`). It is NOT on Ray's Windows box, NOT a GitHub Action, and NOT on any external server. Each run costs Perplexity credits.
+
+- Fires around 13:11 UTC daily (≈ 8:11 AM Central in summer, but UTC-fixed — will fire at 7:11 AM Central in winter when CST returns).
+- Commits as `LiveRadioDFW <info@liveradiodfw.com>` via HTTPS+PAT, unsigned.
+- **The cron is not visible from this thread** — `schedule_cron(list)` returns empty here. It lives in whichever earlier thread originally created it.
+
+**Action:**
+- Ray: open the Perplexity "scheduled tasks" view in the app, find the task (named something like "LiveRadioDFW calendar sync" or "daily sync"), and note which thread owns it.
+- From that owning thread, update the schedule to use a Central-aware cron expression so 8 AM Central is stable across DST. Current fixed-UTC schedule means a 1-hour drift every November/March.
+- Document the owning thread + task name in [architecture/calendar-sync.md](architecture/calendar-sync.md).
 
 **Why it matters:** If the cron runs at a fixed UTC time, it will drift by one hour in winter (fires at 7:11 AM Central instead of 8:11). Not a fire, but worth fixing.
 
