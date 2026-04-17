@@ -156,18 +156,6 @@ A half-complete bug entry is worse than no entry. If symptom or impact aren't cl
 
 ---
 
-## B5. Missing `_github-pages-challenge-TicoRicoRay` TXT record
-
-**Symptom:** The GitHub Pages domain-verification TXT record that was in the original DNS checklist is no longer present in Cloudflare. May have been dropped during the Cloudflare migration.
-
-**Risk:** Low. GitHub could theoretically ask for re-verification later. Cloudflare proxy effectively prevents takeover in the meantime.
-
-**Fix:** Pull fresh challenge value from `liveradiodfw-site` → Settings → Pages, add as TXT record in Cloudflare.
-
-**Status:** Open, low urgency.
-
----
-
 ---
 
 # Jarvis blind spots (AI-agent limitations that affect this project)
@@ -260,6 +248,7 @@ These aren't band bugs - they're limitations in how Jarvis (the AI assistant) ca
 
 ## Fixed recently (moved here for context; full history in postmortems)
 
+- **2026-04-17 - B5 GitHub Pages challenge TXT restored:** Pulled fresh challenge value from `github.com/settings/pages`, added as TXT record in Cloudflare (`_github-pages-challenge-TicoRicoRay` → `76bd16254d16a7be4333e49413c13d`). Verified propagation on 1.1.1.1, 8.8.8.8, and `summer.ns.cloudflare.com`. Domain was already verified via DNS-based method; this restores the belt-and-suspenders challenge record that was dropped during the Cloudflare migration.
 - **2026-04-17 - Sync wipe:** `sync_calendar.py` was overwriting hand-curated fields in `shows.json`. Fixed with non-destructive merge + strict ticket-price parser. See [postmortems/2026-04-17-sync-wipe.md](postmortems/2026-04-17-sync-wipe.md).
 - **2026-04-15 to 2026-04-16 - 12-hour outage:** during the Bandzoogle → Cloudflare → GitHub Pages migration. Fixed. See [postmortems/](postmortems/).
 - **2026-04-17 - Silent "Free" default:** the ticket parser used to default to "Free" when no line was present. Now it alerts via email and leaves the field blank.
