@@ -1,13 +1,15 @@
 # Live Radio DFW — Project Plan
 
-_Last updated: 2026-04-17 · 1:15 PM Central_
+_Last updated: 2026-04-17 · 1:38 PM Central_
+
+**This file is the session-to-session handoff.** For active defects see [bugs.md](bugs.md). For planned work see [roadmap.md](roadmap.md).
 
 
 ## 🚀 Starting a new session
 
 Perplexity threads are disposable. This repo is the durable memory. To get a new agent up to speed fast, paste this as your first message:
 
-> **Band marketing work on Live Radio DFW. Before anything else, read https://github.com/TicoRicoRay/liveradiodfw-site/tree/docs — start with `docs/project-plan.md` (especially "Pick up here next session"), then skim `docs/architecture/sources-of-truth.md` and `docs/runbooks/`. For band-facing facts (genre, lineup, songs, upcoming shows, positioning, social handles), read the public site at https://www.liveradiodfw.com — that's the source of truth for anything the public sees. Then [today's task].**
+> **Band marketing work on Live Radio DFW. Before anything else, read https://github.com/TicoRicoRay/liveradiodfw-site/tree/docs — start with `docs/project-plan.md` (especially "Pick up here next session"), then `docs/bugs.md` (active defects) and `docs/roadmap.md` (planned work), then skim `docs/architecture/sources-of-truth.md` and `docs/runbooks/`. For band-facing facts (genre, lineup, songs, upcoming shows, positioning, social handles), read the public site at https://www.liveradiodfw.com — that's the source of truth for anything the public sees. Then [today's task].**
 
 **Rules of engagement you should remind the agent of if they slip:**
 - Google Calendar is the source of truth for shows. Never hand-edit `shows.json` or `shows/*.html`.
@@ -26,18 +28,15 @@ _Put this at the top so next-session-me reads it first._
 
 **Context:** We spent today (2026-04-17) fixing the sync-wipe bug (non-destructive merge + strict parser), grandfathering "Tickets: Free" into the calendar, moving docs to a `docs` branch on `liveradiodfw-site`, cleaning up the `-marketing` repo, and rewriting the DNS/Pages runbook.
 
-**Top priority open items (in order):**
+**Top priorities right now:**
 
-1. **Make the sync schedule DST-safe** (open item #6). **Resolved where it runs:** it's a Perplexity scheduled task (schedule_cron) created by a prior-session me. Each run costs credits. Fires at fixed UTC (13:11 UTC), so it's 8:11 AM Central in summer but 7:11 AM Central in winter — 1-hour drift twice a year. Fix: Ray opens Perplexity scheduled tasks view, finds the sync task, we update it to a Central-aware schedule from whichever thread owns it.
+1. **B1 - DST-safe sync cron.** See [bugs.md#b1](bugs.md). Ray needs to find the owning thread in Perplexity's scheduled-tasks view.
+2. **R1 - Cancel Bandzoogle.** See [roadmap.md#r1](roadmap.md). Legacy domains are already redirected; just needs Bandzoogle Domain Manager cleanup + cancellation.
+3. **B2 / R8 - Regina as attendee.** See [bugs.md#b2](bugs.md). Decision pending: manual in GCal UI vs. extending `Code.gs`.
+4. **R4 - Wildcard 301s.** See [roadmap.md#r4](roadmap.md). Waiting on Search Console export from Ray.
 
-2. **Cancel Bandzoogle subscription** (open item #1). Both legacy domains (jacksoncrossingdallas.com, riskybusinessdfw.com) are now Cloudflare-redirected to /lander; remaining work is removing them from Bandzoogle Domain Manager (if still listed there) and canceling the plan.
-
-3. **Wildcard 301s for cached URLs** (open item #2). Waiting on Google Search Console list from Ray.
-
-4. **Add Regina (sound engineer) as attendee on future gig events.** Email: `falkor79@duck.com`. **Known-failed approach:** sending `attendees: ["falkor79@duck.com"]` to the webhook's `update` action returns `status: updated` but silently does NOT add the attendee (confirmed by Ray on OG Cellars 2026-04-18). **Next options:**
-   - (a) Ray adds her manually in Google Calendar UI on each recurring/future event — simplest, no code.
-   - (b) Extend the webhook (`Code.gs` in the Apps Script project) to actually honor the `attendees` field via `event.setAttendees([...])` or `event.addGuest(email)`, then add a post-sync step in `sync_calendar.py` to ensure Regina is on every future public event.
-   - Pick an approach with Ray before touching anything. Do NOT loop through events with the webhook until the webhook is verified to honor attendees.
+**New additions (2026-04-17 PM):**
+- Bug **B4** logged: the calendar-host identity in docs (`rmyers@futurebright.com` in 4 places) is likely wrong; real canonical should probably be Outlook on `info@liveradiodfw.com`. Intentionally deferred - every calendar change turns into a multi-hour rabbit hole.
 
 **Don't break:**
 - The band Google Calendar is the source of truth for shows. Never hand-edit `shows.json` or `shows/*.html`.
@@ -59,70 +58,10 @@ _Put this at the top so next-session-me reads it first._
 
 ## Open items
 
-### 1. Migrate old band domains off Bandzoogle (BLOCKS Bandzoogle cancellation)
-Bandzoogle Domain Manager previously held 3 domains:
-- `liveradiodfw.com` (PRIMARY) — **moved** to Cloudflare → GitHub Pages
-- `jacksoncrossingdallas.com` (Jackson Crossing, legacy) — **moved**, Cloudflare-redirected to `/lander`
-- `riskybusinessdfw.com` (Risky Business, legacy) — **moved**, Cloudflare-redirected to `/lander`
+Linear list of open items has moved out of this file. See:
 
-**Remaining action:**
-- Remove both legacy domains from Bandzoogle Domain Manager (if still listed)
-- Cancel Bandzoogle subscription
-- Verify Cloudflare redirect rules for both legacy domains land on `https://www.liveradiodfw.com/lander` (HTTP 301, preserving path optional)
-
-### 2. Wildcard 301 for other cached URLs (non-`/home`, non-`/lander`)
-Google has cached individual old show pages.
-
-**Recommendation: Cloudflare Bulk Redirects (Free plan)**
-- Free plan allows one redirect list, up to 20 redirects
-- Can pattern-match known old paths → `/` (homepage) or `/shows`
-- Preserves link equity; eliminates soft 404s
-- Alternative: Single catch-all Page Rule `liveradiodfw.com/*show*` → `/shows` (Free plan has 3 page rules)
-
-**Status:** Deferred until we pull the full list of cached URLs from Google Search Console.
-
-### 3. Historic shows migration (SEO)
-Bandzoogle staging (https://liveradiodfw.bandzoogle.com) plus The Bash profile still hold the historical show archive. Migrate them into `/shows/` as permanent pages for long-tail SEO and credibility.
-
-**Action:**
-- Pull show history from Bandzoogle staging calendar
-- Pull show history from The Bash profile
-- Generate one static page per historical show (same template as current shows)
-- Add to sitemap.xml
-
-### 4. Google Search Console cleanup
-- Submit updated sitemap.xml
-- Request re-indexing of `/home` redirect + `/lander`
-- Use URL inspection to force refresh on cached dead URLs
-
-### 5. Verify GitHub Pages domain challenge TXT
-The `_github-pages-challenge-TicoRicoRay` TXT record that was in the original DNS checklist is no longer present (may have been dropped during the Cloudflare migration). Low-urgency because the site is working and Cloudflare proxy protects against most takeover scenarios, but GitHub may eventually require re-verification.
-
-**Action:** Pull fresh challenge value from `liveradiodfw-site` → Settings → Pages, and add as a TXT record in Cloudflare.
-
-### 6. Verify the `sync_calendar.py` scheduled task and make it DST-safe
-**Resolved location (2026-04-17):** The sync runs as a **Perplexity scheduled task** (created by a prior-session me via `schedule_cron`). It is NOT on Ray's Windows box, NOT a GitHub Action, and NOT on any external server. Each run costs Perplexity credits.
-
-- Fires around 13:11 UTC daily (≈ 8:11 AM Central in summer, but UTC-fixed — will fire at 7:11 AM Central in winter when CST returns).
-- Commits as `LiveRadioDFW <info@liveradiodfw.com>` via HTTPS+PAT, unsigned.
-- **The cron is not visible from this thread** — `schedule_cron(list)` returns empty here. It lives in whichever earlier thread originally created it.
-
-**Action:**
-- Ray: open the Perplexity "scheduled tasks" view in the app, find the task (named something like "LiveRadioDFW calendar sync" or "daily sync"), and note which thread owns it.
-- From that owning thread, update the schedule to use a Central-aware cron expression so 8 AM Central is stable across DST. Current fixed-UTC schedule means a 1-hour drift every November/March.
-- Document the owning thread + task name in [architecture/calendar-sync.md](architecture/calendar-sync.md).
-
-**Why it matters:** If the cron runs at a fixed UTC time, it will drift by one hour in winter (fires at 7:11 AM Central instead of 8:11). Not a fire, but worth fixing.
-
-**Action:**
-- Locate where the sync runs (check Ray's Windows Task Scheduler, any Linux boxes, GitHub Actions in the repo, etc.)
-- If on Linux cron: add `CRON_TZ=America/Chicago` at top of crontab so `0 8 * * *` stays DST-correct
-- If on Windows Task Scheduler: already tracks local time, just verify trigger is set to Central
-- If GitHub Actions: use a timezone-aware action or accept the winter shift
-- Once located, document in [architecture/calendar-sync.md](architecture/calendar-sync.md)
-
-### 7. Timezone convention
-Going forward: all documentation uses **"Central"** or **"America/Chicago"**, never "CDT" or "CST". The DST-named variants cause ambiguity and silent off-by-an-hour bugs.
+- **Live defects:** [bugs.md](bugs.md)
+- **Planned work:** [roadmap.md](roadmap.md)
 
 ## Recently completed
 
