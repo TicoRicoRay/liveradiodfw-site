@@ -121,7 +121,7 @@ Look for `status: "built"`.
 | Switching Cloudflare SSL mode away from "Full" | "Too many redirects" or SSL errors | Leave at **Full**. Never "Flexible". |
 | Assigning this custom domain to any other GitHub repo | Immediate outage | Only `liveradiodfw-site` may hold `www.liveradiodfw.com`. |
 | Force-pushing to `gh-pages` | Could wipe site history | Never force-push. |
-| Hand-editing `shows.json` or `shows/*.html` | Overwritten on next daily sync at 8 AM CDT | Edit the band Google Calendar instead — see [edit-ticket-prices.md](edit-ticket-prices.md). |
+| Hand-editing `shows.json` or `shows/*.html` | Overwritten on next daily sync at 8 AM Central | Edit the band Google Calendar instead — see [edit-ticket-prices.md](edit-ticket-prices.md). |
 
 ## Monitoring
 
