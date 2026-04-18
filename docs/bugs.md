@@ -158,6 +158,37 @@ A half-complete bug entry is worse than no entry. If symptom or impact aren't cl
 
 ---
 
+## B13. Red date badge on show-detail pages is not square
+
+**Symptom:** On individual show pages (`/shows/*.html`), the red date block in the hero renders as a tall rectangle instead of a square. The same kind of date badge on the shows-list page (`/shows.html`) renders visually closer to square. Ray wants them squared up and positioned upper-left within the show-page hero.
+
+**Where:** `lrdfw-ghpages/css/style.css` lines 1712–1722 (the `.show-page-date` rule).
+
+```css
+.show-page-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 72px;
+  padding: var(--space-3);
+  background: var(--red);
+  color: #ffffff;
+  border-radius: var(--radius-md);
+  text-transform: uppercase;
+  font-family: var(--font-display);
+}
+```
+
+No explicit width or height — dimensions are purely content-driven. Three rows of text (`day-name` / `day-num` / `month`) plus `--space-3` padding top and bottom makes the height larger than the `min-width: 72px`. The list-page badge (`.show-date-badge`, line 788) has the same content-driven structure but smaller padding + smaller min-width, so it happens to look close enough to square by accident.
+
+**Position:** The hero container (`.show-page-hero`, line 1698) is already `display: flex` with `align-items: flex-start` and the date is the first child, so it's already upper-left within the hero box. No layout change needed for position.
+
+**Fix:** Lock the date block to a fixed square (e.g. `72px × 72px`) and use `justify-content: center` to keep the three text rows vertically centered. Mirror list-page styling for visual consistency across pages.
+
+**Status:** Fixed 2026-04-18 AM. See Fixed Recently section below.
+
+---
+
 ## B12. Light-mode selection doesn't persist across pages
 
 **Symptom:** User visits any page on `liveradiodfw.com`, clicks the sun/moon icon in the top nav to switch to light mode, then navigates to another page — reverts to dark mode. Same in reverse (pick dark on a light-default system and navigate; reverts to light). Every page load honors the OS-level `prefers-color-scheme` and ignores whatever the user last clicked.
@@ -463,6 +494,7 @@ These aren't band bugs - they're limitations in how Jarvis (the AI assistant) ca
 
 ## Fixed recently (moved here for context; full history in postmortems)
 
+- **2026-04-18 AM - B13 red date badge on show-detail pages now square:** `.show-page-date` had `min-width: 72px` but no explicit height, so three rows of text plus `--space-3` padding pushed height above width, rendering as a tall rectangle. Fixed by locking `width: 72px; height: 72px;` and adding `justify-content: center` so the three text rows vertically center; dropped padding from `--space-3` to `--space-2` so the text still fits inside the 72px square. Added `flex-shrink: 0` for narrow-hero safety. Position was already correct (the parent `.show-page-hero` is a flex row with `align-items: flex-start` and the date is child #1, so upper-left was the pre-existing layout). Verified on `/shows/fresh-by-brookshires-2026-04-25.html` after push.
 - **2026-04-18 AM - B11 breadcrumb on show pages now unique:** `build_show_pages.py` line 194 changed from `<span>{venue}</span>` to `<span>{venue} &mdash; {long_date}</span>`. Each detail page now has a distinct trailing crumb like `Home › Shows › FRESH by Brookshire's — Saturday, April 25, 2026`. Verified live on `/shows/fresh-by-brookshires-2026-04-25.html` after sync push.
 - **2026-04-18 AM - B10 follow-up: `address_short` regex tightened to not match `TX-276`:** Immediately after shipping B10 and updating the Sweetwater Grill calendar event with a real street address (`4884 TX-276, Royse City, TX 75189, USA`), sync ran and `address_short` regressed from `Royse City, TX` to `4884, TX`. Polluted the `<title>` and meta description on the show-detail page (`| Live Music 4884, TX`). Root cause: the short-address parser at `sync_calendar.py` lines 261 and 271 used `TX\b` which matches at the X-hyphen word boundary in `TX-276`, then captured the street number (`4884`) as the city. Fix: both regexes changed from `TX\b` to `TX(?=\s|$|\d)` so TX must be followed by whitespace, end-of-string, or a ZIP digit — not a hyphen. Verified against all current addresses before pushing. Lesson: highway designators like `TX-276` are the edge case; `\b` is not tight enough for state-abbreviation matching when the same two letters can appear in highway names.
 - **2026-04-18 AM - B10 venue duplication cleaned up at ingest:** `sync_calendar.py` now strips the leading venue segment from `address` when the second segment clearly looks like a street address (first char is a digit). Canonical `shows.json` stores street-only addresses; every downstream consumer (`/shows.html` venue-address line, show-detail `show-page-address`, JSON-LD schema, Add-to-Calendar `data-cal-address`, `.ics` export) is cleaned in one pass. 7 of 10 current shows updated on the live site on the first pass. Sweetwater Grill was the 8th once Ray added a street address to the calendar event later that morning; that update exposed the `TX-276` regex bug noted in the follow-up bullet above.
