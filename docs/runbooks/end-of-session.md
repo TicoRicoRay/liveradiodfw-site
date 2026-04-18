@@ -29,7 +29,21 @@ All three of these, every time:
 - **Refresh the "Top priorities right now" list.** Add newly-surfaced priorities, remove items closed this session, reorder if priorities shifted.
 - **"Recently closed" subsection:** add any bugs closed this session (one-liner each).
 
-### 3. Commit and push
+### 3. Update architecture docs if anything structural changed this session
+
+If the session changed anything about how the system is wired - not just content edits - update the relevant architecture doc in `docs/architecture/` before committing. This is how `architecture/` stays current instead of drifting into fiction.
+
+Check each of these against what happened this session:
+
+- **New, changed, or deleted scheduled task / cron?** Update [`architecture/scheduled-tasks.md`](../architecture/scheduled-tasks.md). One-shot session timers are not scheduled tasks for inventory purposes - only durable recurring jobs count.
+- **New connector connected, or existing connector's identity/use changed?** Update [`architecture/connectors.md`](../architecture/connectors.md). Classify into active-band-use / available-if-needed / off-limits / not-band-relevant. If the new connector shares identity with an off-limits account (EOS, personal health, etc.), it goes straight to the off-limits section.
+- **Change to where a data type lives** (calendar host, contact system, DNS, hosting, repo layout)? Update [`architecture/sources-of-truth.md`](../architecture/sources-of-truth.md).
+- **Change to the calendar-sync pipeline** (webhook, `sync_calendar.py`, ticket-price parser, merge behavior)? Update [`architecture/calendar-sync.md`](../architecture/calendar-sync.md).
+- **Change to the monthly availability email pipeline**? Update [`architecture/marketing-automation.md`](../architecture/marketing-automation.md).
+
+If nothing structural changed, skip this step. If unsure whether something counts as structural, ask Ray - a missed update is worse than a one-line "no change."
+
+### 4. Commit and push
 
 One commit is fine if the changes are related. Otherwise use separate commits. Standard format:
 
@@ -44,14 +58,14 @@ git -c user.name="LiveRadioDFW" -c user.email="info@liveradiodfw.com" commit -m 
 git push origin docs
 ```
 
-### 4. Confirm with Ray
+### 5. Confirm with Ray
 
 Reply to Ray with:
 - One-line summary of what was added/updated/closed
 - Commit SHA(s) as clickable links to the GitHub commit page
 - Any open questions or items Ray still needs to act on outside the thread
 
-### 5. Sanity-check the thread itself
+### 6. Sanity-check the thread itself
 
 Before Ray leaves, note whether any of these failed this session (if yes → they become new `J<n>` entries for the next cold-start test):
 
