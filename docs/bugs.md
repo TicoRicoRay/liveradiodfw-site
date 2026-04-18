@@ -1,6 +1,6 @@
 # Live Radio DFW - Bug List
 
-_Last updated: 2026-04-17_
+_Last updated: 2026-04-17 (calendar SoT cleanup session)_
 
 Current known defects and correctness issues. Fixed bugs move to [postmortems/](postmortems/) or the "Recently completed" section of [project-plan.md](project-plan.md). For planned work that isn't a defect, see [roadmap.md](roadmap.md).
 
@@ -88,13 +88,15 @@ A half-complete bug entry is worse than no entry. If symptom or impact aren't cl
 
 **Workaround:** Add attendees manually in the Google Calendar UI.
 
+**Root cause (identified 2026-04-17):** The Apps Script `_updateEvent` function accepts the `attendees` payload field but has no code path that does anything with it. The `list`, `create`, and `delete` branches exist; the `update` branch simply never calls `event.addGuest(email)` or `event.setAttendees([...])`. Approximately a 2-line fix in `LiveRadioDFWCalendar.gs` (see `scripts/LiveRadioDFWCalendar.gs` on the `docs` branch).
+
 **Fix options:**
 - (a) Keep doing manual adds in GCal UI on each recurring/future event. Simplest, no code.
-- (b) Extend `Code.gs` to honor `attendees` via `event.setAttendees([...])` or `event.addGuest(email)`, then add a post-sync step in `sync_calendar.py` to ensure Regina is on every future public event.
+- (b) Extend `_updateEvent` in `LiveRadioDFWCalendar.gs` to iterate `payload.attendees` and call `event.addGuest(email)` for each. Publish via [runbooks/publish-calendar-webhook.md](runbooks/publish-calendar-webhook.md). Optionally add a post-sync step in `sync_calendar.py` to ensure Regina is on every future public event. Tracked as [R10](roadmap.md#r10-extend-_updateevent-to-honor-attendees).
 
-**Decision pending:** Ray to pick (a) or (b) before any code touches the webhook. Do NOT loop through events with the webhook until it's verified to honor `attendees`.
+**Decision pending:** Ray to pick (a) or (b). Do NOT loop through events with the webhook until `update` is verified to honor `attendees`.
 
-**Status:** Open, decision-gated.
+**Status:** Open, decision-gated. Root cause known, fix drafted.
 
 ---
 
@@ -102,31 +104,57 @@ A half-complete bug entry is worse than no entry. If symptom or impact aren't cl
 
 **Symptom:** Events created in Outlook that sync over to Google Calendar have an Outlook-native hex event ID (long hex string, no `@google.com` suffix). The Apps Script webhook's `update` action fails on these.
 
-**Workaround:** Edit by hand in Google Calendar UI. Watters Creek 6/6 is a known example that required manual update.
+**Workaround:** Edit by hand in Google Calendar UI. Watters Creek 6/6 is a known example that required manual update. "LR - The Gathering in Allen" 9/18 is a second known Outlook-native event (found during 2026-04-17 SoT cleanup reconciliation).
 
-**Fix:** Going forward, create events directly in Google Calendar to avoid generating Outlook-native IDs. Not clear whether existing Outlook-native events can be converted.
+**Fix:** Going forward, create events directly in Google Calendar (on info@liveradiodfw.com) to avoid generating Outlook-native IDs. Since the Google Calendar on info@ is now confirmed as the source of truth, this is equivalent to "don't use Outlook to create band events." Not clear whether existing Outlook-native events can be converted. Eliminating the Outlook dual-entry pipeline entirely is under consideration.
 
-**Status:** Open, workaround documented.
+**Status:** Open, workaround documented. Two known affected events.
 
 ---
 
-## B4. Calendar host identity is ambiguous in docs
+## B4. Calendar host identity is ambiguous in docs ~~[OPEN]~~ → **FIXED 2026-04-17**
 
-**Symptom:** The `docs` branch says the band calendar lives on `rmyers@futurebright.com` (in 4 places: `calendar-sync.md` x2, `sources-of-truth.md`, `edit-ticket-prices.md`, and a postmortem reference). Ray believes the real source of truth should be / is Outlook on the band's Microsoft 365 mailbox (`info@liveradiodfw.com`), not his personal Google account.
+**Symptom:** The `docs` branch said the band calendar lives on `rmyers@futurebright.com` in 4 places. Ray wasn't sure whether the real host was his personal Google account, a Google Workspace, or Outlook on `info@liveradiodfw.com`.
 
-**Where:** `docs/architecture/calendar-sync.md` lines 8 and 31, `docs/architecture/sources-of-truth.md` line 7, `docs/runbooks/edit-ticket-prices.md` line 7, `docs/postmortems/2026-04-17-sync-wipe.md` line 60.
+**Where:** `docs/architecture/calendar-sync.md` lines 8 and 31, `docs/architecture/sources-of-truth.md` line 7, `docs/runbooks/edit-ticket-prices.md` line 7.
 
-**Workaround:** None needed for day-to-day - sync still works because the webhook reads whichever Google Calendar it's wired to.
+**Root cause identified (2026-04-17):** Ray logged into `info@liveradiodfw.com` (a free Google **personal** account on the band domain) and found the Apps Script project **"LiveRadioDFW Calendar"** living there, bound to info@'s Google Calendar. The webhook has always been reading info@'s calendar. rmyers@futurebright.com is merely **subscribed** for day-to-day visibility, not the host. The docs were simply wrong.
 
-**Fix (deferred - rabbit hole):**
-1. Confirm where the webhook is actually reading from (personal Google vs. band Google Workspace vs. Outlook via sync bridge).
-2. Decide the canonical host. If it should be Outlook on `info@liveradiodfw.com`, design the bridge (e.g. Microsoft 365 → Google sync, or rewrite webhook against Microsoft Graph).
-3. Rewrite all 4 doc locations in one pass.
-4. Likely triggers cascading questions about the Outlook-native event ID bug (B3) and attendee bug (B2).
+**Fix applied:**
+1. Corrected all 4 doc locations to state: Google Calendar owned by `info@liveradiodfw.com` (free Google personal account).
+2. Added a canonical statement in `architecture/sources-of-truth.md` with the confirmation date and method.
+3. Checked the postmortem line-60 reference — false positive, unrelated context.
+4. Committed master copy of the Apps Script to `docs/scripts/LiveRadioDFWCalendar.gs` with passphrase redacted.
+5. New runbook: [runbooks/publish-calendar-webhook.md](runbooks/publish-calendar-webhook.md) for the manual publish step.
+6. Logged J9 (connectors are account-wide, not per-project), R10 (extend `_updateEvent` for attendees), B7 (public passphrase exposure discovered during this cleanup).
 
-**Why deferred:** Every calendar change turns into a multi-hour rabbit hole. Don't touch until there's a dedicated session for it.
+**Status:** Fixed 2026-04-17.
 
-**Status:** Open, intentionally deferred.
+---
+
+## B7. Webhook passphrase and URL are publicly readable on the live site
+
+**Symptom:** `sync_calendar.py` lives on the `gh-pages` branch and hard-codes the Apps Script webhook URL and passphrase (lines 44–45). Because `gh-pages` is the live site served via GitHub Pages + Cloudflare, the file is fetchable at `https://www.liveradiodfw.com/sync_calendar.py` (200 OK, observed 2026-04-17) and also readable directly from the public GitHub repo.
+
+**Where:** `liveradiodfw-site` repo, `gh-pages` branch, `sync_calendar.py` lines 44–45. Public URLs:
+- `https://www.liveradiodfw.com/sync_calendar.py`
+- `https://raw.githubusercontent.com/TicoRicoRay/liveradiodfw-site/gh-pages/sync_calendar.py`
+
+**Impact:** Anyone who discovers either URL can invoke the webhook with `{action: "create"|"update"|"delete"}` and corrupt, wipe, or plant events on the band calendar. Severity: high. No evidence of exploitation yet, but the exposure window may have been long.
+
+**Workaround:** None at the script level. Short-term: do not link to or publicize either URL.
+
+**Fix options (ranked):**
+- (a) **Rotate passphrase + move sync off gh-pages.** Generate new passphrase, update Apps Script and password manager, move `sync_calendar.py` to a non-public location on whatever host actually runs the cron (likely Ray's Windows box; see B1), read passphrase from env var or local config file that's `.gitignore`d. Strongest fix.
+- (b) **Rotate passphrase + keep script on gh-pages but add `.gitignore` + Jekyll exclude or `_config.yml` exclude + server-side 404 for `*.py`.** Risky — GitHub Pages serves everything in the branch by default. Easy to regress.
+- (c) **Rotate passphrase + move `sync_calendar.py` to a private repo or private branch.** Moderate. Requires re-pointing the cron.
+- (d) **Keep everything and add an IP allow-list in the Apps Script.** Only helps if the cron runs from a stable public IP. Doesn't fix the GitHub-readable copy.
+
+**Recommendation:** (a). Rotate first, move second. Rotation alone immediately invalidates any copies already harvested.
+
+**Discovered:** 2026-04-17 during calendar SoT cleanup, while auditing where the passphrase lives.
+
+**Status:** Open. Top priority — promotes to project-plan top-priority list next session.
 
 ---
 
@@ -244,10 +272,23 @@ These aren't band bugs - they're limitations in how Jarvis (the AI assistant) ca
 
 **Status:** Behavioral rule. Must re-surface at thread start.
 
+## J9. Connectors are account-wide, not per-project
+
+**Symptom:** Perplexity's external-tool connectors are attached to the user's Perplexity account, not to individual projects or threads. Band work and EOS work run in the same connector namespace. There is no UI-level way to say "this thread can reach Mailchimp + info@'s Google services, but must not touch ray.myers@eosworldwide.com's Gmail/GCal."
+
+**Impact:** Project separation must be enforced behaviorally via cardinal rules ("NEVER read/write/search the `gcal` connector for band work") rather than structurally. J7 — cross-project connector access under ambiguity — is a direct consequence. Small lapse in rule adherence can leak data across project boundaries.
+
+**Mitigation:** Cardinal rules in memory, `project-plan.md`, `architecture/sources-of-truth.md`, and the startup prompt. Ray's pushback is the safety net.
+
+**Feature request to Perplexity:** Per-thread or per-Space connector allow-lists. Would fix J7, J3 (indirectly — Spaces already have their own connector limitation, but configurable per-project connectors would remove the reason to use Spaces this way), and reduce cognitive load on cardinal rules.
+
+**Status:** Open, external platform limitation. Logged 2026-04-17 during calendar SoT cleanup as an explicit structural root cause (previously only surfaced implicitly via J7).
+
 ---
 
 ## Fixed recently (moved here for context; full history in postmortems)
 
+- **2026-04-17 - B4 calendar host identity cleaned up:** Band calendar source of truth confirmed as `info@liveradiodfw.com` (free Google personal account). Corrected 3 doc locations (`sources-of-truth.md`, `calendar-sync.md` x2, `edit-ticket-prices.md`). Added canonical statement in `architecture/sources-of-truth.md`. Committed master copy of Apps Script to `docs/scripts/LiveRadioDFWCalendar.gs` (passphrase redacted). New runbook: `runbooks/publish-calendar-webhook.md`. Spawned B7 (public passphrase exposure), J9 (connectors account-wide), R10 (attendees fix).
 - **2026-04-17 - B5 GitHub Pages challenge TXT restored:** Pulled fresh challenge value from `github.com/settings/pages`, added as TXT record in Cloudflare (`_github-pages-challenge-TicoRicoRay` → `76bd16254d16a7be4333e49413c13d`). Verified propagation on 1.1.1.1, 8.8.8.8, and `summer.ns.cloudflare.com`. Domain was already verified via DNS-based method; this restores the belt-and-suspenders challenge record that was dropped during the Cloudflare migration.
 - **2026-04-17 - Sync wipe:** `sync_calendar.py` was overwriting hand-curated fields in `shows.json`. Fixed with non-destructive merge + strict ticket-price parser. See [postmortems/2026-04-17-sync-wipe.md](postmortems/2026-04-17-sync-wipe.md).
 - **2026-04-15 to 2026-04-16 - 12-hour outage:** during the Bandzoogle → Cloudflare → GitHub Pages migration. Fixed. See [postmortems/](postmortems/).

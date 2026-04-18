@@ -114,6 +114,18 @@ Pick before any code touches the webhook.
 ### R9. Timezone convention enforcement
 Standing rule: all docs use "Central" or "America/Chicago", never "CDT" or "CST". Swept once on 2026-04-17; worth a periodic grep to keep new docs compliant.
 
+### R10. Extend `_updateEvent` to honor attendees
+Dependency for [B2](bugs.md#b2-webhook-attendees-field-is-a-silent-no-op). Root cause is known: `_updateEvent` in `LiveRadioDFWCalendar.gs` accepts the `attendees` payload field but has no code path that acts on it.
+
+**Scope:**
+1. In `docs/scripts/LiveRadioDFWCalendar.gs`, extend `_updateEvent` to iterate `payload.attendees` and call `event.addGuest(email)` for each (~2 lines).
+2. Publish via [runbooks/publish-calendar-webhook.md](runbooks/publish-calendar-webhook.md).
+3. Smoke-test against a throwaway event before trusting on real gigs.
+4. Optionally: post-sync step in `sync_calendar.py` to ensure Regina is on every future public event.
+5. Move B2 to decision-resolved.
+
+**Gate:** R8 decision. If Ray picks (a) manual-only, R10 is parked.
+
 ---
 
 ## Parked / someday-maybe

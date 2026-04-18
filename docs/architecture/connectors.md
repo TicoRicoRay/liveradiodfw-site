@@ -19,8 +19,8 @@ These have documented band workflows. Runbooks, architecture docs, or scripts re
 ### GitHub (`github_mcp_direct`)
 - **Identity:** Ray's personal GitHub (`TicoRicoRay`).
 - **Band use:** Read/write both band repos.
-  - [`liveradiodfw-site`](https://github.com/TicoRicoRay/liveradiodfw-site): `docs` branch (durable memory - this file lives here), `gh-pages` branch (the live site), `master` branch (Python automation including `sync_calendar.py`).
-  - [`liveradiodfw-marketing`](https://github.com/TicoRicoRay/liveradiodfw-marketing): availability-email scripts, analysis assets, campaign drafts.
+  - [`liveradiodfw-site`](https://github.com/TicoRicoRay/liveradiodfw-site): two branches. `docs` (durable memory — this file lives here; never served). `gh-pages` (the live site; also holds `sync_calendar.py` today per B7's exposure note). There is **no** `master` branch on this repo.
+  - [`liveradiodfw-marketing`](https://github.com/TicoRicoRay/liveradiodfw-marketing): `master` branch. Availability-email scripts, analysis assets, campaign drafts.
 - **Access pattern:** `bash` + `gh` / `git` CLI (credentials pre-configured, never inspect them).
 - **Cross-project note:** GitHub will eventually be used by every project Ray runs with Jarvis (durable-memory pattern proven here is being generalized). Band-specific access is via the two repo names above - other projects will have their own repos.
 - **Referenced by:** `architecture/calendar-sync.md`, `architecture/marketing-automation.md`, `runbooks/dns-and-pages.md`, `runbooks/end-of-session.md`.
@@ -36,11 +36,11 @@ These have documented band workflows. Runbooks, architecture docs, or scripts re
 - **Referenced by:** `architecture/sources-of-truth.md`, `architecture/marketing-automation.md`, `architecture/scheduled-tasks.md`.
 
 ### Outlook (`outlook`)
-- **Identity:** Band account (`info@liveradiodfw.com`) - Microsoft 365 mailbox.
-- **Band use:** Inbound venue replies, booking confirmations, business email. Likely the true calendar host per B4 (deferred - calendar-host identity ambiguous in docs).
+- **Identity:** Band account (`info@liveradiodfw.com`) — Microsoft 365 mailbox (MX on Microsoft 365).
+- **Band use:** Inbound venue replies, booking confirmations, business email. **Not the calendar source of truth** (confirmed 2026-04-17: the band's Google Calendar on info@'s free Google personal account is the source of truth; see `architecture/sources-of-truth.md`). Outlook's calendar has historically been a dual-write destination — this habit is under review, see the footnote in `postmortems/2026-04-17-sync-wipe.md`.
 - **Cardinal rule touchpoint:** Only the `info@` identity. If a personal Outlook identity shows up here, do not use it for band work.
 - **Tools exposed:** `search_email`, `draft_email`, `send_email`, `search_calendar`, `update_calendar`.
-- **Open question (B4):** Whether the band Google Calendar the webhook reads from is actually sourced from this Outlook mailbox via a sync bridge. Deferred rabbit hole.
+- **B4 (calendar host identity) RESOLVED 2026-04-17:** the Google Calendar is owned by info@'s free Google personal account, not by Outlook or a sync bridge. See `bugs.md` fixed-recently section.
 
 ### Eventbrite (`eventbrite__pipedream`)
 - **Identity:** Band account (`info@liveradiodfw.com`).
