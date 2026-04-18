@@ -158,6 +158,40 @@ A half-complete bug entry is worse than no entry. If symptom or impact aren't cl
 
 ---
 
+## B14. Show-detail action buttons need reorder + Share promoted to primary CTA
+
+**Symptom:** On each show-detail page the action-button row renders as `Get Directions` (red primary) &rarr; `Add to Calendar` (outline) &rarr; `Share` (outline) &rarr; `All Shows` (outline). Share is the action the band most wants fans to take (it drives new reach to upcoming shows), but visually it sits third in the row with the same ghost outline as every other button, so it reads as a low-priority tertiary.
+
+**Desired state:**
+
+1. **Share** first in the row, styled as the primary CTA (solid fill, distinct colour from the existing `--red` directions button so they don't compete). Button text in white so it pops against the fill.
+2. **Get Directions** second.
+3. **Add to Calendar** third.
+4. **All Shows** last (stays secondary/outline).
+
+**Where:** `lrdfw-ghpages/build_show_pages.py` lines 208–213 — the `<div class="show-page-actions">` block in the page template. Current order in the source:
+
+```python
+<div class="show-page-actions">
+  <a ... class="btn btn-primary">Get Directions</a>
+  <button class="btn-calendar">... Add to Calendar</button>
+  <button class="btn-share">... Share</button>
+  <a ... class="btn btn-secondary">All Shows</a>
+</div>
+```
+
+CSS for the button styles lives in `css/style.css` — `.btn-primary` at ~L277, `.btn-share` (outline ghost) and `.btn-calendar` nearby. Need a new modifier (e.g. `.btn-share.btn-cta` or a new `.btn-primary-accent`) with a distinct fill colour + `color: #ffffff`.
+
+**Colour suggestion (not prescribed):** site already owns `--red: #e63946` for the primary CTA. A dark navy/blue (e.g. `#1d3557`, which sits in the same family as the existing navbar) or a deep teal would give Share a different primary treatment without clashing. Pick during implementation; the cardinal rule is "different from `--red` so the two primary buttons in the row don't fight each other."
+
+**Impact:** Cosmetic + conversion. Makes the highest-leverage action (Share) the most visually prominent action on the page. Changes only `build_show_pages.py` template + one CSS block; regenerate all show pages via `build_show_pages.py`.
+
+**Dependencies:** None. Can ship standalone. Related to R8 (show-page layout polish, closed) and B13 (badge square, closed).
+
+**Status:** Open. Logged 2026-04-18 AM.
+
+---
+
 ## B13. Red date badge on show-detail pages is not square
 
 **Symptom:** On individual show pages (`/shows/*.html`), the red date block in the hero renders as a tall rectangle instead of a square. The same kind of date badge on the shows-list page (`/shows.html`) renders visually closer to square. Ray wants them squared up and positioned upper-left within the show-page hero.
@@ -499,7 +533,8 @@ These aren't band bugs - they're limitations in how Jarvis (the AI assistant) ca
 ## Fixed recently (moved here for context; full history in postmortems)
 
 - **2026-04-18 AM - B10 Pass 2: venue duplication at render layer cleaned up:** After shipping the ingest-side fix earlier in the morning, Ray spotted residual duplication on live `/shows.html` — h3 title "FRISCO RAIL YARD" followed by address line "Frisco Rail Yard, 9040 First St, …". Root cause was render-side: `build_shows.py` line 78 concatenated `{venue}, {address}` in the `.venue-address` paragraph, and because `address` was already pre-cleaned of the leading venue segment by Pass 1, the template was the only remaining dupe source. Fix: drop the `{venue}, ` prefix so the paragraph renders street-only. Compact cards on index.html already used `address_short`, no change needed there. J6 lesson reinforced: when I first said "it's live" after the ingest fix, I was reading the JSON (clean) rather than the rendered card (still dup). Verify at the render layer, not just the data.
-- **2026-04-18 AM - B13 red date badge on show-detail pages now square:** `.show-page-date` had `min-width: 72px` but no explicit height, so three rows of text plus `--space-3` padding pushed height above width, rendering as a tall rectangle. Fixed by locking `width: 72px; height: 72px;` and adding `justify-content: center` so the three text rows vertically center; dropped padding from `--space-3` to `--space-2` so the text still fits inside the 72px square. Added `flex-shrink: 0` for narrow-hero safety. Position was already correct (the parent `.show-page-hero` is a flex row with `align-items: flex-start` and the date is child #1, so upper-left was the pre-existing layout). Verified on `/shows/fresh-by-brookshires-2026-04-25.html` after push.
+- **2026-04-18 AM - B13 Pass 2: badge bumped 72→80 so text content fits the square:** First pass locked `width: 72px; height: 72px` which made the box model square, but Ray caught that the rendered badge still *read* as taller than wide. Live-DOM measurement confirmed the box was exactly 72×72, but the three text rows (SAT 22px + day-num ~39px + APR 22px = ~83px total) overflowed the 72px height, making the background square look shorter than its content. Fixed by bumping width/height to 80×80 — matches the `.show-date-badge` on `/shows.html`, where `day-num` is 35px and the content totals ~80px, fitting cleanly inside the square. Bonus consistency: listing and detail badges are now the exact same visual size. Lesson: a square border-box doesn't guarantee a square *appearance* when child content overflows; measure rendered child heights, not just the box.
+- **2026-04-18 AM - B13 Pass 1: square-boxed `.show-page-date` on show-detail pages:** `.show-page-date` had `min-width: 72px` but no explicit height, so three rows of text plus `--space-3` padding pushed height above width, rendering as a tall rectangle. Fixed by locking `width: 72px; height: 72px;` and adding `justify-content: center` so the three text rows vertically center; dropped padding from `--space-3` to `--space-2` so the text still fits inside the 72px square. Added `flex-shrink: 0` for narrow-hero safety. Position was already correct (the parent `.show-page-hero` is a flex row with `align-items: flex-start` and the date is child #1, so upper-left was the pre-existing layout). Verified on `/shows/fresh-by-brookshires-2026-04-25.html` after push.
 - **2026-04-18 AM - B11 breadcrumb on show pages now unique:** `build_show_pages.py` line 194 changed from `<span>{venue}</span>` to `<span>{venue} &mdash; {long_date}</span>`. Each detail page now has a distinct trailing crumb like `Home › Shows › FRESH by Brookshire's — Saturday, April 25, 2026`. Verified live on `/shows/fresh-by-brookshires-2026-04-25.html` after sync push.
 - **2026-04-18 AM - B10 follow-up: `address_short` regex tightened to not match `TX-276`:** Immediately after shipping B10 and updating the Sweetwater Grill calendar event with a real street address (`4884 TX-276, Royse City, TX 75189, USA`), sync ran and `address_short` regressed from `Royse City, TX` to `4884, TX`. Polluted the `<title>` and meta description on the show-detail page (`| Live Music 4884, TX`). Root cause: the short-address parser at `sync_calendar.py` lines 261 and 271 used `TX\b` which matches at the X-hyphen word boundary in `TX-276`, then captured the street number (`4884`) as the city. Fix: both regexes changed from `TX\b` to `TX(?=\s|$|\d)` so TX must be followed by whitespace, end-of-string, or a ZIP digit — not a hyphen. Verified against all current addresses before pushing. Lesson: highway designators like `TX-276` are the edge case; `\b` is not tight enough for state-abbreviation matching when the same two letters can appear in highway names.
 - **2026-04-18 AM - B10 venue duplication cleaned up at ingest:** `sync_calendar.py` now strips the leading venue segment from `address` when the second segment clearly looks like a street address (first char is a digit). Canonical `shows.json` stores street-only addresses; every downstream consumer (`/shows.html` venue-address line, show-detail `show-page-address`, JSON-LD schema, Add-to-Calendar `data-cal-address`, `.ics` export) is cleaned in one pass. 7 of 10 current shows updated on the live site on the first pass. Sweetwater Grill was the 8th once Ray added a street address to the calendar event later that morning; that update exposed the `TX-276` regex bug noted in the follow-up bullet above.
