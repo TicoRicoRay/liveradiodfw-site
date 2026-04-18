@@ -158,6 +158,39 @@ A half-complete bug entry is worse than no entry. If symptom or impact aren't cl
 
 ---
 
+## B11. Breadcrumb on show-detail pages is not unique per-show
+
+**Symptom:** Every individual show page renders the breadcrumb as:
+
+> Home › Shows › **Venue Name**
+
+Since the band plays the same venues repeatedly (Fresh by Brookshires is on the schedule 2026-04-25, 2026-05-16, and 2026-09-12 right now), the three separate show pages all show an identical trailing breadcrumb crumb. Ray would prefer each page's crumb to be unique, e.g.:
+
+> Home › Shows › **Venue Name — Date**
+
+**Where:** `lrdfw-ghpages/build_show_pages.py` line 194:
+
+```python
+<span>{venue}</span>
+```
+
+sits inside `<nav class="breadcrumb" aria-label="Breadcrumb">` at lines 191–195. No structured-data `BreadcrumbList` block exists, so this is the only render site.
+
+**Impact:** None functional. Pure cosmetic / neat-freak polish. Minor secondary benefit: makes the browser tab / SERP text snippet slightly more distinctive for the same-venue repeat pages.
+
+**Fix options:**
+- (a) **Append the date.** Change line 194 to something like `<span>{venue} — {long_date}</span>`, reusing the `long_date` variable already computed earlier in `build_show_pages.py` (it's the `"Saturday, April 25, 2026"` form used in the meta description). Mirrors the phrasing Ray asked for. One-line change.
+- (b) **Append a shorter date.** Same as (a) but with `{show["date"]}` (ISO `2026-04-25`) or a compact `Apr 25` form — keeps the crumb from wrapping on mobile. Small trade-off vs. (a).
+- (c) **Leave title as-is, add a BreadcrumbList schema.org block too.** If we're editing the breadcrumb anyway, worth also emitting a JSON-LD `BreadcrumbList` so Google can show breadcrumb text in SERPs (already noted as a gap in `ai_outputs/seo_keyword_analysis.md`). Small bonus scope, separate concern from the visible crumb.
+
+**Recommendation:** (a), using an en-dash or em-dash consistent with the rest of the site (existing docs use em-dashes; the visible render already uses `&rsaquo;` as separator so any punctuation works). Ship with (c) if it's convenient; otherwise log (c) as a separate follow-up.
+
+**Style note for the fix:** this is prose that will appear in rendered HTML on the public site, so the site's existing em-dash convention applies — no need to avoid em-dashes here (the "no em-dashes" cardinal rule is about Jarvis's output to Ray, not about site copy).
+
+**Status:** Open. Trivial fix. Batch with B8 + B10 next time we touch `sync_calendar.py`/`build_show_pages.py`.
+
+---
+
 ## B10. Venue name duplicated on `/shows` and show-detail pages
 
 **Symptom:** On `/shows.html`, each upcoming-show card renders the venue name two or three times in a row, e.g.:
