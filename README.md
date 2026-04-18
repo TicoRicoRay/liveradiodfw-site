@@ -91,8 +91,8 @@ liveradiodfw-site/
 **Shows are now managed automatically via `sync_calendar.py`.** The Google Calendar (info@liveradiodfw.com) is the source of truth.
 
 **How it works:**
-1. A daily cron (8 AM CDT) runs `sync_calendar.py`
-2. The script fetches all events from Google Calendar via iCal feed
+1. A daily cron (8 AM Central) runs `sync_calendar.py`
+2. The script fetches all events from Google Calendar via the `LiveRadioDFW Calendar` Apps Script webhook (POST `{action: "list"}`)
 3. It compares against `shows.json` and:
    - **Adds** new shows found on the calendar
    - **Removes** shows deleted from the calendar
@@ -217,15 +217,15 @@ These run automatically via Perplexity Computer:
 
 | Cron | Schedule | What it does |
 |------|----------|-------------|
-| **Daily Calendar Sync** | **Every day 8 AM CDT** | **Runs `sync_calendar.py` — syncs Google Calendar → shows.json → website. Auto-adds, auto-deletes, auto-updates. Emails info@ on changes. Pushes to gh-pages.** |
+| **Daily Calendar Sync** | **Every day 8 AM Central** | **Runs `sync_calendar.py` — syncs Google Calendar → shows.json → website. Auto-adds, auto-deletes, auto-updates. Emails info@ on changes. Pushes to gh-pages.** |
 | HTTPS Cert Check (temp) | Hourly (until resolved) | Checks `https://www.liveradiodfw.com` cert. Emails info@ on success or after 5 failures, then self-deletes. |
 
 **Calendar sync details:**
-- Source of truth: Google Calendar (info@liveradiodfw.com)
-- iCal feed URL: private (stored in sync_calendar.py)
-- Google Calendar webhook: used for dual-write (create/update events), NOT for sync reads
-- Events are dual-written to both Outlook (connector) and Google Calendar (webhook)
-- Do NOT add info@liveradiodfw.com as an Outlook event attendee (causes duplicate cross-sync to Google)
+- Source of truth: Google Calendar owned by `info@liveradiodfw.com` (free Google personal account on the band domain). See `docs` branch: `architecture/sources-of-truth.md`.
+- Webhook: **"LiveRadioDFW Calendar"** Apps Script project under info@. Used by `sync_calendar.py` for **reads** (`action: "list"`) and also supports writes (`action: "create"|"update"|"delete"`). (Corrected 2026-04-17: previous note claiming the webhook was not used for sync reads was wrong.)
+- Master copy of webhook code: `docs` branch `scripts/LiveRadioDFWCalendar.gs`. Publish procedure: `docs` branch `runbooks/publish-calendar-webhook.md`.
+- Events historically dual-written to both Outlook and Google Calendar. Going forward, create events directly in Google Calendar on info@ (avoids bugs B2/B3 on the `docs` branch `bugs.md`). Eliminating the Outlook half of the pipeline is under consideration.
+- Do NOT add info@liveradiodfw.com as an Outlook event attendee (causes duplicate cross-sync to Google).
 
 ---
 
