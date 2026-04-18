@@ -42,7 +42,7 @@ from zoneinfo import ZoneInfo
 
 # ── Config ────────────────────────────────────────────────────────────────────
 WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbz9nOyNo-_YOeU0x4rnq76Y5iuxyiZOSUES2m7Lye4TmXZ6wyQNG9cUp7r9ithYTlbLeA/exec"
-PASSPHRASE = "El3QSCjanehlVwDpTOO_TBS-JGC9v7nW"
+PASSPHRASE = "L7D3U7cLUHDcjHSpPjVsomp5LqufSFHj"
 BASE = Path(__file__).parent
 ALERT_EMAIL = "info@liveradiodfw.com"
 CDT = ZoneInfo("America/Chicago")
