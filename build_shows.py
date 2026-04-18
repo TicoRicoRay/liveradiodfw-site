@@ -41,9 +41,22 @@ with open(BASE / "shows.json", "w") as f:
     json.dump(all_shows, f, indent=2)
     f.write("\n")
 
-# Filter out past shows for upcoming display
+# Filter out past shows for upcoming display.
+# A show is past when its date is before today OR when it carries the explicit
+# "past": true flag (set by import_bandzoogle.py for historic imports).
 today = date.today()
-upcoming = [s for s in all_shows if datetime.strptime(s["date"], "%Y-%m-%d").date() >= today]
+
+
+def is_past(s):
+    if s.get("past") is True:
+        return True
+    return datetime.strptime(s["date"], "%Y-%m-%d").date() < today
+
+
+upcoming = [s for s in all_shows if not is_past(s)]
+past_shows = [s for s in all_shows if is_past(s)]
+# past-shows list is rendered reverse-chronologically (most recent first).
+past_shows_rev = sorted(past_shows, key=lambda s: s["date"], reverse=True)
 
 PRIVATE_BADGE = '<p class="show-private-badge" style="display:inline-block;margin-top:0.25rem;padding:2px 10px;font-size:var(--text-xs);font-weight:600;color:#e63946;border:1px solid #e63946;border-radius:999px;text-transform:uppercase;letter-spacing:0.05em;">Private Event</p>'
 
@@ -178,8 +191,9 @@ def build_jsonld(shows):
 shows_html_path = BASE / "shows.html"
 shows_html = shows_html_path.read_text(encoding="utf-8")
 
-# Replace JSON-LD
-jsonld_new = build_jsonld(all_shows)
+# Replace JSON-LD. JSON-LD MusicEvent entries are for upcoming shows only;
+# past events already happened and Google's event markup is for discovery.
+jsonld_new = build_jsonld(upcoming)
 shows_html = re.sub(
     r'(<script type="application/ld\+json">)\s*\[.*?\]\s*(</script>)',
     lambda m: m.group(1) + jsonld_new + m.group(2),
@@ -187,8 +201,9 @@ shows_html = re.sub(
     flags=re.DOTALL
 )
 
-# Replace show cards between markers
-full_cards = build_full_cards(all_shows)
+# Replace show cards between markers. Only upcoming shows appear on /shows
+# (past shows get their own /past-shows.html page, built separately).
+full_cards = build_full_cards(upcoming)
 shows_html = re.sub(
     r'(<!-- BEGIN_SHOWS -->).*?(<!-- END_SHOWS -->)',
     lambda m: m.group(1) + "\n" + full_cards + "\n    " + m.group(2),
@@ -212,7 +227,25 @@ index_html = re.sub(
 index_html_path.write_text(index_html, encoding="utf-8")
 print("✓ index.html updated")
 
-print(f"\nShows in JSON: {len(all_shows)} total, {len(upcoming)} upcoming")
+# ── Stamp past-shows.html ────────────────────────────────────────────────────────────
+# past-shows.html is a separate index page showing every past show in
+# reverse-chronological order. It only exists once there is at least one
+# past show (the template file is written by hand; the shows are stamped
+# into the BEGIN_SHOWS/END_SHOWS markers here).
+past_shows_html_path = BASE / "past-shows.html"
+if past_shows_html_path.exists() and past_shows_rev:
+    past_html = past_shows_html_path.read_text(encoding="utf-8")
+    past_cards = build_full_cards(past_shows_rev)
+    past_html = re.sub(
+        r'(<!-- BEGIN_SHOWS -->).*?(<!-- END_SHOWS -->)',
+        lambda m: m.group(1) + "\n" + past_cards + "\n    " + m.group(2),
+        past_html,
+        flags=re.DOTALL
+    )
+    past_shows_html_path.write_text(past_html, encoding="utf-8")
+    print(f"✓ past-shows.html updated ({len(past_shows_rev)} past shows)")
+
+print(f"\nShows in JSON: {len(all_shows)} total, {len(upcoming)} upcoming, {len(past_shows)} past")
 for s in upcoming:
     flag = " [PRIVATE]" if s.get("private", False) else ""
     print(f"  {s['date']}  {s['title']}{flag}")
