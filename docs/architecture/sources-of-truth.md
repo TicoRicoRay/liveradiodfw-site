@@ -16,7 +16,7 @@ This is a free Google **personal** account on the band domain. The domain's emai
 
 **rmyers@futurebright.com is NOT the source of truth.** Ray's futurebright account is **subscribed** to info@'s calendar for convenient day-to-day visibility, but it does not own the events. All create/edit/delete operations must target info@'s calendar.
 
-**Not the source of truth:** Outlook calendar. Events may exist there via prior dual-entry habits, but the sync reads from Google only. See [bugs.md](../bugs.md) B3 for the Outlook-originated-event failure mode — always create new events in Google first.
+**Not a band calendar destination at all:** Outlook calendar. As of 2026-04-17 PM the Outlook half of the old dual-entry pipeline is formally decommissioned. Outlook (`info@liveradiodfw.com` via Microsoft 365) remains in use for band **email** only. **Never create, edit, or delete band events in Outlook.** Older events created in Outlook that synced over to Google with Outlook-native hex IDs still exist; edit those directly in the Google Calendar UI (see [runbooks/edit-ticket-prices.md](../runbooks/edit-ticket-prices.md) and B3 in [bugs.md](../bugs.md)).
 
 **Never touch:** The EOS calendar (`ray.myers@eosworldwide.com`). It is personal and unrelated to the band. See cardinal rules in the session-startup prompt.
 

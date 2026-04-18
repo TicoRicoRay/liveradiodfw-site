@@ -37,9 +37,9 @@ These have documented band workflows. Runbooks, architecture docs, or scripts re
 
 ### Outlook (`outlook`)
 - **Identity:** Band account (`info@liveradiodfw.com`) — Microsoft 365 mailbox (MX on Microsoft 365).
-- **Band use:** Inbound venue replies, booking confirmations, business email. **Not the calendar source of truth** (confirmed 2026-04-17: the band's Google Calendar on info@'s free Google personal account is the source of truth; see `architecture/sources-of-truth.md`). Outlook's calendar has historically been a dual-write destination — this habit is under review, see the footnote in `postmortems/2026-04-17-sync-wipe.md`.
-- **Cardinal rule touchpoint:** Only the `info@` identity. If a personal Outlook identity shows up here, do not use it for band work.
-- **Tools exposed:** `search_email`, `draft_email`, `send_email`, `search_calendar`, `update_calendar`.
+- **Band use:** **Email only.** Inbound venue replies, booking confirmations, business email. The Outlook calendar is **NOT a band calendar destination** as of 2026-04-17 PM (see the cardinal rules in `project-plan.md` and the Shows/Gigs section of `architecture/sources-of-truth.md`). Do not call `update_calendar` or create events through this connector for band work — the band calendar lives on info@'s free Google personal account and is written only via the Apps Script webhook.
+- **Cardinal rule touchpoint:** Only the `info@` identity. If a personal Outlook identity shows up here, do not use it for band work. Calendar tools on this connector are off-limits for band events.
+- **Tools exposed:** `search_email`, `draft_email`, `send_email`, `search_calendar`, `update_calendar`. (Use only the email-side tools for band work.)
 - **B4 (calendar host identity) RESOLVED 2026-04-17:** the Google Calendar is owned by info@'s free Google personal account, not by Outlook or a sync bridge. See `bugs.md` fixed-recently section.
 
 ### Eventbrite (`eventbrite__pipedream`)
@@ -85,7 +85,7 @@ Using any of these for band work is a cardinal-rule violation. Listed here expli
 - **Identity:** `ray.myers@eosworldwide.com` (EOS Worldwide - Ray's day job, completely unrelated to the band).
 - **Tools exposed:** `search_email`, `draft_email`, `send_email`, `search_calendar`, `update_calendar`.
 - **Rule:** **Never read, write, or search this connector for band work.** No exceptions. This is the single biggest cross-project contamination risk on the account - same account, same Perplexity UI, different project. The connector name "Gmail with Calendar" sounds generic and will invite wrong use. It is specifically the EOS calendar and EOS mailbox.
-- **If you need email or calendar for the band:** use `outlook` (the band's `info@liveradiodfw.com` mailbox). There is no dedicated band Google Calendar connector today - calendar sync runs through the Apps Script webhook, not a direct connector.
+- **If you need email for the band:** use `outlook` (the band's `info@liveradiodfw.com` mailbox). **Email only — the Outlook calendar is not a band destination.** For the band calendar, there is no dedicated connector; create/edit/delete events via the `LiveRadioDFW Calendar` Apps Script webhook (master copy at `scripts/LiveRadioDFWCalendar.gs`, publish via `runbooks/publish-calendar-webhook.md`).
 - **Related bugs:** [J7](../bugs.md) (cross-project contamination behaviorally mitigated, not structurally), J9 (platform-level root cause - connectors are account-wide).
 
 ### Personal Health Data (`health`)
