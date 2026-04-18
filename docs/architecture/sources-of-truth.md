@@ -4,16 +4,21 @@ Where each type of data lives. If you're ever confused about where to look or wh
 
 ## Shows / Gigs
 
-**Source of truth: Google Calendar** (band calendar on rmyers@futurebright.com)
+**Source of truth: Google Calendar owned by `info@liveradiodfw.com`.**
 
-- Event details (title, venue, date, time, location) live on the calendar
+This is a free Google **personal** account on the band domain. The domain's email (MX) is on Microsoft 365; only the Google Calendar side of that account is used for band operations. Confirmed 2026-04-17 by logging in and inspecting the Apps Script project **"LiveRadioDFW Calendar"** under info@.
+
+- Event details (title, venue, date, time, location) live on this calendar
 - Ticket prices live in the event **description** (see [runbooks/edit-ticket-prices.md](../runbooks/edit-ticket-prices.md))
-- The site (`shows.json` + per-show HTML pages) is derived automatically by `sync_calendar.py` running daily at 8 AM Central
+- The site (`shows.json` + per-show HTML pages) is derived automatically by `sync_calendar.py` running daily at 8 AM Central, which reads the calendar via the **"LiveRadioDFW Calendar"** Apps Script webhook
 - **Never** hand-edit `shows.json` or `shows/*.html` — the sync will overwrite them
+- Master copy of the webhook code: [`scripts/LiveRadioDFWCalendar.gs`](../scripts/LiveRadioDFWCalendar.gs). Publish procedure: [runbooks/publish-calendar-webhook.md](../runbooks/publish-calendar-webhook.md)
 
-**Not the source of truth:** Outlook calendar (even though the same events exist there via sync). The sync reads from Google only.
+**rmyers@futurebright.com is NOT the source of truth.** Ray's futurebright account is **subscribed** to info@'s calendar for convenient day-to-day visibility, but it does not own the events. All create/edit/delete operations must target info@'s calendar.
 
-**Never touch:** The EOS calendar. It is personal and unrelated to the band.
+**Not the source of truth:** Outlook calendar. Events may exist there via prior dual-entry habits, but the sync reads from Google only. See [bugs.md](../bugs.md) B3 for the Outlook-originated-event failure mode — always create new events in Google first.
+
+**Never touch:** The EOS calendar (`ray.myers@eosworldwide.com`). It is personal and unrelated to the band. See cardinal rules in the session-startup prompt.
 
 ## Venues and Venue Contacts
 

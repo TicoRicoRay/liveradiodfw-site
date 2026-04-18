@@ -5,7 +5,7 @@ How the band website's shows page gets built and kept in sync.
 ## Data Flow
 
 ```
-Google Calendar (band calendar on rmyers@futurebright.com)
+Google Calendar (owned by info@liveradiodfw.com)
          │
          │  POST {action: "list"}
          ▼
@@ -28,15 +28,17 @@ GitHub Pages serves liveradiodfw.com
 ## Components
 
 ### Google Calendar
-The band calendar (secondary calendar on rmyers@futurebright.com). Individual events with title, start, end, location, description.
+The band calendar is the **primary** calendar of the free Google personal account `info@liveradiodfw.com`. Individual events with title, start, end, location, description. See [architecture/sources-of-truth.md](sources-of-truth.md#shows--gigs) for the full rationale. rmyers@futurebright.com is **subscribed** (read view) for Ray's day-to-day convenience; it is not the source of truth and must not be used as the target for create/edit/delete.
 
 ### Google Apps Script Webhook
 A webhook that exposes the calendar to `sync_calendar.py`.
 
-- **URL:** not in docs (public branch). See your password manager.
-- **Passphrase:** not in docs. See your password manager.
+- **Apps Script project name:** `LiveRadioDFW Calendar` (owned by info@liveradiodfw.com, viewable at script.google.com when logged in as info@)
+- **Master copy of the code:** [`scripts/LiveRadioDFWCalendar.gs`](../scripts/LiveRadioDFWCalendar.gs) on the `docs` branch. Publishing is manual — see [runbooks/publish-calendar-webhook.md](../runbooks/publish-calendar-webhook.md). The master copy has the passphrase redacted to `'__REPLACE_BEFORE_DEPLOY__'`.
+- **URL and passphrase:** kept out of the `docs` branch. **SECURITY ISSUE (B7 — open):** both currently live in `sync_calendar.py` on the `gh-pages` branch, which is public and served at `https://www.liveradiodfw.com/sync_calendar.py`. Remediation pending — see bugs.md B7.
 - **Actions:** `list`, `create`, `update`, `delete`
-- **Known limitation:** `update` fails on events whose ID is an Outlook-native hex string (events created in Outlook that then synced over). Create events directly in Google Calendar to avoid this.
+- **Known limitation 1 (B3):** `update` fails on events whose ID is an Outlook-native hex string (events created in Outlook that then synced over). Create events directly in Google Calendar to avoid this.
+- **Known limitation 2 (B2):** `update` silently drops attendee modifications. Root cause: `_updateEvent` has no attendee code path. 2-line fix pending — see bugs.md B2.
 
 ### sync_calendar.py
 Lives in the `gh-pages` branch, runs on the server hosting the cron job (not on GitHub).

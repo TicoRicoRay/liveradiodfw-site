@@ -4,7 +4,9 @@ The band website (liveradiodfw.com) shows a ticket price for each public show. T
 
 ## Source of truth
 
-**The band Google Calendar** (secondary calendar on rmyers@futurebright.com). Ticket prices are parsed from the event **description**.
+**The band Google Calendar** (owned by `info@liveradiodfw.com` — a free Google personal account). Ticket prices are parsed from the event **description**.
+
+Ray's rmyers@futurebright.com account is subscribed to this calendar for visibility, but edits made there will NOT flow through unless the event is owned by info@. Always edit under info@'s calendar. See [architecture/sources-of-truth.md](../architecture/sources-of-truth.md#shows--gigs).
 
 Do NOT edit `shows.json` or individual show HTML pages by hand — the nightly sync will overwrite them.
 
