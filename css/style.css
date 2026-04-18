@@ -1925,6 +1925,37 @@ textarea.form-input {
   background: #ffffff;
   color: #1a1a2e;
 }
+/* B14: Share promoted to primary CTA on show-detail pages.
+   Solid-fill red (matches Get Directions) + white text + white icon.
+   More specific selector than plain .btn-share so it overrides the
+   ghost-outline defaults above. Hover mirrors .btn-primary:hover.
+   Share is intentionally the first button in the show-page-actions row;
+   Ray wants the highest-leverage action (spreading show reach) to be
+   the most visually prominent. */
+.btn-share.btn-primary {
+  background: var(--red);
+  color: #ffffff;
+  border-color: var(--red);
+}
+.btn-share.btn-primary:hover {
+  background: var(--red-hover);
+  color: #ffffff;
+  border-color: var(--red-hover);
+}
+.btn-share.btn-primary svg {
+  stroke: #ffffff;
+}
+[data-theme="dark"] .btn-share.btn-primary {
+  background: var(--red);
+  color: #ffffff;
+  border-color: var(--red);
+}
+[data-theme="dark"] .btn-share.btn-primary:hover {
+  background: var(--red-hover);
+  color: #ffffff;
+  border-color: var(--red-hover);
+}
+
 .btn-share svg {
   width: 1em;
   height: 1em;
