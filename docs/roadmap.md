@@ -50,13 +50,15 @@ docs: add R<n> - <short title>
 
 ## Ops / infrastructure
 
-### R1. Cancel Bandzoogle subscription
-Both legacy domains (`jacksoncrossingdallas.com`, `riskybusinessdfw.com`) are already Cloudflare-redirected to `/lander`. Remaining work:
-- Remove both domains from Bandzoogle Domain Manager (if still listed)
-- Cancel the Bandzoogle plan
-- Verify redirect rules land on `https://www.liveradiodfw.com/lander` (HTTP 301)
+### R1. Cancel Bandzoogle subscription ~~[OPEN]~~ &rarr; **DONE 2026-04-18**
+Both legacy domains (`jacksoncrossingdallas.com`, `riskybusinessdfw.com`) are already Cloudflare-redirected to `/lander`. Remaining work (all completed):
+- ~~Remove both domains from Bandzoogle Domain Manager (if still listed)~~
+- ~~Cancel the Bandzoogle plan~~
+- ~~Verify redirect rules land on `https://www.liveradiodfw.com/lander` (HTTP 301)~~
 
-**Priority:** High - recurring subscription cost is the motivator.
+**Closed 2026-04-18:** Ray closed the Bandzoogle account. Recurring subscription cost eliminated. Legacy-domain redirects to `/lander` were already in place via Cloudflare before cancellation; no infra change required on our side. If either legacy domain ever drops out of DNS control, `/lander` is still the canonical merger-announcement landing and can be pointed at from any new source.
+
+**Priority:** ~~High - recurring subscription cost is the motivator.~~ N/A (closed).
 
 ### R2. UptimeRobot monitoring
 Set up UptimeRobot (free tier) for `https://www.liveradiodfw.com` with SMS + email alerts. Currently a checkbox in the DNS/Pages runbook but not provisioned. Catches outages like the 2026-04-15 event faster than Google Search Console noticing.
