@@ -166,10 +166,33 @@ def is_gig_event(event):
     return False
 
 
+# B8: match 'private' as a standalone word anywhere in the title.
+# The word boundary \b prevents false matches on substrings like
+# 'privateer' or 'privatize'. Matching is case-insensitive.
+# Also retain 'gathering' / 'gatherings' as an explicit trigger for the
+# Gatherings(r) venue family, which is always private.
+# The function is deliberately called with the RAW calendar title
+# (before the 'LR -' prefix strip) so any disambiguating context in the
+# raw title — including parenthesized (Private) and bracketed [PRIVATE]
+# — is available at privacy-decision time. See sync_calendar.py line 213.
+_PRIVATE_WORD_RE = re.compile(r"\bprivate\b", re.IGNORECASE)
+_GATHERING_WORD_RE = re.compile(r"\bgatherings?\b", re.IGNORECASE)
+
 def is_private_event(title):
-    """Check if event title indicates a private event."""
-    t = title.lower()
-    return "private party" in t or "private event" in t or "gathering" in t
+    """Return True when the event title indicates a private booking.
+
+    Matches:
+      - the standalone word 'private' anywhere in the title, including
+        '(Private)', '[PRIVATE]', '- private', 'Private BBQ', etc.
+      - the word 'gathering' / 'gatherings' (the Gatherings(r) venue family).
+
+    Does NOT match:
+      - substrings like 'privateer' or 'privatize' (word boundary required).
+      - the word 'party' alone (would over-match '80s Dance Party' etc.).
+    """
+    if not title:
+        return False
+    return bool(_PRIVATE_WORD_RE.search(title) or _GATHERING_WORD_RE.search(title))
 
 
 def parse_ticket_price(description):
