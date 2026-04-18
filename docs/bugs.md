@@ -206,6 +206,8 @@ try { localStorage.setItem('theme', currentTheme); } catch (err) {}
 
 **Status:** Open. Low-complexity, high-visibility fix — worth batching but also fine to ship on its own whenever there's a CSS/JS touch.
 
+**Cross-reference:** [roadmap.md R11](roadmap.md) — extend `build_includes.py` to cover head-level snippets. Shipping R11 first makes this bug's fix a one-file edit to `includes/head-boot.html` instead of a 15-file sweep. R11 is the preferred ordering but this bug is independently shippable if we don't want to wait.
+
 ---
 
 ## B11. Breadcrumb on show-detail pages is not unique per-show
