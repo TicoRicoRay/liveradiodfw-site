@@ -106,7 +106,7 @@ def build_show_page(show):
     iso_datetime = parse_time_to_iso(date_str, time_str)
 
     # SEO fields
-    page_title = f"Live Radio DFW at {venue} — {long_date} | Live Music {address_short}"
+    page_title = f"Live Radio DFW at {venue} · {long_date} | Live Music {address_short}"
     meta_desc = (
         f"Catch Live Radio DFW live at {venue} in {address_short} on {long_date}. "
         f"{'Free admission. ' if ticket_price == 'Free' else f'{ticket_price} admission. '}"
@@ -242,7 +242,7 @@ def build_show_page(show):
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
   <!-- Styles -->
-  <link rel="stylesheet" href="../css/style.css?v=39">
+  <link rel="stylesheet" href="../css/style.css?v=40">
   <script type="application/ld+json">{jsonld}</script>
 </head>
 <body>
@@ -277,7 +277,7 @@ def build_show_page(show):
 
 <!-- BEGIN_FOOTER -->
 <!-- END_FOOTER -->
-<script src="../js/main.js"></script>
+<script src="../js/main.js?v=2"></script>
 <script src="../js/show-actions.js"></script>
 </body>
 </html>"""

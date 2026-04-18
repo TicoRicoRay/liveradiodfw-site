@@ -143,6 +143,9 @@ document.addEventListener('DOMContentLoaded', function () {
   var list = document.querySelector('.shows-page-list');
   if (!list) return;
 
+  // Skip on archive pages (past-shows.html) - every card is meant to show
+  if (list.hasAttribute('data-past-only')) return;
+
   var today = new Date();
   today.setHours(0, 0, 0, 0); // compare date only, not time
 
