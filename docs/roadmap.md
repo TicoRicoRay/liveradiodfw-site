@@ -95,16 +95,32 @@ Google has cached individual old show pages. Cloudflare Bulk Redirects (Free pla
 
 **Depends on:** R3 (need the cached-URL list from Google Search Console first).
 
-### R5. Historic shows migration
+### R5. Historic shows migration ~~[OPEN]~~ → **IN PROGRESS 2026-04-18 PM**
 Bandzoogle staging (`https://liveradiodfw.bandzoogle.com`) and The Bash profile still hold the full historical show archive. Migrate into `/shows/` as permanent pages for long-tail SEO and credibility.
 
-**Plan:**
-- Pull show history from Bandzoogle staging calendar
-- Pull show history from The Bash profile
-- Generate one static page per historical show (same template as current shows)
-- Add to `sitemap.xml`
+**Bandzoogle scope (confirmed 2026-04-18 via browser extract):**
+- **33 past shows** across 2 pages: page 1 (20 shows, Apr 11 2026 → May 2 2025) + page 2 (13 shows, Apr 5 2025 → Aug 9 2024)
+- Shows span ~20 months. Oldest is Aug 9 2024 at Harvest Hall Grapevine
+- 4 shows from Aug-Sep 2024 are from the **Jackson Crossing** era (prior band name), caught via description text mentioning "Jackson Crossing"; we'll regenerate those descriptions via B16 draft path so they land with current voice rather than preserving the prior brand references
+- 5 descriptions are truncated at ~95 chars by Bandzoogle's HTML with no "Read more" expansion available
+- No ticket prices were recorded on Bandzoogle (not shown on any of the 33 past shows)
 
-**Priority:** Medium. Good for SEO, not urgent.
+**Plan (this session, 2026-04-18):**
+1. **Import layer (one-time):** new `lrdfw-ghpages/import_bandzoogle.py`. Reads the 33 shows, normalizes venue names against existing shows.json conventions (e.g. `"Fresh by Brookshires - Fate TX"` → `"FRESH by Brookshire's"`), extracts actual venue from address when the title is a marketing slogan, parses the actual venue address, sets `"past": true` + `"source": "bandzoogle-import-2026-04-18"`. Dedupes against any existing shows.json dates.
+2. **Description strategy per B16 rollout:**
+   - Bandzoogle description present and >= 50 chars and not truncated → use verbatim
+   - Bandzoogle description missing, truncated, or mentions "Jackson Crossing" → B16 `generate_description_draft()` with `[DRAFT - ...]` flag; page renders placeholder until Ray approves
+   - Private events → no description, same as current (handled naturally)
+3. **Build layer:** extend `build_shows.py` to split shows into upcoming + past, stop rendering past on `/shows` and home; extend `build_show_pages.py` to render a subtle "Past show" banner and no Add-to-Calendar / Get-Directions CTAs (irrelevant for past shows).
+4. **New index page:** `past-shows.html` (new file, built via a new builder) — reverse-chronological list of past shows, same card style as `/shows`. Linked from `/shows` and footer.
+5. **Sitemap:** append all 33 past-show pages to `sitemap.xml`.
+6. **Review gate:** after import + build generate local preview, pause and present the full list to Ray for batch approval BEFORE committing to gh-pages.
+
+**The Bash profile (deferred, not this session):** a separate R-entry will be filed when we tackle that source.
+
+**Priority:** Medium. Good for long-tail SEO and credibility. Blocking follow-up: description enrichment work will continue after the initial batch ships; high-value venues (repeat bookings, marquee shows) get hand-curated replacements over time.
+
+**Status:** IN PROGRESS 2026-04-18 PM — Bandzoogle extract complete, import + build + review gate underway in the current Jarvis session.
 
 ---
 
