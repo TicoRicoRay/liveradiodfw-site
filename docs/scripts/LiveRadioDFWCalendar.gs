@@ -63,10 +63,15 @@ function _createEvent(data) {
 
   const start = new Date(data.start);
   const end = new Date(data.end);
+
+  // Accept either `guests` (original field name) or `attendees` (what update uses).
+  // Caller-friendly: one API surface, two synonymous keys.
+  const guestList = (data.guests || data.attendees || []);
+
   const event = cal.createEvent(data.title, start, end, {
     description: data.description || '',
     location: data.location || '',
-    guests: (data.guests || []).join(','),
+    guests: guestList.join(','),
     sendInvites: false
   });
 
@@ -75,7 +80,8 @@ function _createEvent(data) {
     eventId: event.getId(),
     title: data.title,
     start: start.toISOString(),
-    end: end.toISOString()
+    end: end.toISOString(),
+    guests: event.getGuestList().map(function(g) { return g.getEmail(); })
   });
 }
 
@@ -91,10 +97,20 @@ function _updateEvent(data) {
   if (data.location !== undefined) event.setLocation(data.location);
   if (data.start && data.end) event.setTime(new Date(data.start), new Date(data.end));
 
+  // Guests/attendees: iterate the array and add each as a guest. Fixes B2 / closes R10.
+  // Accept either `attendees` (natural for update) or `guests` (matches create's field name).
+  // Apps Script CalendarApp does not expose a "replace all guests" primitive; addGuest
+  // is a no-op if the email is already on the event, so repeated calls are safe.
+  const guestList = data.attendees || data.guests;
+  if (guestList && Array.isArray(guestList)) {
+    guestList.forEach(function(email) { event.addGuest(email); });
+  }
+
   return _json({
     status: 'updated',
     eventId: data.eventId,
-    title: event.getTitle()
+    title: event.getTitle(),
+    guests: event.getGuestList().map(function(g) { return g.getEmail(); })
   });
 }
 
@@ -161,3 +177,4 @@ function testAccess() {
 // See docs/runbooks/publish-calendar-webhook.md
 
 // Deployed: 2026-04-17 — initial master-copy commit (functionally identical to then-deployed version, passphrase redacted) — by Ray (captured by Jarvis)
+// Deployed: 2026-04-17 ~20:52 Central — Version 2 — rotated passphrase (B7 Part 1) + extended _updateEvent and _createEvent to honor attendees/guests and return guests[] (R10, fixes B2) — by Ray, code authored by Jarvis. Smoke test passed via requests.post: list OK (98 events), old passphrase rejected 401, create+update with attendees returned guests[] correctly, delete OK.
