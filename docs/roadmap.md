@@ -95,7 +95,7 @@ Google has cached individual old show pages. Cloudflare Bulk Redirects (Free pla
 
 **Depends on:** R3 (need the cached-URL list from Google Search Console first).
 
-### R5. Historic shows migration ~~[OPEN]~~ → **IN PROGRESS 2026-04-18 PM**
+### R5. Historic shows migration ~~[OPEN]~~ ~~[IN PROGRESS]~~ → **SHIPPED 2026-04-18 PM**
 Bandzoogle staging (`https://liveradiodfw.bandzoogle.com`) and The Bash profile still hold the full historical show archive. Migrate into `/shows/` as permanent pages for long-tail SEO and credibility.
 
 **Bandzoogle scope (confirmed 2026-04-18 via browser extract):**
@@ -120,7 +120,11 @@ Bandzoogle staging (`https://liveradiodfw.bandzoogle.com`) and The Bash profile 
 
 **Priority:** Medium. Good for long-tail SEO and credibility. Blocking follow-up: description enrichment work will continue after the initial batch ships; high-value venues (repeat bookings, marquee shows) get hand-curated replacements over time.
 
-**Status:** IN PROGRESS 2026-04-18 PM — Bandzoogle extract complete, import + build + review gate underway in the current Jarvis session.
+**Status:** SHIPPED 2026-04-18 PM — 33 Bandzoogle shows live at https://www.liveradiodfw.com/past-shows.html. Commit `51da273` on gh-pages. Shipped breakdown: 22 verbatim (with prior-band-name sanitization), 6 machine-draft placeholders, 5 private events. Per Ray: shipping best-guess state and iterating on any that look off. Older-than-Bandzoogle shows (2021-2024) to be added as Ray digs them up — follow-up import will re-use `import_bandzoogle.py` with a fresh raw file.
+
+**Follow-ups:**
+- Thin Lion & Crown boilerplate descriptions (5 shows, ~62 chars each, near-identical) are good candidates for hand-curated rewrites if Ray wants more SEO depth on those pages.
+- Next import batch: older shows Ray surfaces (pre-Aug 2024). Same script, new `bandzoogle_raw.json` (or analogous).
 
 ---
 
