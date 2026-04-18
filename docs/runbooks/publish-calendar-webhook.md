@@ -31,7 +31,7 @@ Do **not** run this runbook just to reformat the master or adjust comments. Keep
 ## Before you start
 
 - [ ] Confirm the master copy compiles cleanly in your head (or in a diff review with Jarvis).
-- [ ] Note the passphrase location: password manager → entry `LiveRadioDFW Calendar webhook passphrase`. Do NOT copy it into any repo file, chat, or note.
+- [ ] Note the passphrase location: **1Password → Secure Note titled `LiveRadioDFW Calendar webhook passphrase`**. Do NOT copy it into any repo file, chat, or note. (Ray's standing convention: band secrets live in 1Password Secure Notes with descriptive titles, never login entries.)
 - [ ] If you are rotating the passphrase in this publish, also plan to update `sync_calendar.py` on `gh-pages` in the same batch. Everything breaks if these drift.
 
 ---
