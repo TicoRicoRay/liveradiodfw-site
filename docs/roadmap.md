@@ -104,27 +104,23 @@ Analysis assets already live in `liveradiodfw-marketing`. Decide whether/how to 
 
 ## Decisions pending (not bugs, but blocking other work)
 
-### R8. Regina as event attendee - method decision
-See [bugs.md B2](bugs.md#b2-webhook-attendees-field-is-a-silent-no-op). Choose:
-- (a) Manual adds in Google Calendar UI per event
-- (b) Extend `Code.gs` webhook + post-sync step in `sync_calendar.py`
-
-Pick before any code touches the webhook.
+### R8. Regina as event attendee - method decision ~~[PENDING]~~ → **DECIDED 2026-04-17 PM (option b)**
+See [bugs.md B2](bugs.md#b2-webhook-attendees-field-is-a-silent-no-op). Ray chose option (b): extend the `_updateEvent` webhook so automation can add attendees. R10 implemented the code change and it's deployed. The optional post-sync step in `sync_calendar.py` to auto-add Regina to every future public event is not yet implemented — if we want that, file a new R-entry for it rather than reopening R8.
 
 ### R9. Timezone convention enforcement
 Standing rule: all docs use "Central" or "America/Chicago", never "CDT" or "CST". Swept once on 2026-04-17; worth a periodic grep to keep new docs compliant.
 
-### R10. Extend `_updateEvent` to honor attendees
-Dependency for [B2](bugs.md#b2-webhook-attendees-field-is-a-silent-no-op). Root cause is known: `_updateEvent` in `LiveRadioDFWCalendar.gs` accepts the `attendees` payload field but has no code path that acts on it.
+### R10. Extend `_updateEvent` to honor attendees ~~[OPEN]~~ → **DONE 2026-04-17 PM**
+Dependency for [B2](bugs.md#b2-webhook-attendees-field-is-a-silent-no-op). `_updateEvent` previously accepted the `attendees` payload field but had no code path that acted on it.
 
-**Scope:**
-1. In `docs/scripts/LiveRadioDFWCalendar.gs`, extend `_updateEvent` to iterate `payload.attendees` and call `event.addGuest(email)` for each (~2 lines).
-2. Publish via [runbooks/publish-calendar-webhook.md](runbooks/publish-calendar-webhook.md).
-3. Smoke-test against a throwaway event before trusting on real gigs.
-4. Optionally: post-sync step in `sync_calendar.py` to ensure Regina is on every future public event.
-5. Move B2 to decision-resolved.
-
-**Gate:** R8 decision. If Ray picks (a) manual-only, R10 is parked.
+**Delivered 2026-04-17 PM:**
+1. ✅ Extended `_updateEvent` in `docs/scripts/LiveRadioDFWCalendar.gs` to iterate `data.attendees || data.guests` and call `event.addGuest(email)` for each.
+2. ✅ Normalized `_createEvent` to accept either field name as a bonus.
+3. ✅ Both paths now return the resulting `guests:` array in the response for verification.
+4. ✅ Published as Version 2 via [runbooks/publish-calendar-webhook.md](runbooks/publish-calendar-webhook.md) (same session the passphrase was rotated for B7 — coordinated change).
+5. ✅ Smoke-tested against a throwaway event: `create` with `attendees: ["rmyers@futurebright.com"]` returned `guests: ["rmyers@futurebright.com"]`; `update` with a new attendee set returned the updated `guests` array; throwaway deleted.
+6. ✅ B2 moved to Fixed Recently.
+7. ⏭️ Optional `sync_calendar.py` auto-ensure-Regina step deferred — file a new R-entry if we decide to do it.
 
 ---
 

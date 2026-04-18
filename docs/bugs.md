@@ -80,35 +80,33 @@ A half-complete bug entry is worse than no entry. If symptom or impact aren't cl
 
 ---
 
-## B2. Webhook `attendees` field is a silent no-op
+## B2. Webhook `attendees` field is a silent no-op ~~[OPEN]~~ → **FIXED 2026-04-17 PM (R10)**
 
-**Symptom:** Sending `attendees: ["falkor79@duck.com"]` to the Google Apps Script webhook's `update` action returns `status: updated` but does NOT actually add the attendee. Confirmed by Ray on OG Cellars 2026-04-18.
+**Symptom:** Sending `attendees: ["falkor79@duck.com"]` to the Google Apps Script webhook's `update` action returned `status: updated` but did NOT actually add the attendee. Confirmed by Ray on OG Cellars 2026-04-18.
 
-**Where:** Apps Script webhook (`Code.gs`). Blocks automated add of Regina (sound engineer) to future gig events.
+**Where:** Apps Script webhook (`Code.gs`). Blocked automated add of Regina (sound engineer) to future gig events.
 
-**Workaround:** Add attendees manually in the Google Calendar UI.
+**Root cause (identified 2026-04-17):** The Apps Script `_updateEvent` function accepted the `attendees` payload field but had no code path that did anything with it. The `list`, `create`, and `delete` branches existed; the `update` branch never called `event.addGuest(email)` or `event.setAttendees([...])`.
 
-**Root cause (identified 2026-04-17):** The Apps Script `_updateEvent` function accepts the `attendees` payload field but has no code path that does anything with it. The `list`, `create`, and `delete` branches exist; the `update` branch simply never calls `event.addGuest(email)` or `event.setAttendees([...])`. Approximately a 2-line fix in `LiveRadioDFWCalendar.gs` (see `scripts/LiveRadioDFWCalendar.gs` on the `docs` branch).
+**Fix applied (2026-04-17 PM):** Ray chose option (b) in the original fix list. Extended `_updateEvent` in `scripts/LiveRadioDFWCalendar.gs` to iterate `data.attendees || data.guests` and call `event.addGuest(email)` for each, and normalized `_createEvent` to accept either field name. Both paths return the resulting `guests:` array in the response for verification. Passphrase was simultaneously rotated (see B7). Published via [runbooks/publish-calendar-webhook.md](runbooks/publish-calendar-webhook.md) as Version 2 of the `LiveRadioDFW Calendar` Apps Script project.
 
-**Fix options:**
-- (a) Keep doing manual adds in GCal UI on each recurring/future event. Simplest, no code.
-- (b) Extend `_updateEvent` in `LiveRadioDFWCalendar.gs` to iterate `payload.attendees` and call `event.addGuest(email)` for each. Publish via [runbooks/publish-calendar-webhook.md](runbooks/publish-calendar-webhook.md). Optionally add a post-sync step in `sync_calendar.py` to ensure Regina is on every future public event. Tracked as [R10](roadmap.md#r10-extend-_updateevent-to-honor-attendees).
+**Smoke test (2026-04-17 PM):** Throwaway event created with `attendees: ["rmyers@futurebright.com"]` → `guests` array in response contained the email. `update` with a different attendee set on the same event → `guests` array reflected the added guest. Throwaway deleted. Tracked as R10 (now closed).
 
-**Decision pending:** Ray to pick (a) or (b). Do NOT loop through events with the webhook until `update` is verified to honor `attendees`.
-
-**Status:** Open, decision-gated. Root cause known, fix drafted.
+**Status:** Fixed. See Fixed Recently section below.
 
 ---
 
-## B3. Outlook-native event IDs can't be updated via the webhook
+## B3. Outlook-native event IDs can't be updated via the webhook ~~[OPEN]~~ → **WON'T-FIX 2026-04-17 PM (upstream decommissioned)**
 
-**Symptom:** Events created in Outlook that sync over to Google Calendar have an Outlook-native hex event ID (long hex string, no `@google.com` suffix). The Apps Script webhook's `update` action fails on these.
+**Symptom:** Events created in Outlook that synced over to Google Calendar had Outlook-native hex event IDs (long hex string, no `@google.com` suffix). The Apps Script webhook's `update` action failed on these.
 
-**Workaround:** Edit by hand in Google Calendar UI. Watters Creek 6/6 is a known example that required manual update. "LR - The Gathering in Allen" 9/18 is a second known Outlook-native event (found during 2026-04-17 SoT cleanup reconciliation).
+**Where:** Google Calendar events originating from the old Outlook dual-write pipeline. Known affected events: Watters Creek 6/6 and "LR - The Gathering in Allen" 9/18.
 
-**Fix:** Going forward, create events directly in Google Calendar (on info@liveradiodfw.com) to avoid generating Outlook-native IDs. Since the Google Calendar on info@ is now confirmed as the source of truth, this is equivalent to "don't use Outlook to create band events." Not clear whether existing Outlook-native events can be converted. Eliminating the Outlook dual-entry pipeline entirely is under consideration.
+**Resolution (2026-04-17 PM):** The Outlook calendar half of the old dual-entry pipeline was formally decommissioned this session. Going forward, all new band events are created directly on the Google Calendar (info@liveradiodfw.com), so no new events will carry Outlook-native IDs. This is now a cardinal rule (see `project-plan.md` and `architecture/sources-of-truth.md`). Existing Outlook-origin events keep their hex IDs and must still be edited by hand in the Google Calendar UI (workaround retained for them), but the class of bug is no longer growing.
 
-**Status:** Open, workaround documented. Two known affected events.
+**Why not fix the underlying webhook behavior:** The upstream cause (dual-write creating non-Google IDs) is gone, and the population of affected events is finite and small. Fixing `_updateEvent` to handle Outlook-native IDs would be speculative work against a shrinking set.
+
+**Status:** Won't-fix — upstream source eliminated. Hand-edit existing Outlook-origin events in the GCal UI when needed.
 
 ---
 
@@ -154,7 +152,9 @@ A half-complete bug entry is worse than no entry. If symptom or impact aren't cl
 
 **Discovered:** 2026-04-17 during calendar SoT cleanup, while auditing where the passphrase lives.
 
-**Status:** Open. Top priority — promotes to project-plan top-priority list next session.
+**Update 2026-04-17 PM — Part 1 of (a) complete:** Passphrase was rotated this session. New passphrase is in Ray's 1Password (Secure Note "LiveRadioDFW Calendar webhook passphrase"), deployed to the Apps Script Web App (Version 2, 2026-04-17 ~8:52 PM Central), and written to `gh-pages/sync_calendar.py`. Old passphrase `El3Q…` is revoked. End-to-end smoke test passed (list + create + update + delete via `requests.post`). **Residual exposure:** the new passphrase is still hard-coded in `gh-pages/sync_calendar.py` and therefore still fetchable at `https://www.liveradiodfw.com/sync_calendar.py` and from GitHub raw. Part 2 of (a) — move the script off `gh-pages` — remains open.
+
+**Status:** Partially addressed. Passphrase rotated (Part 1 of fix option (a)); sync script not yet moved off `gh-pages` (Part 2). Remains top priority until Part 2 lands.
 
 ---
 
@@ -288,6 +288,8 @@ These aren't band bugs - they're limitations in how Jarvis (the AI assistant) ca
 
 ## Fixed recently (moved here for context; full history in postmortems)
 
+- **2026-04-17 PM - B2 webhook `attendees` field fixed (R10 closed):** Extended `_updateEvent` in `scripts/LiveRadioDFWCalendar.gs` to iterate `data.attendees || data.guests` and call `event.addGuest(email)` for each; normalized `_createEvent` to accept either field name; both paths now return the resulting `guests` array for verification. Published as Version 2 of the Apps Script project via the new runbook. Smoke test via `requests.post` confirmed `list`, `create` with attendees, `update` adding a new attendee, and `delete` all return JSON 200 with expected payloads. Passphrase was simultaneously rotated (partial B7 fix; see B7 section above).
+- **2026-04-17 PM - B3 Outlook-native event IDs marked won't-fix:** The Outlook half of the old dual-entry pipeline was formally decommissioned this session (new cardinal rule: band events created only on the Google Calendar on info@). Existing Outlook-origin events remain hand-edit-only in the GCal UI, but the population is finite and no longer growing. See B3 section above.
 - **2026-04-17 - B4 calendar host identity cleaned up:** Band calendar source of truth confirmed as `info@liveradiodfw.com` (free Google personal account). Corrected 3 doc locations (`sources-of-truth.md`, `calendar-sync.md` x2, `edit-ticket-prices.md`). Added canonical statement in `architecture/sources-of-truth.md`. Committed master copy of Apps Script to `docs/scripts/LiveRadioDFWCalendar.gs` (passphrase redacted). New runbook: `runbooks/publish-calendar-webhook.md`. Spawned B7 (public passphrase exposure), J9 (connectors account-wide), R10 (attendees fix).
 - **2026-04-17 - B5 GitHub Pages challenge TXT restored:** Pulled fresh challenge value from `github.com/settings/pages`, added as TXT record in Cloudflare (`_github-pages-challenge-TicoRicoRay` → `76bd16254d16a7be4333e49413c13d`). Verified propagation on 1.1.1.1, 8.8.8.8, and `summer.ns.cloudflare.com`. Domain was already verified via DNS-based method; this restores the belt-and-suspenders challenge record that was dropped during the Cloudflare migration.
 - **2026-04-17 - Sync wipe:** `sync_calendar.py` was overwriting hand-curated fields in `shows.json`. Fixed with non-destructive merge + strict ticket-price parser. See [postmortems/2026-04-17-sync-wipe.md](postmortems/2026-04-17-sync-wipe.md).

@@ -21,6 +21,7 @@ Perplexity threads are disposable. This repo is the durable memory. To get a new
 
 **Rules of engagement you should remind the agent of if they slip:**
 - Google Calendar is the source of truth for shows. Never hand-edit `shows.json` or `shows/*.html`.
+- **Band events are created in Google Calendar on `info@liveradiodfw.com` only — never in Outlook.** Outlook is email only for the band; its calendar is out of the band pipeline entirely (decommissioned 2026-04-17 PM, see `architecture/sources-of-truth.md` and B3 in `bugs.md`).
 - Venue contacts + negotiations live in **Mailchimp**.
 - DNS is on **Cloudflare** (GoDaddy is registrar only).
 - **Never read the EOS calendar** — it's personal and unrelated to the band.
@@ -41,15 +42,17 @@ _Put this at the top so next-session-me reads it first._
 
 **Top priorities right now:**
 
-1. **B7 - Public webhook passphrase exposure.** See [bugs.md#b7](bugs.md). `sync_calendar.py` on `gh-pages` hard-codes the real passphrase and is served publicly at `https://www.liveradiodfw.com/sync_calendar.py`. Rotate first, move off gh-pages second. Discovered 2026-04-17 PM.
-2. **B1 - DST-safe sync cron.** See [bugs.md#b1](bugs.md). Ray needs to find the owning thread in Perplexity's scheduled-tasks view.
+1. **B7 - Part 2: move `sync_calendar.py` off `gh-pages`.** See [bugs.md#b7](bugs.md). Passphrase was rotated 2026-04-17 PM (Part 1), but the new value is still hard-coded in `gh-pages/sync_calendar.py` and therefore still fetchable at `https://www.liveradiodfw.com/sync_calendar.py` and GitHub raw. Relocate the sync script to a non-public host (likely Ray's Windows box; see B1) and read the passphrase from an env var or `.gitignore`d config file.
+2. **B1 - DST-safe sync cron.** See [bugs.md#b1](bugs.md). Ray needs to find the owning thread in Perplexity's scheduled-tasks view. Naturally pairs with B7 Part 2 since both likely touch wherever the cron actually runs.
 3. **D1 - ChatGPT site audit.** See "Pending discussion" below. Ray has audit findings to walk through before they become bugs or roadmap items.
 4. **R1 - Cancel Bandzoogle.** See [roadmap.md#r1](roadmap.md). Legacy domains are already redirected; just needs Bandzoogle Domain Manager cleanup + cancellation.
-5. **B2 / R8 / R10 - Regina as attendee.** See [bugs.md#b2](bugs.md). Root cause now known (`_updateEvent` has no attendee code path). Decision pending: manual in GCal UI vs. extending the Apps Script. If Ray picks extend, R10 is a ~2-line fix.
-6. **R4 - Wildcard 301s.** See [roadmap.md#r4](roadmap.md). Waiting on Search Console export from Ray.
-7. **B6 - Videos two-click bug.** See [bugs.md#b6](bugs.md). Investigation-heavy; not a quick fix.
+5. **R4 - Wildcard 301s.** See [roadmap.md#r4](roadmap.md). Waiting on Search Console export from Ray.
+6. **B6 - Videos two-click bug.** See [bugs.md#b6](bugs.md). Investigation-heavy; not a quick fix.
 
 **Recently closed:**
+- **B2 / R8 / R10 - Regina as attendee, end-to-end (2026-04-17 PM):** Ray chose extend-the-webhook. `_updateEvent` and `_createEvent` in `docs/scripts/LiveRadioDFWCalendar.gs` now honor `attendees`/`guests` and return the resulting guest list. Deployed as Version 2 of the Apps Script, smoke-tested via `requests.post` against a throwaway event, torn down cleanly.
+- **B3 - Outlook-native event IDs won't-fix (2026-04-17 PM):** Outlook calendar half of the old dual-entry pipeline formally decommissioned. New cardinal rule: band events created only on Google Calendar on info@. Existing Outlook-origin events remain hand-edit-only in the GCal UI but the population is finite and no longer growing.
+- **B7 Part 1 - Passphrase rotated (2026-04-17 PM):** Old passphrase revoked, new passphrase lives in Ray's 1Password (`LiveRadioDFW Calendar webhook passphrase`) and in `gh-pages/sync_calendar.py`. End-to-end smoke test green. Part 2 still open — see #1 above.
 - **B4 - Calendar host identity cleaned up (2026-04-17 PM):** Google Calendar owned by `info@liveradiodfw.com` (free Google personal account) is the confirmed source of truth. rmyers@futurebright.com is merely subscribed. 3 docs corrected, canonical statement added in `architecture/sources-of-truth.md`, master copy of the Apps Script committed to `docs/scripts/LiveRadioDFWCalendar.gs`, new runbook `runbooks/publish-calendar-webhook.md`. Spawned B7, J9, R10.
 - **B5 - GitHub Pages challenge TXT:** restored in Cloudflare 2026-04-17 PM, verified on three resolvers.
 - **CSS polish - square date badges on /shows:** `.show-card-full .show-date-badge` now renders 80x80 square, top-aligned to card (not stretched to full card height). Commit `4d3edc9` on `gh-pages`. Not logged as a bug since it was cosmetic refinement, not a defect.

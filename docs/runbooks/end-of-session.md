@@ -73,7 +73,7 @@ Before Ray leaves, note whether any of these failed this session (if yes → the
 - 60-min timer auto-started without Ray asking
 - Docs were read before acting
 - Any new bug/roadmap entry followed the template
-- Cardinal rules respected without being re-told (EOS calendar untouched, "Central" not CDT/CST, no em-dashes, no "15 minutes" estimates, GCal = source of truth for shows, Mailchimp = venue contacts, Cloudflare = DNS)
+- Cardinal rules respected without being re-told (EOS calendar untouched, "Central" not CDT/CST, no em-dashes, no "15 minutes" estimates, GCal = source of truth for shows, **band events created in Google Calendar on info@ only — never Outlook**, Mailchimp = venue contacts, Cloudflare = DNS)
 
 ---
 
