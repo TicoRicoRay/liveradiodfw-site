@@ -1,6 +1,6 @@
 # Connectors - Live Radio DFW
 
-_Last updated: 2026-04-17 · 7:49 PM Central_
+_Last updated: 2026-04-17 · 7:54 PM Central_
 
 Every Perplexity external-tool connector on Ray's account, classified by band relevance. This file exists because **connectors are account-wide, not project-scoped** - there is no way in Perplexity today to bind a connector to a specific project. A connected service is visible to every project Ray runs on this account (band, EOS, personal). The cardinal rules in `project-plan.md` substitute for the per-project allow-lists the platform does not provide.
 
@@ -65,10 +65,11 @@ Connected to Ray's personal Google / Dropbox / etc. account (`rmyers@futurebrigh
 - **Identity:** `rmyers@futurebright.com` (personal).
 - **Plausible band use:** File format conversion for marketing assets - press-kit PDFs, promo image format conversions, audio format conversions. Ad-hoc utility.
 
-### Dropbox + Files (`dropbox` and `files`)
+### Dropbox + Files (`dropbox` and `files`) - NOT USED for band work
 - **Identity:** `rmyers@futurebright.com` (personal).
-- **Split behavior (important):** Read/search goes through the `files` connector (`search_files_v2` - searches file names and contents across Dropbox). Write/export goes through the `dropbox` connector (`export_files`). Future Jarvis: do not look for search tools under the `dropbox` connector - they are exposed as `files`.
-- **Plausible band use:** Promo photos, prior press kits, show archives, asset backups.
+- **Split behavior (for context):** Read/search would go through the `files` connector (`search_files_v2`); write/export through the `dropbox` connector (`export_files`).
+- **Why not used:** The `dropbox.export_files` tool can only write to the Dropbox root folder - no subfolder targeting. That is too sloppy for band asset management. Docs and durable artifacts live in GitHub (`liveradiodfw-site` docs branch, `liveradiodfw-marketing` repo) instead.
+- **Rule:** Do not use Dropbox or Files for band work. If a future Jarvis is tempted to "just drop this in Dropbox," the answer is no - put it in GitHub.
 
 ### Spotify (`spotify__pipedream`)
 - **Identity:** `rmyers@futurebright.com` (personal).
