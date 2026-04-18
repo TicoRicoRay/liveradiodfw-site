@@ -22,6 +22,17 @@ from pathlib import Path
 BASE = Path(__file__).parent
 
 
+def format_full_date(date_str):
+    """Return "Saturday April 25, 2026" from an ISO date string.
+    No comma after the weekday (per Ray's spec 2026-04-18).
+    Renders above the time on every show card."""
+    try:
+        dt = datetime.strptime(date_str, "%Y-%m-%d")
+    except ValueError:
+        return date_str
+    return dt.strftime("%A %B %d, %Y").replace(" 0", " ")
+
+
 def slugify(text):
     """Convert text to URL-friendly slug (matches build_show_pages.py)."""
     text = text.lower().strip()
@@ -81,10 +92,12 @@ def build_full_cards(shows):
         price_label = "Free" if ticket_price == "Free" else ticket_price
         price_class = "show-price-free" if ticket_price == "Free" else "show-price-paid"
         price_html = f'<span class="show-ticket-price {price_class}">{price_label}</span>'
+        full_date = format_full_date(s["date"])
+        full_date_html = f'<span class="show-full-date">{full_date}</span>'
         if is_private:
             lines.append(f'          <h3>Private Event</h3>')
             lines.append(f'          <p class="venue-address">{s["address_short"]}</p>')
-            lines.append(f'          <p class="show-time">{s["time"]}</p>')
+            lines.append(f'          <p class="show-time">{full_date_html} &middot; {s["time"]}</p>')
             lines.append(f'          {PRIVATE_BADGE}')
         else:
             lines.append(f'          <h3><a href="{show_page_url}">{s["title"]}</a></h3>')
@@ -94,7 +107,7 @@ def build_full_cards(shows):
             # Render street address only. `address` in shows.json is already cleaned
             # of any leading venue segment by sync_calendar.py.
             lines.append(f'          <p class="venue-address">{s["address"]}</p>')
-            lines.append(f'          <p class="show-time">{s["time"]} &middot; {price_html}</p>')
+            lines.append(f'          <p class="show-time">{full_date_html} &middot; {s["time"]} &middot; {price_html}</p>')
             lines.append(f'          <div class="show-links">')
             lines.append(f'            <a href="{show_page_url}">Show Details</a>')
             lines.append(f'            <a href="{s["maps_url"]}" target="_blank" rel="noopener">Directions</a>')
@@ -132,14 +145,16 @@ def build_compact_cards(shows):
         price_label = "Free" if ticket_price == "Free" else ticket_price
         price_class = "show-price-free" if ticket_price == "Free" else "show-price-paid"
         price_html = f'<span class="show-ticket-price {price_class}">{price_label}</span>'
+        full_date = format_full_date(s["date"])
+        full_date_html = f'<span class="show-full-date">{full_date}</span>'
         if is_private:
             lines.append(f'          <h3>Private Event</h3>')
             lines.append(f'          <p class="venue-address">{s["address_short"]}</p>')
-            lines.append(f'          <p class="show-time">{s["time"]}</p>')
+            lines.append(f'          <p class="show-time">{full_date_html} &middot; {s["time"]}</p>')
         else:
             lines.append(f'          <h3><a href="{show_page_url}">{s["title"]}</a></h3>')
             lines.append(f'          <p class="venue-address">{s["address_short"]}</p>')
-            lines.append(f'          <p class="show-time">{s["time"]} &middot; {price_html}</p>')
+            lines.append(f'          <p class="show-time">{full_date_html} &middot; {s["time"]} &middot; {price_html}</p>')
         lines.append(f'        </div>')
         lines.append(f'      </div>')
     return "\n".join(lines)

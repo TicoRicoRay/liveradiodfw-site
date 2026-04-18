@@ -843,6 +843,16 @@ a.show-date-badge:hover {
   color: var(--red);
 }
 
+/* Full date rendered to the left of the time on every show line.
+   Black in light palette, white in dark palette (per Ray 2026-04-18). */
+.show-full-date {
+  color: #000;
+  font-weight: 700;
+}
+[data-theme="dark"] .show-full-date {
+  color: #fff;
+}
+
 .show-ticket-price {
   font-family: var(--font-display);
   font-weight: 600;

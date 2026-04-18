@@ -70,9 +70,10 @@ def parse_time_to_iso(date_str, time_str):
 
 
 def format_long_date(date_str):
-    """Convert 2026-04-18 to Friday, April 18, 2026."""
+    """Convert 2026-04-18 to "Friday April 18, 2026" (no comma after the
+    weekday, per Ray 2026-04-18)."""
     dt = datetime.strptime(date_str, "%Y-%m-%d")
-    return dt.strftime("%A, %B %d, %Y").replace(" 0", " ")
+    return dt.strftime("%A %B %d, %Y").replace(" 0", " ")
 
 
 def build_show_page(show):
@@ -241,7 +242,7 @@ def build_show_page(show):
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
   <!-- Styles -->
-  <link rel="stylesheet" href="../css/style.css?v=34">
+  <link rel="stylesheet" href="../css/style.css?v=39">
   <script type="application/ld+json">{jsonld}</script>
 </head>
 <body>
@@ -263,7 +264,7 @@ def build_show_page(show):
     </div>
     <div class="show-page-info">
       <h1>Live Radio DFW at {venue}</h1>
-      <p class="show-page-meta">{long_date} &middot; {time_str} &middot; {price_html}</p>
+      <p class="show-page-meta"><span class="show-full-date">{long_date}</span> &middot; {time_str} &middot; {price_html}</p>
       <p class="show-page-venue">{venue}</p>
       <p class="show-page-address">{address}</p>
       <div class="show-page-actions">
