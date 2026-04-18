@@ -257,8 +257,12 @@ def calendar_event_to_show(event):
         address_short = ""
         for i, p in enumerate(parts):
             p_stripped = p.strip()
-            # Case 1: Part is just "TX" or "TX 7xxxx" — city is the previous part
-            if re.match(r'^TX\b', p_stripped, re.IGNORECASE):
+            # Case 1: Part is just "TX" or "TX 7xxxx" — city is the previous part.
+            # Require TX to be followed by whitespace, end-of-string, or a digit (ZIP).
+            # Do NOT match "TX-276" (a state highway designator); \b alone would match
+            # at the X-hyphen boundary and misfire (B10 follow-up: Sweetwater Grill's
+            # address "4884 TX-276, Royse City, TX 75189, USA" exposed this).
+            if re.match(r'^TX(?=\s|$|\d)', p_stripped, re.IGNORECASE):
                 if i > 0:
                     city = parts[i-1].strip()
                     if re.match(r'^\d', city):
@@ -267,8 +271,10 @@ def calendar_event_to_show(event):
                 else:
                     address_short = p_stripped
                 break
-            # Case 2: "Sanger TX 76266" — TX embedded in the part with a city name
-            tx_match = re.search(r'(\S+)\s+TX\b', p_stripped, re.IGNORECASE)
+            # Case 2: "Sanger TX 76266" — TX embedded in the part with a city name.
+            # Same lookahead guard as Case 1 so we don't capture "4884" out of
+            # "4884 TX-276".
+            tx_match = re.search(r'(\S+)\s+TX(?=\s|$|\d)', p_stripped, re.IGNORECASE)
             if tx_match:
                 city = tx_match.group(1)
                 address_short = f"{city}, TX"
