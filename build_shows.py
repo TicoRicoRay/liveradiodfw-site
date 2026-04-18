@@ -75,7 +75,12 @@ def build_full_cards(shows):
             lines.append(f'          {PRIVATE_BADGE}')
         else:
             lines.append(f'          <h3><a href="{show_page_url}">{s["title"]}</a></h3>')
-            lines.append(f'          <p class="venue-address">{s["venue"]}, {s["address"]}</p>')
+            # B10 render fix: the h3 title above already carries venue/event name.
+            # Showing venue name again as a prefix on the address line duplicates it
+            # (especially visible when title is just the venue, e.g. "Frisco Rail Yard").
+            # Render street address only. `address` in shows.json is already cleaned
+            # of any leading venue segment by sync_calendar.py.
+            lines.append(f'          <p class="venue-address">{s["address"]}</p>')
             lines.append(f'          <p class="show-time">{s["time"]} &middot; {price_html}</p>')
             lines.append(f'          <div class="show-links">')
             lines.append(f'            <a href="{show_page_url}">Show Details</a>')
