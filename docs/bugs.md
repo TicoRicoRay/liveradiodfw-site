@@ -158,6 +158,66 @@ A half-complete bug entry is worse than no entry. If symptom or impact aren't cl
 
 ---
 
+## B9. Availability script cannot be run or smoke-tested from Jarvis's sandbox
+
+**Symptom:** `liveradiodfw-marketing/liveradiodfw_availability.py` authenticates to Google Calendar via OAuth (`credentials.json` + `token.json` via `google-auth-oauthlib`) and calls the Calendar API directly — it does NOT use the LiveRadioDFW Calendar Apps Script webhook. The OAuth credentials live on Ray's Windows cron host, not in the repo and not in Jarvis's sandbox. First-run auth requires `flow.run_local_server(port=0)` which pops a local browser, unavailable in a headless sandbox.
+
+**Where:** `liveradiodfw-marketing/liveradiodfw_availability.py`, function `get_service()` around lines 39–54.
+
+**Impact:** Jarvis cannot end-to-end smoke-test the availability pipeline against real calendar data. We can simulate the logic against the webhook's event list (which returns the same calendar, just through a different channel) but the simulation doesn't exercise the OAuth path, doesn't exercise pagination, and doesn't exercise the `showHiddenInvitations=True` flag. Any bug that's specific to the OAuth code path is invisible to Jarvis. Discovered 2026-04-17 PM during a smoke-test that tried to verify the availability script sees a test event correctly.
+
+Secondary observation worth capturing: this means the band calendar is read by **two independent code paths** (sync via webhook, availability via OAuth). Rotating the webhook passphrase (B7) only affects one of them; rotating/revoking the OAuth token would only affect the other. Something to keep in mind for any future credential hygiene pass.
+
+**Workaround:** Ray runs `python liveradiodfw_availability.py` from the marketing repo folder on his Windows box and pastes the output into the thread for Jarvis to verify. Adequate but manual and slow.
+
+**Fix options (ordered simplest to most invasive):**
+- (a) **Reuse the webhook.** Add an availability-generation path that uses the Apps Script webhook (same auth surface as `sync_calendar.py`) instead of direct Google Calendar OAuth. Jarvis could then smoke-test it from the sandbox. Cost: the webhook doesn't currently return all-day events or the `showHiddenInvitations` flag behavior — would need a small Apps Script extension (analogous to R10) and a response-shape check.
+- (b) **Service-account credentials committed encrypted.** Use a Google service account with calendar-read scope, store the key encrypted (e.g. `sops`/`age`) in the repo, and have Jarvis decrypt at runtime from a secret injected via sandbox config. Invasive; introduces a secret-management system the project doesn't have yet.
+- (c) **Ray exports a dated snapshot.** Periodic pipeline where Ray's Windows box writes the raw OAuth `events().list()` JSON to a gist or S3, and Jarvis reads that for testing. Decouples testing from real-time data but requires a separate pipeline.
+- (d) **Keep manual.** Accept the limitation — Ray runs it locally, sends output, Jarvis reviews.
+
+**Recommendation:** (a) is the most consistent with the rest of the architecture: the webhook is already the canonical band→Google-Calendar bridge, and consolidating on it eliminates the two-code-paths observation above. Would naturally pair with B7 Part 2 (move sync off gh-pages) and B1 (DST-safe cron) since all three touch the cron host.
+
+**Status:** Open. Not urgent (workaround exists, manual testing is fine), but worth tracking because it limits Jarvis's ability to verify changes to the availability pipeline end-to-end.
+
+---
+
+## B8. `is_private_event` filter is too narrow; private shows can leak as public pages
+
+**Symptom:** A calendar event titled `LR - Test Event (Private)` was correctly flagged as a gig (matches the `LR -` rule in `is_gig_event`) but was NOT flagged as private by `is_private_event`. Result: `shows.json` entry had `private: false`, and `build_show_pages.py` generated a full public show page at `shows/5608-chalice-dr-2026-06-20.html` with the residential venue address, a `MusicEvent` schema.org block, a canonical URL, and an announcement-style meta description.
+
+**Where:** `sync_calendar.py`, function `is_private_event` (around line 169). The check is:
+```python
+def is_private_event(title):
+    t = title.lower()
+    return "private party" in t or "private event" in t or "gathering" in t
+```
+It only matches the exact substrings `private party`, `private event`, or `gathering`. Titles like `Test Event (Private)`, `Johnson Wedding - private`, or `Private BBQ` slip through.
+
+Secondary issue: `calendar_event_to_show` strips the `LR - ` prefix before storing the title, so by the time downstream code sees the entry, any disambiguating context in the raw calendar title is already gone. The privacy decision should be made against the raw calendar event, not the stripped display title.
+
+**Impact:** High. If a band member schedules a private booking (e.g. a wedding or house gig) and labels it with `(Private)` in parentheses rather than using the exact phrase `Private Event`, the script will publish:
+- The residential venue address on the live site
+- A schema.org `MusicEvent` block telling Google/Bing it's a public event
+- A canonical URL Google will index
+- A meta description announcing the show to the general public
+
+Discovered 2026-04-17 PM during a smoke-test of the sync against a deliberate test event. No real private event has leaked to date (verified — both existing `private: true` entries on 2026-09-18 and 2026-10-31 have literal `Private Event` titles that the current filter catches). The bug is latent until someone labels a private event with non-matching phrasing.
+
+**Workaround:** When creating a private booking on the calendar, use the literal phrase `Private Event` or `Private Party` in the title (or include the word `gathering`). Do NOT use `(Private)` in parentheses, `[private]` in brackets, or similar shorthand. Better: both — label it AND verify it lands as `private: true` on the next sync before trusting it.
+
+**Fix options (ordered simplest to most invasive):**
+- (a) **Broaden the filter.** Change `is_private_event` to match `\bprivate\b` as a standalone word anywhere in the title (regex word-boundary). Also consider matching against the raw `LR - ...` title, not the stripped one. Small code change, covers 90% of the likely miss cases.
+- (b) **Require an explicit calendar signal.** E.g. the event description must contain a `Private: yes` line, OR the event title must contain `[PRIVATE]` in brackets. Explicit, zero false-positives, but requires documenting the convention and retrofitting existing events.
+- (c) **Default-deny.** Flip the model: an LR-prefixed event is private unless the description explicitly contains a `Public: yes` line or a ticket line. Safest for privacy leaks but breaks the current muscle memory of "just put it on the calendar".
+- (d) **Address-based heuristic.** If the venue string looks like a residential address (street number + street + city pattern, and NOT in the `KNOWN_VENUES` list), default to private. Indirect and fragile.
+
+**Recommendation:** (a) as a quick fix to close the immediate gap, plus (b) documented as the canonical convention in `runbooks/edit-ticket-prices.md` (or a new runbook). (c) is tempting but would retroactively re-classify events and is more invasive than needed right now.
+
+**Status:** Open. Not urgent because no real private event currently has ambiguous phrasing, but latent — the next private booking someone labels casually could leak a home address. Should fix before the next private event lands on the calendar.
+
+---
+
 ## B6. Videos on site require two clicks to play
 
 **Symptom:** Every embedded video on `liveradiodfw.com` requires two clicks to start playing. First click registers but does not initiate playback; second click plays the video.
