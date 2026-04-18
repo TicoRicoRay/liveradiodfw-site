@@ -1774,11 +1774,17 @@ textarea.form-input {
   gap: var(--space-3);
   flex-wrap: wrap;
 }
+/* B14: text is hard-coded #ffffff (not var(--white)) because the dark
+   theme remaps --white to #12121e (see [data-theme="dark"] :root block),
+   which would turn this CTA's text near-black in dark mode. The nav
+   BOOK THE BAND pill uses the same hard-coded #ffffff for the same
+   reason — keeps red-fill + white-text consistent across both themes
+   and matches the nav CTA treatment site-wide. */
 .btn-primary {
   display: inline-block;
   padding: var(--space-3) var(--space-6);
   background: var(--red);
-  color: var(--white);
+  color: #ffffff;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: var(--text-sm);
