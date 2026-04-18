@@ -158,6 +158,36 @@ A half-complete bug entry is worse than no entry. If symptom or impact aren't cl
 
 ---
 
+## B10. Venue name duplicated on `/shows` and show-detail pages
+
+**Symptom:** On `/shows.html`, each upcoming-show card renders the venue name two or three times in a row, e.g.:
+
+> **25 Apr** — Fresh by Brookshires
+> FRESH by Brookshire's, FRESH by Brookshire's, 5100 I-30, Fate, TX 75189, USA
+
+The `<h3>` title (`Fresh by Brookshires`) is one rendering; the `<p class="venue-address">` line then starts with the venue name twice before the street address. Observed 2026-04-17 PM on live site for every Fresh by Brookshires card. Likely present on other cards where Google's `location` field is the place-name-prefixed form (`Venue Name, 123 Street, City, ST`).
+
+**Where:** `lrdfw-ghpages/build_shows.py` line ~78:
+
+```python
+lines.append(f'          <p class="venue-address">{s["venue"]}, {s["address"]}</p>')
+```
+
+`s["address"]` comes straight from the Google Calendar event's `location` field, which Google Places populates as `"FRESH by Brookshire's, 5100 I-30, Fate, TX 75189, USA"` — the venue name is already the first segment. Concatenating `venue + ", " + address` duplicates it. The `<h3>` title already shows the venue name (from `s["title"]`, which is the stripped calendar title), so the full rendered cluster is venue×3.
+
+**Impact:** Cosmetic but noticeable — looks unprofessional on the public `/shows` page, which is the primary conversion surface for the band. Also inflates the text content that search engines index for each show card with redundant tokens. Individual show-detail pages may have the same pattern (build_show_pages.py uses similar concatenation around line ~194–206) — worth auditing when fixing.
+
+**Fix options (ordered simplest to most invasive):**
+- (a) **Drop `venue` from the address line.** Change line 78 to `<p class="venue-address">{s["address"]}</p>`. Since Google's address already starts with the venue name, the card still shows the venue twice (h3 + address start) but not three times. Smallest diff.
+- (b) **Strip leading venue from address.** In `calendar_event_to_show`, if `address.lower().startswith(venue.lower() + ",")`, strip that prefix so `s["address"]` is just `"5100 I-30, Fate, TX 75189, USA"`. Then venue appears once in h3 and address is clean street-only. Cleanest. Slight risk if venue and address disagree in casing or punctuation — handle with a normalized compare.
+- (c) **Canonicalize at sync time.** Teach `sync_calendar.py` to split the calendar `location` into `venue` + `street_address` on ingest and store both, instead of parsing each build pass. More invasive but fixes related issues (e.g. `address_short` computation, which also consumes the raw address).
+
+**Recommendation:** (b) as the fix. It's a ~5-line change in `calendar_event_to_show`, doesn't touch `shows.json` schema, and cleans up both `/shows.html` and the show-detail pages in one pass. Verify with `KNOWN_VENUES` entries and the two current private-event entries (which skip rendering anyway) to make sure nothing regresses.
+
+**Status:** Open. Cosmetic; not urgent, but low-effort + visible to every site visitor, so worth batching with the next `sync_calendar.py` touch (e.g. B8 fix).
+
+---
+
 ## B9. Availability script cannot be run or smoke-tested from Jarvis's sandbox
 
 **Symptom:** `liveradiodfw-marketing/liveradiodfw_availability.py` authenticates to Google Calendar via OAuth (`credentials.json` + `token.json` via `google-auth-oauthlib`) and calls the Calendar API directly — it does NOT use the LiveRadioDFW Calendar Apps Script webhook. The OAuth credentials live on Ray's Windows cron host, not in the repo and not in Jarvis's sandbox. First-run auth requires `flow.run_local_server(port=0)` which pops a local browser, unavailable in a headless sandbox.
