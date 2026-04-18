@@ -1709,13 +1709,17 @@ textarea.form-input {
   border-color: #333;
 }
 
+/* B13 follow-up: 72x72 looked square in the box model but the three
+   text rows (SAT + 18 + APR) totalled ~83px of content, overflowing the
+   square and making the badge read as taller than wide. Match the
+   /shows listing badge at 80x80 so content fits inside the square. */
 .show-page-date {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 72px;
-  height: 72px;
+  width: 80px;
+  height: 80px;
   flex-shrink: 0;
   padding: var(--space-2);
   background: var(--red);
