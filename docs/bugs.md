@@ -1,6 +1,6 @@
 # Live Radio DFW - Bug List
 
-_Last updated: 2026-04-18 (B15: cancellation/reschedule convention)_
+_Last updated: 2026-04-18 (B16: description handling for new shows)_
 
 Current known defects and correctness issues. Fixed bugs move to [postmortems/](postmortems/) or the "Recently completed" section of [project-plan.md](project-plan.md). For planned work that isn't a defect, see [roadmap.md](roadmap.md).
 
@@ -189,6 +189,34 @@ CSS for the button styles lives in `css/style.css` — `.btn-primary` at ~L277, 
 **Dependencies:** None. Can ship standalone. Related to R8 (show-page layout polish, closed) and B13 (badge square, closed).
 
 **Status:** Fixed 2026-04-18 midday. Shipped in two commits: render/template in gh-pages `1f66996` (buttons reordered to Share, Get Directions, Add to Calendar, All Shows; Share gained `.btn-primary` class alongside `.btn-share` so the existing JS click handler keeps working), follow-up in gh-pages `5509b30` (restored nav/footer on show pages after initial rebuild missed build_includes.py, and fixed CTA text colour in dark mode by hard-coding `color: #ffffff` on `.btn-primary`). Final colour decision: **red fill + white text in both themes**, matching the nav BOOK THE BAND pill. Lesson captured: `[data-theme="dark"]` redefines `--white` to `#12121e` in the `:root` block (line 85–92), so any CTA using `color: var(--white)` renders near-black in dark mode. The nav-cta had always hard-coded `#ffffff` to avoid this; `.btn-primary` had not. See Fixed recently for details.
+
+---
+
+## B16. New shows added by sync have no `description`; no alert when description is missing; no placeholder on the rendered page
+
+**Symptom:** When the daily sync adds a new show to `shows.json`, it populates only the 12 calendar-owned fields. The `description` field — which drives the `<About This Show>` block on the show-detail page — is hand-curated and therefore absent on every fresh add. There is no alert-email warning, no on-page signal, and no automatic draft. First caught in the wild today: the Aug 1 OG Cellars show that got added via the B15 cancellation/reschedule run landed with no description, which Ray caught while spot-checking the live page.
+
+**Where:**
+- `lrdfw-ghpages/sync_calendar.py` — `calendar_event_to_show()` emits no `description`; `check_missing_info()` does not flag missing descriptions.
+- `lrdfw-ghpages/build_show_pages.py` — the description section is silently omitted when the field is empty, so the page has no visible "needs attention" cue.
+- `lrdfw-ghpages/shows.json` — the Aug 1 OG Cellars entry is missing `description`.
+
+**Impact:** SEO + user experience. Every hand-curated description is 350-530 characters of venue-specific prose covering setting, food/drink, parking, nearby communities, family/dog-friendliness, etc. Without it, show pages read as cookie-cutter templates — exactly the failure mode flagged in a prior session: "The risk would be if every page was cookie-cutter with just the date/time swapped." Ray's explicit constraint: **this must be solid before the historical-shows import**, because backfilling descriptions onto dozens of old shows is a much bigger job than preventing the gap going forward.
+
+**Workaround (today):** Ray eyeballs each new show-detail page and emails himself to write a description. Fragile — relies on human memory for something the sync should surface automatically.
+
+**Fix plan (staged rollout, per Ray's 2026-04-18 decision):**
+
+**Stage 1 (ship now, B16 scope):** *propose, don't auto-publish.*
+1. Add a deterministic `generate_description_draft(show)` helper in `sync_calendar.py` that composes a 3-5 sentence draft from the calendar-owned fields, using the voice conventions extracted from the existing 7 descriptions (opener rotation, venue/city, ticket language, geographic call-out, no em-dashes, no exclamation points, present tense).
+2. Extend `check_missing_info()` to flag missing `description` on public (non-private) shows.
+3. In the alert email's MISSING INFO block for a description, **include the machine-generated draft inline** so Ray can reply-with-edits or copy-paste-as-is.
+4. Update `build_show_pages.py` to render a short `Show details coming soon` placeholder block when `description` is empty, so any human browsing the live site sees a clear signal instead of silently-thin content.
+5. Backfill Aug 1 OG Cellars description in this same session (it was the bug's trigger; best to ship a complete page alongside the fix).
+
+**Stage 2 (future, NOT B16 scope):** once Ray and Jarvis both feel confident that the machine-generated drafts have the right tone and quality across a few real examples, flip the default to *publish the generated description immediately + notify Ray in case there are problems*. Rationale (Ray, 2026-04-18): "some content better than none — and easy to correct." Trigger to flip: when the last 3-5 machine drafts have needed only minor or no edits before Ray approved. Track in this file as a follow-up.
+
+**Status:** Open — Stage 1 fix landing in the same session this entry was filed. Stage 2 trigger to watch: next 3-5 new venues/shows, log whether the draft was accepted as-is or edited. Revisit when trigger met.
 
 ---
 
