@@ -126,6 +126,48 @@ Bandzoogle staging (`https://liveradiodfw.bandzoogle.com`) and The Bash profile 
 - Thin Lion & Crown boilerplate descriptions (5 shows, ~62 chars each, near-identical) are good candidates for hand-curated rewrites if Ray wants more SEO depth on those pages.
 - Next import batch: older shows Ray surfaces (pre-Aug 2024). Same script, new `bandzoogle_raw.json` (or analogous).
 
+### R16. Historic calendar import (pre-Bandzoogle 2021–2024) → **SHIPPED 2026-04-18 PM**
+63 past shows imported from the `info@liveradiodfw.com` Google Calendar covering 2021-04-16 through 2024-07-27 (all pre-date the R5 Bandzoogle earliest entry of 2024-08-09, so zero dedupe collisions). Shipped via new `import_historic.py` + `build_approved_historic.py` in the gh-pages repo.
+
+**Breakdown:** 59 public + 4 private. All 59 public entries carry `[DRAFT - ...]` machine descriptions (internal calendar notes — booking fees, gate codes, contact numbers — are never shipped verbatim). Public pages render the "Show details coming soon" placeholder until Ray enriches them. shows.json grew 43→106; show pages 36→95; sitemap regenerated via new `update_sitemap.py`. Commit `100d182` on gh-pages.
+
+**New canonical venues registered:** Plano Sports Tavern, The Maverick, American Legion Post 597, Howling Mutt Brewing, Lava Cantina The Colony, Turning Point Beer, Johnny Krackers, Harry Myers Park, Horsemen's Bar-B-Que, The Village Dallas, Shakertins Prosper, Rockin' S at Twin Coves.
+
+**Follow-ups:** enrichment passes for the 59 placeholder pages, ideally grouped by venue (all Frisco Bars, all Lion & Crowns, etc.) for speed.
+
+### R17. Upgrade calendar icons across the site
+Replace the current calendar-date chips on the homepage, `/shows`, `/past-shows`, individual show pages, and future locale pages (see R18) with a polished HTML+CSS calendar-icon treatment inspired by [SitePoint's "Create a Calendar Icon in HTML5 and CSS3"](https://www.sitepoint.com/create-calendar-icon-html5-css3/) — month band across the top, large day number body, subtle dashed perforation, layered page-stack shadow for depth. Match our palette (B14 red-on-black dark mode + light-mode counterparts) instead of SitePoint's orange.
+
+**Pattern from the reference (palette-swap target in parens):**
+- Outer card: white bg (dark mode: `--surface`), rounded corners, multi-layer `box-shadow` stack for 3D page/binding effect
+- Month band: top strip, solid fill (`--red`) with white text, dashed bottom border for the perforated-torn-edge look
+- Day number: oversized (2.8em equivalent), dark text on light (light text on dark)
+- Day name: small, bottom, in accent color
+- All ems/percentages so it scales with `font-size` on the container
+
+**Scope:**
+- Audit every place a date pill renders today: `build_shows.py` full cards, compact cards, past-show cards, `show-page-meta` on individual show pages, home hero upcoming-shows strip.
+- Build one reusable CSS component (`.cal-icon` with `.cal-icon__month`, `.cal-icon__day`, `.cal-icon__dow`) in `style.css` with light + dark theme variants.
+- Update all builders/templates to emit the new markup. Bump `style.css?v=`.
+- Verify in both palettes via `screenshot_page`.
+- Accessibility: semantic `<time datetime="YYYY-MM-DD">` wrapper with `aria-label` like "Friday, July 23, 2021".
+
+**Priority:** Medium. Visual polish, not critical path. Good candidate after a batch of placeholder descriptions get enriched (R16 follow-up) so the upgraded icons sit alongside real copy instead of placeholders.
+
+### R18. Locale / "where we've played" pages
+SEO long-tail: per-city landing pages (e.g. `/dfw-cover-band-frisco.html`, `/dfw-cover-band-plano.html`, `/dfw-cover-band-the-colony.html`) listing every show Live Radio DFW has played in that city, linking to the individual show pages. Builds on the R16 historic import which already tags every show with `address_short` ("Frisco, TX", "Plano, TX", etc.), so the data is ready.
+
+**Plan sketch (not yet scoped):**
+- New builder `build_locale_pages.py` that groups shows by city and renders one HTML per locale with the locale name in `<title>`, `<h1>`, and the intro copy.
+- Template includes past-shows list for that city + any upcoming shows in the same city, plus a "book us in your town" CTA linking to `/book`.
+- Candidate cities (by current show count): Frisco, Allen, Grapevine, Fate, Plano, The Colony, Addison, Carrollton, Royse City, Dallas, Lewisville. Filter to cities with ≥3 shows to avoid thin content.
+- Add to `sitemap.xml`, link from footer or `/shows` page.
+- Each page uses the R17 calendar-icon treatment on its show list.
+
+**Depends on:** R16 historic import (done) supplies the show density per city.
+
+**Priority:** Medium. Long-tail SEO play with real content (actual shows we played, not keyword stuffing) — exactly the kind of page Google and humans both like.
+
 ---
 
 ## Marketing automation
