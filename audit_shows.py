@@ -35,9 +35,16 @@ def warn(page, msg):
     issues.append((page, msg))
 
 def fetch(path):
-    url = BASE + path
+    # Cache-bust to get the latest edge copy (Cloudflare TTL is 10 min)
+    import time
+    sep = "&" if "?" in path else "?"
+    url = BASE + path + f"{sep}_ab={int(time.time())}"
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "lrdfw-audit/1.0"})
+        req = urllib.request.Request(url, headers={
+            "User-Agent": "lrdfw-audit/1.0",
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache",
+        })
         with urllib.request.urlopen(req, timeout=30) as r:
             return r.status, r.read().decode("utf-8", errors="replace")
     except urllib.error.HTTPError as e:
@@ -87,8 +94,8 @@ for slug in slugs:
         warn(path, "missing og tags")
 
     # cache-buster
-    if 'style.css?v=39' not in html:
-        warn(path, "CSS not v=39")
+    if 'style.css?v=40' not in html:
+        warn(path, "CSS not v=40")
 
     # full date with year (show-page-meta should contain 4-digit year)
     meta_match = re.search(r'<p class="show-page-meta">(.*?)</p>', html, re.S)
@@ -170,8 +177,8 @@ for p in ["/shows.html", "/past-shows.html", "/index.html", "/sitemap.xml"]:
         if n != 36:
             warn(p, f"sitemap has {n} show URLs, expected 36")
     else:
-        if 'style.css?v=39' not in html:
-            warn(p, "CSS not v=39")
+        if 'style.css?v=40' not in html:
+            warn(p, "CSS not v=40")
         if p == "/shows.html":
             # should contain exactly 9 upcoming cards (10 - 1 private filtered out if private hidden)
             # actually private are shown as "Private Event" placeholder cards? check
