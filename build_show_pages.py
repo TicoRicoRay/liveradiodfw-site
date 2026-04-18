@@ -115,13 +115,26 @@ def build_show_page(show):
     else:
         price_html = f'<span class="show-ticket-price show-price-paid">{ticket_price}</span>'
 
-    # Description section (only if Ray has approved content)
+    # Description section. Three states:
+    #   1. Approved description present — render the About This Show block.
+    #   2. Draft placeholder (string starts with "[DRAFT") — never publish
+    #      draft text to the public site; fall through to the placeholder.
+    #   3. No description at all — render a short "Show details coming soon"
+    #      placeholder (B16 Stage 1) so the page has a visible signal that
+    #      more content is on the way instead of silently-thin content.
     desc_section = ""
-    if description:
+    approved = description and not description.lstrip().startswith("[DRAFT")
+    if approved:
         desc_section = f"""
       <div class="show-page-description">
         <h2>About This Show</h2>
         <p>{description}</p>
+      </div>"""
+    else:
+        desc_section = """
+      <div class="show-page-description show-page-description-placeholder">
+        <h2>About This Show</h2>
+        <p>Show details coming soon. In the meantime, see the date, time, and location above or reach out via the Contact page.</p>
       </div>"""
 
     # JSON-LD

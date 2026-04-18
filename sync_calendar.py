@@ -240,6 +240,96 @@ def parse_ticket_price(description):
     return TICKET_PRICE_MISSING
 
 
+def generate_description_draft(show):
+    """Compose a 3-5 sentence machine-generated description draft from the
+    calendar-owned fields of a show dict. B16 Stage 1: the draft is proposed
+    to Ray via the alert email; nothing auto-publishes.
+
+    Voice calibration is based on the 7 existing hand-curated descriptions
+    as of 2026-04-18:
+      - Opener rotation: "Live Radio DFW <verb> <venue> in <city>" or
+        "Catch Live Radio DFW at <venue> in <city>"
+      - 3-5 sentences, ~300-500 chars
+      - Mentions ticket language (Free / no cover / $N admission)
+      - Geographic call-out (city + a nearby community or region)
+      - No em-dashes, no exclamation points, present tense
+
+    Deterministic: same show dict -> same draft (no LLM, no RNG). The opener
+    is chosen by hashing the date+venue so we don't get "Live Radio DFW
+    takes over ..." on every single new page.
+
+    Returns the draft string, or "" if the show is private or has insufficient
+    information (no venue, TBA time, etc.) to make a reasonable draft.
+    """
+    if show.get("private"):
+        return ""
+    venue = show.get("venue", "").strip()
+    city = show.get("address_short", "").strip()
+    if not venue or not city or city == "DFW Area":
+        return ""
+    ticket = show.get("ticket_price", "")
+    time_str = show.get("time", "")
+    day_name = show.get("day_name", "")
+    date_str = show.get("date", "")
+
+    # Rotate opener based on a stable hash of (date, venue) so repeat bookings
+    # at the same venue don't all get the same sentence.
+    openers = [
+        f"Live Radio DFW heads to {venue} in {city}",
+        f"Catch Live Radio DFW at {venue} in {city}",
+        f"Live Radio DFW takes the stage at {venue} in {city}",
+        f"Live Radio DFW returns to {venue} in {city}",
+    ]
+    # Stable hash across processes (Python's built-in hash() is randomized
+    # per-process via PYTHONHASHSEED; we need the same draft every run).
+    import hashlib
+    key = hashlib.sha256(f"{date_str}|{venue}".encode()).digest()
+    opener = openers[key[0] % len(openers)]
+
+    # Day-of-week framing for the opener sentence
+    day_full = {
+        "Mon": "Monday", "Tue": "Tuesday", "Wed": "Wednesday",
+        "Thu": "Thursday", "Fri": "Friday", "Sat": "Saturday", "Sun": "Sunday",
+    }.get(day_name, "")
+    if day_full:
+        opener_sentence = f"{opener} for a {day_full} evening of live music."
+    else:
+        opener_sentence = f"{opener} for an evening of live music."
+
+    # Ticket sentence
+    if ticket == "Free":
+        ticket_sentence = "No cover charge, no tickets needed."
+    elif ticket and ticket != TICKET_PRICE_MISSING:
+        ticket_sentence = f"Admission is {ticket}."
+    else:
+        ticket_sentence = ""
+
+    # Generic middle sentence about the show itself (intentionally bland so
+    # Ray knows it needs venue-specific enrichment before ship).
+    middle_sentence = (
+        "We'll be playing our mix of 70s, 80s, classic rock, and oldies covers "
+        "across the set."
+    )
+
+    # Close with a geographic hint if we can infer one from the city string.
+    close_sentence = (
+        f"A solid night out for the {city} crowd and the surrounding DFW Metroplex communities."
+    )
+
+    # Flag the draft so humans never mistake it for finished copy.
+    flag = (
+        "[DRAFT - machine-generated from calendar fields; "
+        "review and enrich with venue-specific details before publish.]"
+    )
+
+    parts = [opener_sentence, middle_sentence]
+    if ticket_sentence:
+        parts.append(ticket_sentence)
+    parts.append(close_sentence)
+    body = " ".join(parts)
+    return f"{flag} {body}"
+
+
 def calendar_event_to_show(event):
     """Convert a calendar event to a shows.json entry."""
     start_utc = datetime.fromisoformat(event["start"].replace("Z", "+00:00"))
@@ -379,6 +469,15 @@ def check_missing_info(show, event):
             "Ticket price (add a line like 'Tickets: $25' or 'Tickets: Free' "
             "to the calendar event description)"
         )
+    # B16 Stage 1: flag missing description on public shows. The draft itself
+    # is surfaced in the alert email body rather than returned here so the
+    # normal MISSING INFO formatter stays single-purpose.
+    if not show.get("private") and not show.get("description", "").strip():
+        missing.append(
+            "About-this-show description (hand-curated prose for SEO + the "
+            "on-page About block; a machine-generated draft is included below "
+            "for review/edit)"
+        )
     return missing
 
 
@@ -486,10 +585,20 @@ async def main():
         show = calendar_event_to_show(event)
         cal_dates.add(show["date"])
 
-        # Check for missing required info
-        missing = check_missing_info(show, event)
+        # Build the effective show dict the site will actually ship so that
+        # hand-curated fields (e.g. description) are visible to
+        # check_missing_info() for existing shows. For new adds there is no
+        # existing entry, so effective == show.
+        if show["date"] in current_by_date:
+            effective = _merge_calendar_fields(current_by_date[show["date"]], show)
+        else:
+            effective = show
+
+        # Check for missing required info (runs against effective dict so we
+        # respect existing hand-curated fields like description).
+        missing = check_missing_info(effective, event)
         if missing:
-            missing_info.append((show, missing))
+            missing_info.append((effective, missing))
 
         if show["date"] not in current_by_date:
             # New show not on website
@@ -584,11 +693,29 @@ async def main():
 
     if missing_info:
         for show, fields in missing_info:
-            email_parts.append(
+            block = (
                 f"⚠️ MISSING INFO:\n"
                 f"  {show['title']} on {show['date']}\n"
                 + "\n".join(f"    Missing: {f}" for f in fields)
             )
+            # B16 Stage 1: if the description is what's missing, propose a
+            # machine-generated draft inline so Ray can review/edit/approve
+            # without having to leave the email.
+            needs_desc = any("About-this-show description" in f for f in fields)
+            if needs_desc:
+                draft = generate_description_draft(show)
+                if draft:
+                    block += (
+                        "\n\n  Proposed description draft (review and enrich "
+                        "with venue-specific details before publish):\n"
+                        f"    {draft}"
+                    )
+                else:
+                    block += (
+                        "\n\n  Could not auto-draft a description for this show "
+                        "(missing venue, city, or other required fields)."
+                    )
+            email_parts.append(block)
 
     if email_parts:
         body = (
