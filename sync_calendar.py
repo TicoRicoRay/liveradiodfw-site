@@ -29,6 +29,18 @@ GIG DETECTION RULES:
   - Known venue names (from shows.json history) → auto-add
   - "Private Party" / "Private Event" → auto-add as private
   - Everything else (rehearsals, personal, other bands, holds) → skip
+
+CANCELLATION / RESCHEDULE CONVENTION (added 2026-04-18, B15):
+  When a show is cancelled or rescheduled, DO NOT delete the original
+  Google Calendar event. Instead:
+    1. Rename the original event with a parenthetical suffix at the end:
+         "<original title> (Rescheduled due to Weather)"
+         "<original title> (Cancelled)"
+    2. If rescheduled, create a brand-new event for the new date
+       (the sync will pick it up via the normal KNOWN_VENUES / "LR -" path).
+  The renamed original stays on the calendar as a band-facing audit record
+  of what happened, but is filtered out of shows.json so the public site
+  never sends fans to a dead show. See SKIP_PATTERNS below.
 """
 
 import json
@@ -90,6 +102,12 @@ SKIP_PATTERNS = [
     r"to-jo",               # Kyle's other band
     r"live wire",           # Don's other band
     r"fat daddy",           # Kyle's other band venue
+    # Cancellation / reschedule convention (B15, 2026-04-18):
+    # Ray renames an event with a parenthetical suffix at the end of the
+    # title when a show is cancelled or rescheduled. The original stays on
+    # GCal for audit, but must be filtered out of the public shows.json.
+    r"\(.*\brescheduled\b.*\)\s*$",   # "... (Rescheduled due to Weather)"
+    r"\(.*\bcancel(?:l)?ed\b.*\)\s*$",  # "... (Cancelled)" / "(Canceled)"
 ]
 
 # Known venue names that are definitely LR gigs (built from history)
