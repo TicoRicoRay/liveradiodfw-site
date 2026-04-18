@@ -1,6 +1,6 @@
 # Live Radio DFW - Bug List
 
-_Last updated: 2026-04-17 (calendar SoT cleanup session)_
+_Last updated: 2026-04-18 (B15: cancellation/reschedule convention)_
 
 Current known defects and correctness issues. Fixed bugs move to [postmortems/](postmortems/) or the "Recently completed" section of [project-plan.md](project-plan.md). For planned work that isn't a defect, see [roadmap.md](roadmap.md).
 
@@ -189,6 +189,32 @@ CSS for the button styles lives in `css/style.css` — `.btn-primary` at ~L277, 
 **Dependencies:** None. Can ship standalone. Related to R8 (show-page layout polish, closed) and B13 (badge square, closed).
 
 **Status:** Fixed 2026-04-18 midday. Shipped in two commits: render/template in gh-pages `1f66996` (buttons reordered to Share, Get Directions, Add to Calendar, All Shows; Share gained `.btn-primary` class alongside `.btn-share` so the existing JS click handler keeps working), follow-up in gh-pages `5509b30` (restored nav/footer on show pages after initial rebuild missed build_includes.py, and fixed CTA text colour in dark mode by hard-coding `color: #ffffff` on `.btn-primary`). Final colour decision: **red fill + white text in both themes**, matching the nav BOOK THE BAND pill. Lesson captured: `[data-theme="dark"]` redefines `--white` to `#12121e` in the `:root` block (line 85–92), so any CTA using `color: var(--white)` renders near-black in dark mode. The nav-cta had always hard-coded `#ffffff` to avoid this; `.btn-primary` had not. See Fixed recently for details.
+
+---
+
+## B15. Calendar sync has no convention for cancelled or rescheduled shows ~~[OPEN]~~ → **FIXED 2026-04-18**
+
+**Symptom:** Before this fix `sync_calendar.py` had no business logic for cancellations or reschedulings. If a show was cancelled or rescheduled, Ray's only clean options were (a) delete the GCal event and lose the audit trail, or (b) edit the event in place and have the public site continue to advertise a show that wasn't happening. First real occurrence: tonight's Apr 18 2026 OG Cellars show was weather-cancelled and rescheduled to Aug 1 2026.
+
+**Where:** `lrdfw-ghpages/sync_calendar.py` — `SKIP_PATTERNS` and the module docstring.
+
+**Impact:** Operational. Without a convention, either the GCal audit trail gets lost (delete/recreate) or the public site sends fans to a dead show (edit in place). Also: no test coverage for the scenario, so any future ad-hoc handling could regress silently.
+
+**Workaround (before fix):** Manually edit `shows.json` after a cancellation — which violates the cardinal rule that GCal is the only source of truth.
+
+**Fix (shipped 2026-04-18):** Established a convention plus code + tests to enforce it.
+
+1. **Convention (what Ray does in GCal):** when a show is cancelled or rescheduled, do NOT delete the original event. Instead, rename it with a parenthetical suffix at the end of the title: `"<original title> (Rescheduled due to Weather)"` or `"<original title> (Cancelled)"`. If rescheduled, create a brand-new event for the new date (normal flow).
+2. **Code (what `sync_calendar.py` does):** two new entries in `SKIP_PATTERNS` match any end-of-title parenthetical containing `rescheduled` or `cancel(l)ed` (both British and American spellings, case-insensitive). The renamed original stays on GCal as a band-facing audit record but is filtered out of `shows.json` so the public site never advertises a dead show. Docstring updated with the convention.
+3. **Tests:** new `lrdfw-ghpages/test_cancellation_reschedule.py` — 13 cases covering the live Apr 18 + Aug 1 scenario, case variants, both spellings, LR-prefix + known-venue interaction with the new filter, and negative cases that confirm no false positives on words like "Canceltown" or "Rescheduling Ceremony" when not wrapped in an end-anchored parenthetical.
+
+**Result on the live calendar run (2026-04-18 18:32 UTC):** sync correctly removed Apr 18 from `shows.json`, added Aug 1, regenerated `o-g-cellars-2026-08-01.html`, removed `o-g-cellars-2026-04-18.html`, committed `d124061`, and pushed to gh-pages. Alert email path exercised and would have sent; sandbox lacked the tools endpoint to deliver it, but the cron environment has it and will.
+
+**Follow-ups (not in scope here):**
+- `sync_calendar.py` email copy still uses the string "CDT" in one spot (`(daily at 8 AM CDT)`), which violates the Central/America-Chicago cardinal rule. Not blocking; track separately if it hasn't been.
+- Once the GCal event for Apr 18 is old enough that Ray no longer wants it cluttering his calendar view, he can delete it — the sync no longer relies on its presence once Aug 1 is in place.
+
+**Status:** Fixed 2026-04-18. Commits: gh-pages `d124061` (sync logic + tests + docstring, shipped atomically via the auto-sync commit); docs branch (this file) to follow.
 
 ---
 
