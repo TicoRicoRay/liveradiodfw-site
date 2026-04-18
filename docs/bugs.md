@@ -239,7 +239,7 @@ sits inside `<nav class="breadcrumb" aria-label="Breadcrumb">` at lines 191–19
 
 **Style note for the fix:** this is prose that will appear in rendered HTML on the public site, so the site's existing em-dash convention applies — no need to avoid em-dashes here (the "no em-dashes" cardinal rule is about Jarvis's output to Ray, not about site copy).
 
-**Status:** Open. Trivial fix. Batch with B8 + B10 next time we touch `sync_calendar.py`/`build_show_pages.py`.
+**Status:** Fixed 2026-04-18 AM. Applied option (a): changed line 194 to `<span>{venue} &mdash; {long_date}</span>`. All 8 public show-detail pages rebuilt and verified live — each now shows a unique crumb like `Home › Shows › FRESH by Brookshire's — Saturday, April 25, 2026`. See Fixed Recently section below.
 
 ---
 
@@ -269,7 +269,7 @@ lines.append(f'          <p class="venue-address">{s["venue"]}, {s["address"]}</
 
 **Recommendation:** (b) as the fix. It's a ~5-line change in `calendar_event_to_show`, doesn't touch `shows.json` schema, and cleans up both `/shows.html` and the show-detail pages in one pass. Verify with `KNOWN_VENUES` entries and the two current private-event entries (which skip rendering anyway) to make sure nothing regresses.
 
-**Status:** Open. Cosmetic; not urgent, but low-effort + visible to every site visitor, so worth batching with the next `sync_calendar.py` touch (e.g. B8 fix).
+**Status:** Fixed 2026-04-18 AM. Applied option (b) in `sync_calendar.py` with a guarded heuristic: strip the first comma-separated segment from `address` only when it looks like a venue name (starts with a letter) AND the second segment looks like a street address (starts with a digit). This cleans Google Places–formatted entries while leaving bare street addresses, private-event "City, TX" values, and multi-word street-name entries (like the Gatherings® building-G address) untouched. 7 of 10 current shows affected; canonical `shows.json` now stores street-only addresses, which also cleans the Add-to-Calendar button data, .ics export, and JSON-LD schema. **Known edge case:** Sweetwater Grill still renders doubled (`Sweetwater Grill, Sweetwater Grill, Royse City, TX`) because the calendar event has no street number, so the heuristic can't confidently strip; fix is to update the calendar event with a street address (calendar = source of truth). See Fixed Recently section below.
 
 ---
 
@@ -463,6 +463,8 @@ These aren't band bugs - they're limitations in how Jarvis (the AI assistant) ca
 
 ## Fixed recently (moved here for context; full history in postmortems)
 
+- **2026-04-18 AM - B11 breadcrumb on show pages now unique:** `build_show_pages.py` line 194 changed from `<span>{venue}</span>` to `<span>{venue} &mdash; {long_date}</span>`. Each detail page now has a distinct trailing crumb like `Home › Shows › FRESH by Brookshire's — Saturday, April 25, 2026`. Verified live on `/shows/fresh-by-brookshires-2026-04-25.html` after sync push.
+- **2026-04-18 AM - B10 venue duplication cleaned up at ingest:** `sync_calendar.py` now strips the leading venue segment from `address` when the second segment clearly looks like a street address (first char is a digit). Canonical `shows.json` stores street-only addresses; every downstream consumer (`/shows.html` venue-address line, show-detail `show-page-address`, JSON-LD schema, Add-to-Calendar `data-cal-address`, `.ics` export) is cleaned in one pass. 7 of 10 current shows updated on the live site. Residual: Sweetwater Grill still doubles because the calendar event has no street number; data-side fix required on that event.
 - **2026-04-17 PM - B2 webhook `attendees` field fixed (R10 closed):** Extended `_updateEvent` in `scripts/LiveRadioDFWCalendar.gs` to iterate `data.attendees || data.guests` and call `event.addGuest(email)` for each; normalized `_createEvent` to accept either field name; both paths now return the resulting `guests` array for verification. Published as Version 2 of the Apps Script project via the new runbook. Smoke test via `requests.post` confirmed `list`, `create` with attendees, `update` adding a new attendee, and `delete` all return JSON 200 with expected payloads. Passphrase was simultaneously rotated (partial B7 fix; see B7 section above).
 - **2026-04-17 PM - B3 Outlook-native event IDs marked won't-fix:** The Outlook half of the old dual-entry pipeline was formally decommissioned this session (new cardinal rule: band events created only on the Google Calendar on info@). Existing Outlook-origin events remain hand-edit-only in the GCal UI, but the population is finite and no longer growing. See B3 section above.
 - **2026-04-17 - B4 calendar host identity cleaned up:** Band calendar source of truth confirmed as `info@liveradiodfw.com` (free Google personal account). Corrected 3 doc locations (`sources-of-truth.md`, `calendar-sync.md` x2, `edit-ticket-prices.md`). Added canonical statement in `architecture/sources-of-truth.md`. Committed master copy of Apps Script to `docs/scripts/LiveRadioDFWCalendar.gs` (passphrase redacted). New runbook: `runbooks/publish-calendar-webhook.md`. Spawned B7 (public passphrase exposure), J9 (connectors account-wide), R10 (attendees fix).
