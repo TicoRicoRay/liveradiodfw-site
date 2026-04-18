@@ -154,19 +154,44 @@ Replace the current calendar-date chips on the homepage, `/shows`, `/past-shows`
 
 **Priority:** Medium. Visual polish, not critical path. Good candidate after a batch of placeholder descriptions get enriched (R16 follow-up) so the upgraded icons sit alongside real copy instead of placeholders.
 
-### R18. Locale / "where we've played" pages
-SEO long-tail: per-city landing pages (e.g. `/dfw-cover-band-frisco.html`, `/dfw-cover-band-plano.html`, `/dfw-cover-band-the-colony.html`) listing every show Live Radio DFW has played in that city, linking to the individual show pages. Builds on the R16 historic import which already tags every show with `address_short` ("Frisco, TX", "Plano, TX", etc.), so the data is ready.
+### R18. Locale SEO landing pages ("band-type in location" search capture)
+Dedicated SEO landing pages targeting "{band-type} in {city}" intent queries — e.g. `cover band in Frisco`, `80s cover band Plano`, `live band Grapevine TX`, `wedding band The Colony`. We earn the right to rank for these because **we've actually played in those cities**: the R16 historic import + ongoing calendar give us genuine proof-of-presence, which is exactly the kind of local signal Google rewards and which thin "directory" competitors can't match.
 
-**Plan sketch (not yet scoped):**
-- New builder `build_locale_pages.py` that groups shows by city and renders one HTML per locale with the locale name in `<title>`, `<h1>`, and the intro copy.
-- Template includes past-shows list for that city + any upcoming shows in the same city, plus a "book us in your town" CTA linking to `/book`.
-- Candidate cities (by current show count): Frisco, Allen, Grapevine, Fate, Plano, The Colony, Addison, Carrollton, Royse City, Dallas, Lewisville. Filter to cities with ≥3 shows to avoid thin content.
-- Add to `sitemap.xml`, link from footer or `/shows` page.
-- Each page uses the R17 calendar-icon treatment on its show list.
+**Why this works (the angle Ray surfaced):**
+- Intent-rich: someone searching "cover band in Plano" is closer to booking than someone searching "cover band DFW"
+- Content we already own: every show in that city is a real event at a real venue with a real date — not keyword-stuffed filler
+- Local relevance signals: venue names, street addresses, city + TX in body copy, outbound-style references to the venues themselves
+- Scales naturally with R16 follow-ups: every placeholder description Ray enriches makes the city page it appears on richer too
 
-**Depends on:** R16 historic import (done) supplies the show density per city.
+**Candidate cities (public-show counts after R16 import, verified against shows.json 2026-04-18):**
+Frisco (19), Allen (19), Fate (16), Grapevine (9), Carrollton (5), The Colony (4), Royse City (4), Plano (3), Addison (3), Lewisville (3), Bonham (2), Denton (1), Terrell (1), Rockwall (1), Flower Mound (1), Dallas (1), Prosper (1), Sunset (1), Sanger (1).
 
-**Priority:** Medium. Long-tail SEO play with real content (actual shows we played, not keyword stuffing) — exactly the kind of page Google and humans both like.
+Cut line: cities with ≥3 shows get a page in the first batch — **10 pages**: Frisco, Allen, Fate, Grapevine, Carrollton, The Colony, Royse City, Plano, Addison, Lewisville. The rest wait until they hit the threshold via natural booking cadence.
+
+**Page shape (one per city):**
+- URL: `/cover-band-{city-slug}.html` (or similar, TBD with R13 style-guide pass on URL conventions)
+- `<title>` and `<h1>` targeting the intent query: e.g. *"Cover Band in Frisco, TX | Live Radio DFW"*
+- Meta description built from real stats: *"Live Radio DFW has played 14 shows in Frisco at venues like The Frisco Bar & Grill and Frisco Rail Yard. Book us for your Frisco event."*
+- Intro paragraph with city + venues naturally worked in (no keyword stuffing)
+- Show list for that city (past + upcoming), using R17 calendar icons, each linking to its individual show page
+- Venue highlight strip: a line per distinct venue played in that city ("Played 6 times at The Frisco Bar & Grill on Gaylord Pkwy")
+- "Book us in {City}" CTA linking to `/book` with city pre-filled if possible
+- Internal links: to `/songs`, `/videos`, nearby-city locale pages (adds link equity across the set)
+- Schema.org `MusicGroup` + `Place` + `Event` structured data so Google can render rich results
+
+**Technical plan:**
+- New builder `build_locale_pages.py` in `lrdfw-ghpages/`. Groups `shows.json` by `address_short`, renders one HTML per qualifying city from a shared template.
+- Intro/pitch copy is hand-curated per city the first time (stored in a new `_data/locale_copy.json` or inline in the builder) so each page reads like a real page, not a generated one. Machine assembles the data grid; humans own the voice.
+- Builder runs in the same pipeline as `build_shows.py` and `build_show_pages.py`.
+- `update_sitemap.py` extended to include locale pages.
+- Footer link — "Where we play" hub page that lists all locale pages.
+
+**Depends on:**
+- R16 historic import (done) — supplies the show density per city
+- R17 calendar icons (open) — ideally ships first so locale-page show lists use the upgraded visuals
+- R13 style-guide audit (open) — should weigh in on URL convention and intro-copy voice before we cut 9 pages at once
+
+**Priority:** Medium-high. Long-tail SEO play with authentic content, and the content substrate already exists post-R16. Compounds with every future show and every R16 description enrichment.
 
 ---
 
