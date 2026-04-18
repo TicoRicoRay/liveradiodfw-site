@@ -174,8 +174,8 @@ for p in ["/shows.html", "/past-shows.html", "/index.html", "/sitemap.xml"]:
         if "/past-shows.html" not in html:
             warn(p, "sitemap missing /past-shows.html")
         n = len(re.findall(r"<loc>[^<]*/shows/[^<]+</loc>", html))
-        if n != 36:
-            warn(p, f"sitemap has {n} show URLs, expected 36")
+        if n != 95:
+            warn(p, f"sitemap has {n} show URLs, expected 95")
     else:
         if 'style.css?v=40' not in html:
             warn(p, "CSS not v=40")
