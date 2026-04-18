@@ -191,7 +191,7 @@ def build_show_page(show):
   <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="../index.html">Home</a> &rsaquo;
     <a href="../shows.html">Shows</a> &rsaquo;
-    <span>{venue}</span>
+    <span>{venue} &mdash; {long_date}</span>
   </nav>
 
   <section class="show-page-hero">

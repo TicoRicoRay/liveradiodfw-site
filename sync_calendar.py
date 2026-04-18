@@ -234,6 +234,23 @@ def calendar_event_to_show(event):
         venue = parts[0]
         address = location
 
+        # B10 fix: Google's "location" field from Places is often populated as
+        # "Venue Name, 123 Street, City, ST 12345, USA" — the venue name is already
+        # the first segment. If we keep it duplicated in `address`, every downstream
+        # consumer (/shows render, show-detail page, JSON-LD schema, Add-to-Calendar
+        # button, generated .ics) ends up showing the venue name twice. Strip the
+        # first segment from `address` when it looks like a venue name (starts with
+        # a letter) AND the second segment looks like a street address (starts with
+        # a digit). That keeps bare-street-address inputs like "1115 Vista Wy, ..."
+        # intact for private-event parsing, but cleans up Google Places-formatted
+        # entries like "FRESH by Brookshire's, 5100 I-30, Fate, TX 75189, USA".
+        if (len(parts) >= 2
+                and parts[0]
+                and parts[0][0].isalpha()
+                and parts[1]
+                and parts[1][0].isdigit()):
+            address = ", ".join(parts[1:]).strip()
+
         # Build short address (city, state)
         # Look for TX — could be its own comma-separated part ("Allen, TX")
         # or embedded ("Sanger TX 76266")
