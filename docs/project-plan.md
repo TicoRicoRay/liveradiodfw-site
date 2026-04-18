@@ -75,6 +75,34 @@ Ray ran a site audit through ChatGPT and it surfaced useful observations. Ray wa
 
 **Status:** Awaiting Ray to bring the findings into a session.
 
+### D2. Use GitHub Issues / Projects / Wiki instead of markdown files? ~~[OPEN]~~ → **DECIDED 2026-04-18: keep markdown**
+
+Ray asked whether to migrate bugs (B/J), roadmap (R), and decisions (D) from markdown files in `docs/` to GitHub Issues, and whether to adopt Projects and Wiki. Explored together 2026-04-18.
+
+**Decision:** Keep the current markdown-file setup (`docs/bugs.md`, `docs/roadmap.md`, `docs/project-plan.md`). Do not migrate to Issues. Do not adopt Projects. Do not adopt Wiki.
+
+**Why:**
+
+- **Credit/tool-call cost:** A typical session today reads state in 1 file operation. With Issues, a typical session would be 3-4 API calls (list open issues + fetch 2-3 actively-worked issues). Full-archive reads would be ~16 calls vs. 1 today. That is a real, recurring per-session tax for marginal UI benefit given we are a two-actor team (Ray + Jarvis).
+- **UI benefit is real but not painful-to-avoid:** Ray does not currently feel enough friction with the markdown flow to justify the migration cost. If that changes, we can revisit; the reverse migration is also roughly a 2-hour job.
+- **Narrative fits prose better than tickets:** bugs.md carries rich multi-pass debugging stories (e.g., B14's three passes, B8's regex derivation), "How to add" templates, and a Lessons section. Issues handle discrete items well but fight long-form narrative. We would have to keep markdown for those pieces anyway, which means a hybrid system rather than a clean switch.
+- **Wiki is a hard no regardless:** GitHub Wiki content lives in a separate git repo from the code. Our docs intentionally version alongside code in `docs/` so PRs touch both together. Decoupling would be a step backward.
+- **Projects is a hard no today:** kanban value scales with number of actors. With one assignee (Ray) and one agent (Jarvis), Projects is ceremony without payoff. Revisit only if a third person joins the work.
+
+**What we did adopt instead (from the same conversation):**
+
+- Added `-marketing` sibling repo to the docs-read startup trigger (commit `660b511`).
+- Filed R12 (end-to-end booking links in availability email), R13 (style guide audit), R14 (press-kit + why-book-us page enrichment).
+- Added Section 11 to `MARKETING_STYLE_GUIDE.md` in `-marketing` as a guideline (not rule) for one primary CTA per venue-facing email, based on March 2026 send data (-marketing commit `71df18f`).
+
+**Revisit triggers:**
+
+- A third person joins the band-marketing work (contractor, band member, etc.) and needs assignee/kanban semantics.
+- bugs.md crosses ~1500 lines and becomes genuinely unscannable.
+- Ray feels real friction reading current state and asks for this again.
+
+Until one of those triggers fires, do not re-open this discussion.
+
 **Don't break:**
 - The band Google Calendar is the source of truth for shows. Never hand-edit `shows.json` or `shows/*.html`.
 - The EOS calendar is NOT band-related. Never touch it. Ever.
