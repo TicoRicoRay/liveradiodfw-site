@@ -60,10 +60,12 @@ Both legacy domains (`jacksoncrossingdallas.com`, `riskybusinessdfw.com`) are al
 
 **Priority:** ~~High - recurring subscription cost is the motivator.~~ N/A (closed).
 
-### R2. UptimeRobot monitoring
-Set up UptimeRobot (free tier) for `https://www.liveradiodfw.com` with SMS + email alerts. Currently a checkbox in the DNS/Pages runbook but not provisioned. Catches outages like the 2026-04-15 event faster than Google Search Console noticing.
+### R2. UptimeRobot monitoring ~~[OPEN]~~ → **DONE 2026-04-19**
+Set up UptimeRobot (free tier) for `https://www.liveradiodfw.com` with SMS + email alerts. Was a checkbox in the DNS/Pages runbook but not provisioned. Catches outages like the 2026-04-15 event faster than Google Search Console noticing.
 
-**Priority:** Medium. Low effort.
+**Closed 2026-04-19:** UptimeRobot free-tier HEAD-request monitor on `https://www.liveradiodfw.com`, 5-minute polling interval. Alerts route to `info@liveradiodfw.com`, which pushes to Ray's phone and Apple Watch in real time. Dashboard is password-protected. Free tier is HEAD-only — keyword monitoring (which would catch soft failures like blank body / JS error served with a 200) requires GET and is a paid-tier feature, intentionally skipped. API + connector options exist for future integrations (Slack/Discord feed, on-site status strip) but are intentionally unused; the email path is sufficient for a low-traffic marketing site. Monitor has been live and stable for several days prior to formal close-out.
+
+**Priority:** ~~Medium. Low effort.~~ N/A (closed).
 
 ### R11. Extend `build_includes.py` to cover head-level snippets
 

@@ -125,7 +125,7 @@ Look for `status: "built"`.
 
 ## Monitoring
 
-- [ ] **UptimeRobot** (free) monitoring `https://www.liveradiodfw.com` with SMS + email alerts → **TODO: not yet set up**
+- [x] **UptimeRobot** (free) HEAD-request monitor on `https://www.liveradiodfw.com`, 5-minute interval, email alerts to `info@liveradiodfw.com` (pushes to Ray's phone + watch). Live since ~2026-04-16, formally closed [R2](../roadmap.md#r2-uptimerobot-monitoring-open--done-2026-04-19) on 2026-04-19.
 - [ ] **Google Search Console** weekly crawl-error check
 - [ ] Cloudflare Analytics dashboard (free) shows traffic + errors
 
