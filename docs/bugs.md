@@ -1,6 +1,6 @@
 # Live Radio DFW - Bug List
 
-_Last updated: 2026-04-18 (B16: description handling for new shows)_
+_Last updated: 2026-04-19 (B18 filed: past-shows drafts pipeline prefix pitfall)_
 
 Current known defects and correctness issues. Fixed bugs move to [postmortems/](postmortems/) or the "Recently completed" section of [project-plan.md](project-plan.md). For planned work that isn't a defect, see [roadmap.md](roadmap.md).
 
@@ -242,6 +242,35 @@ The `CDT` variable name at line 60 (`CDT = ZoneInfo("America/Chicago")`) is a Py
 Recommend option 1 + option 3 together. Pair them with R9's new end-of-session grep hook so future violations are caught at commit time, not session-months later.
 
 **Status:** Open. Filed 2026-04-19 as part of R9 (timezone convention enforcement) close-out. Not top-priority.
+
+---
+
+## B18. Past-shows drafts pipeline silently regresses live pages to "Show details coming soon" placeholder
+
+**Symptom:** Running `lrdfw-past-shows/shows_patch.py` against `/tmp/lrdfw-lander/shows.json` followed by `build_show_pages.py` + `build_includes.py` reverted 64 approved past-show descriptions back to the `.show-page-description-placeholder` → *"Show details coming soon. In the meantime, see the date, time, and location above or reach out via the Contact page."* boilerplate. Caught and reverted at commit staging on 2026-04-19 PM before push; the live site was never affected.
+
+**Where:**
+- `/home/user/workspace/lrdfw-past-shows/drafts.json` — source of truth for the 65 past-show descriptions. Contained a `[DRAFT - v2 warm-invitation voice, pending approval]` prefix on every description. This prefix was stripped from the **rendered HTML** at publish time (commit `9239aea`, 2026-04-19 AM) but never stripped from `drafts.json` itself.
+- `lrdfw-past-shows/shows_patch.py` — faithfully copies `drafts[i].description` verbatim into `/tmp/lrdfw-lander/shows.json`. With stale prefixes in place, this writes the `[DRAFT ...]` string into `shows.json`.
+- `/tmp/lrdfw-lander/build_show_pages.py` — treats any description starting with `[DRAFT` (or similarly-bracketed sentinel text) as "not yet ready for publication" and swaps the real description for the `.show-page-description-placeholder` boilerplate.
+
+**Impact:** Severity high if triggered on an unreviewed diff — all 64 approved past-show pages would have flipped back to boilerplate in a single commit, undoing Ray's full one-at-a-time review session. Caught on 2026-04-19 PM only because the diff was reviewed before push (`git diff` showed 95 modified HTML files when only 1 should have changed; the `git status` count was the tell).
+
+**Workaround:** Before running `shows_patch.py`, run `python3 -c "import json, re; d=json.load(open('drafts.json')); [s.__setitem__('description', re.sub(r'^\[DRAFT[^\]]*\]\s*', '', s['description'])) for s in d]; json.dump(d, open('drafts.json','w'), indent=2)"` to strip any leaked `[DRAFT` prefixes. Done once on 2026-04-19 PM — `drafts.json` is currently clean.
+
+**Fix options (ranked):**
+1. **Harden `shows_patch.py` to strip the prefix on write.** Five-line change: regex the `[DRAFT...]` prefix out of each description before writing to `shows.json`. Defense-in-depth — even if `drafts.json` leaks a prefix again, it cannot reach the live pipeline. Recommended.
+2. **Add a validator to `shows_patch.py` that refuses to write if any description starts with `[DRAFT`.** Louder failure mode, forces the human to fix `drafts.json` explicitly. Complementary to option 1.
+3. **Document the invariant in a `lrdfw-past-shows/README.md`** (“`drafts.json` must never contain `[DRAFT` prefixes; they are a build-time sentinel, not content”) and call it out in the end-of-session runbook. Cheapest; least enforcement.
+4. **Remove the `[DRAFT` sentinel from `build_show_pages.py` entirely** and instead track draft/ready state as a real field (e.g., `"status": "draft"|"ready"`). Most invasive, but ends the overloading of the `description` string with out-of-band state. Only worth doing if we expect to keep publishing multi-pass drafts through this pipeline.
+
+**Recommendation:** Ship option 1 + option 2 together as a small hardening of `shows_patch.py`. Keep option 4 on the back burner — if past-shows draft cycles end up being a one-off, the overloaded sentinel is cheaper than a schema change.
+
+**Discovered:** 2026-04-19 PM, during the interactive review wrap-up, while pushing a one-line edit to Lava Cantina 2022-03-31. The `git status` file count (95 modified) did not match the intended surface area (2 files), which exposed the defect before commit.
+
+**Lesson (also worth logging in the end-of-session runbook):** when a patch script writes through to generated HTML, always sanity-check `git status --short | wc -l` against the intended change size before `git add`. A 47x file-count multiplier caught this one; a smaller multiplier might not.
+
+**Status:** Open. Low-urgency because the invariant is currently satisfied in `drafts.json` and the past-shows draft cycle is effectively finished, but worth landing option 1 before the next time anyone touches `shows_patch.py` or `drafts.json`.
 
 ---
 
