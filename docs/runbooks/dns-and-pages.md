@@ -123,6 +123,32 @@ Look for `status: "built"`.
 | Force-pushing to `gh-pages` | Could wipe site history | Never force-push. |
 | Hand-editing `shows.json` or `shows/*.html` | Overwritten on next daily sync at 8 AM Central | Edit the band Google Calendar instead — see [edit-ticket-prices.md](edit-ticket-prices.md). |
 
+## Cloudflare Page Rules
+
+Active Page Rules on the `liveradiodfw.com` zone. Free plan includes 3 rules; we currently use 1.
+
+| # | Match pattern | Setting | Value | Purpose |
+|---|---|---|---|---|
+| 1 | `*liveradiodfw.com/home*` | Forwarding URL | 301 → `https://www.liveradiodfw.com/` | Legacy deindex cleanup. Catches any hit on `/home`, `/home.html`, `/home/`, `/home?...`, on apex or www, case-insensitive. Closes the duplicate-content exposure from a period when `home.html` was kept as scaffolding after Google had cached the old Bandzoogle `/home`. See [roadmap R3](../roadmap.md#r3-google-search-console-cleanup-open--done-2026-04-19). |
+
+**Why Page Rules and not Redirect Rules:** this zone's Cloudflare UI currently exposes legacy Page Rules only (no modern Redirect Rules or Bulk Redirects menu). When that changes, we can migrate this single rule without behavior change.
+
+**Verifying the `/home` rule:**
+
+```bash
+# Expect 301 with location https://www.liveradiodfw.com/
+for u in \
+  https://www.liveradiodfw.com/home \
+  https://www.liveradiodfw.com/home.html \
+  https://www.liveradiodfw.com/home/ \
+  https://liveradiodfw.com/home \
+  "https://www.liveradiodfw.com/home?utm_source=x" \
+  https://www.liveradiodfw.com/Home; do
+  curl -sI "$u" | head -2
+  echo
+done
+```
+
 ## Monitoring
 
 - [x] **UptimeRobot** (free) HEAD-request monitor on `https://www.liveradiodfw.com`, 5-minute interval, email alerts to `info@liveradiodfw.com` (pushes to Ray's phone + watch). Live since ~2026-04-16, formally closed [R2](../roadmap.md#r2-uptimerobot-monitoring-open--done-2026-04-19) on 2026-04-19.

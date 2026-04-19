@@ -81,12 +81,21 @@ Set up UptimeRobot (free tier) for `https://www.liveradiodfw.com` with SMS + ema
 
 ---
 
-### R3. Google Search Console cleanup
-- Submit updated `sitemap.xml`
-- Request re-indexing of `/home` redirect + `/lander`
-- URL-inspection sweep of cached dead URLs to force refresh
+### R3. Google Search Console cleanup ~~[OPEN]~~ → **DONE 2026-04-19**
+- ~~Submit updated `sitemap.xml`~~
+- ~~Request re-indexing of `/home` redirect + `/lander`~~
+- ~~URL-inspection sweep of cached dead URLs to force refresh~~
 
-**Depends on:** Ray exports the cached-URL list from Search Console first.
+**Closed 2026-04-19:**
+
+1. **Sitemap** submitted and read by Google. Current count: 112 URLs (17 top-level + 95 show pages post R5/R16 import). Google is working through the backlog; first-crawl of the new pages expected within 1–7 days.
+2. **`/lander`** live-tested in Search Console, confirmed indexable, re-indexing requested 2026-04-19. Same for `/home` originally but see #3.
+3. **`/home` handled differently than planned.** The original plan assumed `/home` was a redirect that needed re-indexing. It was actually a duplicate of the home page served at a second URL (GitHub Pages extensionless routing of `home.html`), created earlier specifically because Google had cached `/home` from the old Bandzoogle site. Search Console confirmed `/home` is no longer in Google's index, meaning the legacy cached URL problem for `/home` is already solved. Replaced the duplicate-content scaffolding with a proper Cloudflare Page Rule 301: `*liveradiodfw.com/home*` → `https://www.liveradiodfw.com/` (301 Permanent Redirect). Verified with curl against every realistic variant (apex/www, trailing slash, `.html`, query string, case variants) — all return 301 to the canonical root, and `/`, `/shows`, `/about` stay 200. See [dns-and-pages.md](runbooks/dns-and-pages.md#cloudflare-page-rules) for the rule config.
+4. **URL-inspection sweep of cached dead URLs** is rolled forward into R4 (which always covered this territory via wildcard redirects). R4 can now be evaluated against current GSC 404/redirect-error counts rather than a stale cached-URL export. Reassess 2026-05-03 after Google has had ~2 weeks to crawl the post-R5/R16 state.
+
+**Follow-up:** `home.html` still exists in the `gh-pages` repo as a duplicate of `index.html`. Google deindexed it and the 301 catches any hits, so it's harmless — but it's dead weight. Safe to delete in a future cleanup session (file a new R if it needs tracking).
+
+**Priority:** ~~(not scored)~~ N/A (closed).
 
 ---
 
