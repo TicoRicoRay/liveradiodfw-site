@@ -1,6 +1,6 @@
 # Live Radio DFW - Roadmap
 
-_Last updated: 2026-04-18_
+_Last updated: 2026-04-19 (R4 enriched, R19/R20/R21 filed from GSC audit)_
 
 Future plans, grouped by theme. Things we've decided or want to do but haven't scheduled.
 
@@ -102,9 +102,22 @@ Set up UptimeRobot (free tier) for `https://www.liveradiodfw.com` with SMS + ema
 ## SEO / content
 
 ### R4. Wildcard 301s for cached URLs
-Google has cached individual old show pages. Cloudflare Bulk Redirects (Free plan: one list, up to 20 redirects) pattern-match known old paths → `/` or `/shows`. Alternative: single catch-all Page Rule `liveradiodfw.com/*show*` → `/shows`.
+Google has cached individual old show pages and legacy Bandzoogle URL patterns. Cloudflare Bulk Redirects (Free plan: one list, up to 20 redirects) pattern-match known old paths → `/` or `/shows`. Alternative: single catch-all Page Rule `liveradiodfw.com/*show*` → `/shows`.
 
-**Depends on:** R3 (need the cached-URL list from Google Search Console first).
+**Depends on:** ~~R3 (need the cached-URL list from Google Search Console first).~~ R3 closed 2026-04-19; cached-URL inventory now available programmatically via the `google_search_console__pipedream` connector.
+
+**Concrete URL patterns still in Google's index (GSC audit 2026-04-19, last 28 days):**
+
+1. **`.html` Bandzoogle variants** (low-volume but index-budget waste, position 1 for exact-match so Google treats them as canonical for direct lookups):
+   - `/book.html` (6 imps), `/contact.html` (2), `/corporate-events.html` (6), `/members.html` (6), `/press-kit.html` (2), `/private-parties.html` (6)
+   - Fix: single wildcard `*.html` → strip-extension redirect, or per-path list (6 entries fits well under the 20-rule Cloudflare free plan limit).
+2. **Bandzoogle event-URL pattern** `/event/<id>/<id>/<slug>` (zombie URLs from pre-migration era):
+   - Observed: `/event/5710250/691552668/live-radio-all-80s-hits`, `/event/5900541/707881016/fresh-by-brookshires-fate-tx`, `/event/5900542/...`, `/event/6055650/...`, `/event/6100957/...`, `/event/6364768/...`, `/event/6378412/...`, `/event/6379565/...` (8 distinct event URLs, 18 total imps)
+   - Fix: single wildcard `*liveradiodfw.com/event/*` → `https://www.liveradiodfw.com/shows` (one rule).
+3. **`http://` (non-HTTPS) variants in the index** — `http://liveradiodfw.com/` still showing 20 impressions despite Cloudflare serving HTTPS. Cloudflare is correctly redirecting at request time, so this is cosmetic index-freshness lag, not a live defect. Worth confirming the edge redirect is **301 not 302** (belt-and-suspenders — 302 would preserve HTTP as canonical in Google's eyes).
+4. **`/home` already handled** (R3 2026-04-19 Cloudflare Page Rule). Traffic was 143 imps / 17 clicks (61% of site clicks) pre-301, so R4 consolidation onto `/` is operating on a larger surface than we assumed. See R21.
+
+**Priority:** Medium. Reassess 2026-05-03 after Google re-crawls. The concrete patterns above suggest 2-3 wildcard rules would cover ~90% of zombie index volume — well within the Cloudflare free-plan 20-rule ceiling.
 
 ### R5. Historic shows migration ~~[OPEN]~~ ~~[IN PROGRESS]~~ → **SHIPPED 2026-04-18 PM**
 Bandzoogle staging (`https://liveradiodfw.bandzoogle.com`) and The Bash profile still hold the full historical show archive. Migrate into `/shows/` as permanent pages for long-tail SEO and credibility.
@@ -164,6 +177,85 @@ Replace the current calendar-date chips on the homepage, `/shows`, `/past-shows`
 - Accessibility: semantic `<time datetime="YYYY-MM-DD">` wrapper with `aria-label` like "Friday, July 23, 2021".
 
 **Priority:** Medium. Visual polish, not critical path. Good candidate after a batch of placeholder descriptions get enriched (R16 follow-up) so the upgraded icons sit alongside real copy instead of placeholders.
+
+### R19. `/lander` conversion audit
+
+GSC audit 2026-04-19 revealed `/lander` is ranking (weakly, avg position 32.8) for high-intent commercial queries but converting almost none of them: 109 impressions, 1 click, CTR 0.9% over last 28 days. Ranks for the exact queries we want to win:
+
+- `dallas cover bands` (17 imps, pos 40) — top commercial-intent phrase in the data
+- `cover bands in dallas` (2 imps, pos 44)
+- `dallas cover band` (2 imps, pos 48)
+- `80s cover band dallas` (3 imps, pos 22)
+- `80s tribute band near me` (1 imp, pos 11)
+- `best cover bands in dallas` (2 imps, pos 76)
+- `dallas tribute bands` (1 imp, pos 41)
+- `dfw cover bands` (3 imps, pos 28)
+- `iconic band dfw` (1 imp, pos 25)
+- `live bands for events in dfw` (8 imps, pos 67)
+- `risky business` (2 imps, pos 8.5) — legacy-band name still attracting traffic
+
+**Why this matters:** `/lander` was built as a Bandzoogle-merger announcement page, not as a conversion page. It appears to be Google's current best guess for commercial queries because the legacy domains redirect to it. The root domain `/` ranks at position 3.3 but for far fewer queries. Once R4 ships and `/home` 301 consolidates, `/lander` may become an even more prominent landing spot — its current conversion UX will start mattering more.
+
+**Plan:**
+1. Pull the actual `<title>`, meta description, H1, and above-the-fold copy from `/lander` and compare against the queries above. Likely gap: page reads "we merged two bands" to visitors who searched "dallas cover bands."
+2. Decide whether `/lander`'s job should stay "explain the merger" or become "capture merger-era traffic AND convert cover-band seekers."
+3. If the latter: add a primary CTA (consistent with `-marketing` Section 11 one-primary-CTA guideline), tighten title/meta for the top query clusters, ensure band-identity signals (genre, location, booking path) are above the fold.
+4. Decide separately whether `/lander` should be the `dallas cover bands` landing page at all, or whether R18 (locale SEO pages) should supersede it over time.
+
+**Depends on:** Nothing urgent. Can ship standalone. Best done before R18 so R18 can link back to a page that converts.
+
+**Priority:** Medium. High-leverage for a small edit — these are the exact intent queries the band exists to capture, and we're already ranking for them weakly.
+
+---
+
+### R20. Radio-station page intent-mismatch review
+
+GSC audit 2026-04-19 surfaced two "station" pages pulling heavy impression volume on queries that don't match the band-booking business model:
+
+- **`/the-all-oldies-hits-station`** — 200 impressions, 0 clicks, avg position 10.4
+- **`/the-classic-rock-station`** — 115 impressions, 1 click, avg position 37.2
+- **`/the-all-80s-hits-station`** — 28 impressions, 0 clicks, avg position 16.4
+- **`/the-all-70s-no-disco-hits-station`** — 9 impressions, 0 clicks, avg position 6.7
+
+Ranking queries on `/the-classic-rock-station` tell the story:
+
+- `classic rock radio station`, `classic rock station`, `classic rock station fm`, `fm classic rock stations`, `local classic rock station`, `rock radio station`, `radio rock station`, `rock station`, `radio station rock music`, `the rock radio station`…
+
+These searchers want an **FM radio station to listen to** — not a cover band to hire. The impressions are effectively hallucination traffic: Google matched our page title keywords, but the searcher intent is incompatible with booking a live band. 200 impressions with 0 clicks on `/the-all-oldies-hits-station` confirms the snippet never converts.
+
+**Options:**
+
+1. **Keep as-is** (status quo). They cost nothing; the branding exposure is free, just non-converting. Accept that these pages exist as part of the brand story ("we play hits from these eras") even if their SEO behavior is off-target.
+2. **Retitle for booking intent** — rewrite `<title>` and H1 to lead with band-booking language ("80s Hits — Book Our 80s Set for Your Event"), keeping the setlist showcase underneath. Tries to convert the leaked traffic into booking interest.
+3. **Noindex or remove** — tell Google to stop ranking these for radio queries. Clean, but loses all brand impressions.
+4. **Repurpose as setlist-by-era pages** — merge with the setlist theme analysis work in `-marketing` (see R7). "80s Hits Setlist" as a genuine booking asset, not a station pretender.
+
+Ray's call which direction this goes — the framing matters a lot for band identity.
+
+**Depends on:** R7 context (setlist theme analysis) if option 4 is chosen.
+
+**Priority:** Low-to-medium. Not a bug, not urgent. Revisit when there's appetite for a content pass.
+
+---
+
+### R21. Verify /home 301 consolidation after Google re-crawl
+
+R3 (closed 2026-04-19) deployed a Cloudflare Page Rule `*liveradiodfw.com/home*` → 301 → `https://www.liveradiodfw.com/`. GSC audit 2026-04-19 surfaced a finding that makes this rule higher-stakes than the R3 close-out assumed: **`/home` was carrying 61% of site clicks** (17 of 28 clicks over the last 28 days) and 143 of 644 impressions, at avg position 14.4.
+
+Implication: once Google re-crawls and honors the 301, `/` (root) inherits `/home`'s link-equity and impression volume. Best case: `/` (currently avg position 3.3 on lower volume) rises further and consolidates all the signal. Worst case (less likely but real): transient ranking dip during re-crawl flux, 1-3 week dip in clicks before recovery.
+
+**Plan:**
+1. At 2026-05-03 R4 reassessment, pull GSC performance by-page for the last 14 days. Confirm `/home` impressions trending to zero (Google has seen the 301), and `/` impressions rising to roughly the sum of the old `/home` + `/` volumes.
+2. If `/home` impressions have not dropped by 2026-05-03, investigate: either the 301 is not firing for Googlebot specifically (rare), or Google has not re-crawled yet (likely — re-crawl cadence for a low-authority site can be slow).
+3. If clicks to `/` are significantly below the prior `/home` + `/` sum and it's past 2026-06-01, deeper investigation (canonical tag conflicts, internal link audit).
+
+**Monitoring safety net already in place:** UptimeRobot (R2) catches outages; monthly availability email clicks (`-marketing`) are independent of Google; Mailchimp venue-contact list is independent of Google. So even a worst-case search-traffic dip would not touch the primary booking-pipeline.
+
+**Depends on:** Time — Google re-crawl cadence. Earliest meaningful check: 2026-05-03.
+
+**Priority:** Medium — fact-finding only, no work to do until 5/3.
+
+---
 
 ### R18. Locale SEO landing pages ("band-type in location" search capture)
 Dedicated SEO landing pages targeting "{band-type} in {city}" intent queries — e.g. `cover band in Frisco`, `80s cover band Plano`, `live band Grapevine TX`, `wedding band The Colony`. We earn the right to rank for these because **we've actually played in those cities**: the R16 historic import + ongoing calendar give us genuine proof-of-presence, which is exactly the kind of local signal Google rewards and which thin "directory" competitors can't match.

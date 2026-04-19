@@ -47,6 +47,14 @@ These have documented band workflows. Runbooks, architecture docs, or scripts re
 - **Band use:** Potential ticketing for public shows. Currently unused in documented workflows - most shows are ticket-free or venue-handled.
 - **Status:** Available for band use. No current workflow. Decision pending on whether to adopt for future paid shows.
 
+### Google Search Console (`google_search_console__pipedream`)
+- **Identity:** Whichever Google account owns the GSC property verification (added 2026-04-19; Ray connected from break). The band has a Domain property `sc-domain:liveradiodfw.com` that receives all traffic data; the URL-prefix properties `https://www.liveradiodfw.com/` and `https://liveradiodfw.com/` return no data and can be considered inactive.
+- **Band use:** SEO audits, cached-URL inventory (drives R4 wildcard 301s), traffic attribution (which pages and queries drive clicks), post-deploy verification (e.g. confirming `/home` 301 consolidation after R3).
+- **Tools exposed:** `retrieve-site-performance-data` (search analytics by date/query/page/device/country), `submit-url-for-indexing` (Indexing API update/delete notification).
+- **Tools NOT exposed by this connector:** sitemap management (list/submit/delete sitemaps), URL Inspection API (live page retrieval as Googlebot sees it). If either is needed, Ray uses the GSC web UI. If the need becomes recurring, evaluate a native GSC connector or a direct API call via Ray's Google account.
+- **Limits:** Indexing API 200 submissions/day; Search Analytics 2000 queries/day and 600/minute per property. Comfortable headroom for band-scale use.
+- **Referenced by:** `roadmap.md` R4, R19, R20, R21. First audit: 2026-04-19 on the break between R9 close-out and next session.
+
 ---
 
 ## 2. Available if needed (personal-account utilities)
