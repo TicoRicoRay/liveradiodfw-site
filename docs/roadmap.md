@@ -1,6 +1,6 @@
 # Live Radio DFW - Roadmap
 
-_Last updated: 2026-04-19 (R19 shipped, R14 enriched, R4/R19/R20/R21 filed earlier from GSC audit)_
+_Last updated: 2026-04-19 (R22 filed from /lander smell-test; R19 shipped, R14 enriched, R4/R19/R20/R21 filed earlier from GSC audit)_
 
 Future plans, grouped by theme. Things we've decided or want to do but haven't scheduled.
 
@@ -324,6 +324,35 @@ Cut line: cities with ≥3 shows get a page in the first batch — **10 pages**:
 - R13 style-guide audit (open) — should weigh in on URL convention and intro-copy voice before we cut 9 pages at once
 
 **Priority:** Medium-high. Long-tail SEO play with authentic content, and the content substrate already exists post-R16. Compounds with every future show and every R16 description enrichment.
+
+---
+
+### R22. Station / Theme / Show taxonomy + build-out of named ready-to-book shows
+
+Two related problems surfaced at the end of R19 smell-testing:
+
+**Problem 1 — Taxonomy.** The site currently calls the four genre buckets "Stations" (The All 80s Hits Station, The Classic Rock Station, etc.). Internally we also talk about "themed shows" (A Tribute To MTV, Graduation Night, Texas Music Night) as a separate product category. On `/lander` we shipped both concepts back-to-back without resolving what to call each one. Open question: is "Station" the right public-facing word, or is "Theme" / "Show" / something else closer to what a venue talent buyer or party planner would (a) search for, and (b) understand when they see it in nav or a section header? Ray's hunch is we need more specific stations plus a clearer word — this item is for working through the naming and the information architecture together, not just renaming in place.
+
+**Problem 2 — We have named ready-to-book shows with no pages.** `/lander` now names A Tribute To MTV, Graduation Night, and Texas Music Night as ready-to-book themed products. Ray has built several others over time that "even I have already forgotten" — they are floating around the marketing repo, old drafts, or memory. With relatively little work each becomes a page: pick the songs from the existing catalog, write a short pitch, ship. But we don't have a runbook for adding one, and we don't have an inventory of which shows exist.
+
+**Architecture discovery (2026-04-19 while filing this item):**
+- `gh-pages/stations.json` exists with 4 entries (80s, 70s no-disco, classic rock, oldies) carrying id / name / slug / short+long description / BandHelper smart-list widget IDs.
+- **No file on `gh-pages` references `stations.json`** (verified via `grep -rn "stations.json"` across HTML / JS / Python). The four station HTML pages are fully hand-built — song lists embedded directly in HTML, BandHelper widget IDs also hard-coded per page. So `stations.json` is currently orphaned data. Either (a) a prior attempt at data-driven station pages that never shipped, (b) intended for a future build step, or (c) stale. Needs a call: delete it, wire it up, or leave it and document why.
+- Nav structure: station links live under the Songs dropdown only. No top-level "Themes" or "Shows" dropdown. If we add themed-show pages, IA changes.
+
+**Plan:**
+1. **Inventory the floating shows.** Search `liveradiodfw-marketing` repo (setlist theme analysis, old campaign drafts, style guide) and Ray's memory for every named ready-to-book show concept. Produce a single list with: name, one-line pitch, rough era/audience, whether setlist is ready or needs curating. Start with MTV, Graduation Night, Texas Music Night and grow from there.
+2. **Resolve taxonomy.** Decide on public-facing words for the two (or more) concepts. Candidates: Station (genre bucket) vs. Themed Show / Tribute Show / Show (named product) vs. collapse into one category vs. something else. Evaluate against: search intent (what does a party planner type?), scan-ability (what does a venue buyer understand in the nav in under two seconds?), honesty (we are a cover band doing era-and-audience tributes, not artist tributes), and room to grow (the named-show list will expand). Low-cost external input: run 3-5 candidate terms past GSC Keyword Planner / Google Trends for the DFW region.
+3. **Decide `stations.json`'s fate.** If we go data-driven for themed shows, extend the schema and wire the station HTML files to it too (kill the duplication). If not, delete `stations.json` to stop the next person thinking it's load-bearing.
+4. **Write the "add a new themed-show page" runbook** in `docs/runbooks/` — templated file, nav-update checklist, sitemap.xml entry, GSC index submission, internal link from `/lander` Custom Tribute Shows paragraph, `stations.json` update (if we keep it). Do this before building the first page so the process is codified.
+5. **Build pages for the named shows, in priority order** decided with Ray. Each page lands with: H1 + meta tuned to search intent, setlist table, short pitch, hero image (or placeholder), CTA. Link from `/lander` Custom Tribute Shows paragraph so the named shows become clickable rather than just text.
+6. **Add more specific stations** per Ray's note — candidates emerge from the marketing-repo setlist theme analysis. Same runbook applies.
+
+**Depends on:**
+- R13 style-guide audit — ideally weighs in on voice and naming conventions before we build pages at scale.
+- R11 head-level includes — if that ships first, nav changes for the new taxonomy are a single-file edit instead of a 15-file sweep. Strongly recommend R11 ships before step 5.
+
+**Priority:** High. Ray called it out explicitly in the R19 smell-test as a high-priority roadmap item, and it compounds the R19 `/lander` investment — every named show we build becomes a landing page for its own search intent ("MTV tribute band dallas", "graduation party band dfw", "texas music cover band") and a conversion target the `/lander` CTA can eventually route to. Belt-and-suspenders concern: the floating-shows list is currently in Ray's head only, and heads forget. Getting it written down has value on its own, even before any page is built.
 
 ---
 
