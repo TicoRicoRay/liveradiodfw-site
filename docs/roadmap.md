@@ -268,8 +268,16 @@ The authoritative brand voice lives in `liveradiodfw-marketing/MARKETING_STYLE_G
 ### R8. Regina as event attendee - method decision ~~[PENDING]~~ → **DECIDED 2026-04-17 PM (option b)**
 See [bugs.md B2](bugs.md#b2-webhook-attendees-field-is-a-silent-no-op). Ray chose option (b): extend the `_updateEvent` webhook so automation can add attendees. R10 implemented the code change and it's deployed. The optional post-sync step in `sync_calendar.py` to auto-add Regina to every future public event is not yet implemented — if we want that, file a new R-entry for it rather than reopening R8.
 
-### R9. Timezone convention enforcement
-Standing rule: all docs use "Central" or "America/Chicago", never "CDT" or "CST". Swept once on 2026-04-17; worth a periodic grep to keep new docs compliant.
+### R9. Timezone convention enforcement — **STANDING RULE, ENFORCED AT END-OF-SESSION 2026-04-19**
+Standing rule: all user-facing language uses "Central" or "America/Chicago", never "CDT" or "CST". Swept once on 2026-04-17.
+
+**Closed 2026-04-19:** reframed from a "planned work" item (which it never really was) into an active enforcement mechanism.
+
+1. **End-of-session grep hook added** to [runbooks/end-of-session.md](runbooks/end-of-session.md) as new step 4 — before committing, diff-scope the session's files for `\b(CDT|CST)\b` and fix user-facing violations in the same commit. Legitimate exceptions (Python identifiers, rule-quoting text, linter code) are called out explicitly so the check doesn't produce false-positive fatigue.
+2. **Existing violation filed as real bug.** A full-repo sweep on 2026-04-19 found two user-facing `"CDT"` strings in `sync_calendar.py:677` and `:731` (alert email bodies). Previously half-mentioned in B15's follow-ups section but never filed. Now tracked as [B17](bugs.md#b17-sync_calendarpy-alert-email-copy-uses-cdt-string-cardinal-rule-violation).
+3. **Rationale for closing as a standing rule, not a one-time item.** Enforcement lives in two places now: `audit_shows.py` (catches HTML leaks at build time) + end-of-session runbook step 4 (catches prose/code leaks at commit time). No further roadmap tracking needed; new violations surface as bugs via the hook.
+
+**Priority:** ~~(not scored)~~ N/A (closed).
 
 ### R10. Extend `_updateEvent` to honor attendees ~~[OPEN]~~ → **DONE 2026-04-17 PM**
 Dependency for [B2](bugs.md#b2-webhook-attendees-field-is-a-silent-no-op). `_updateEvent` previously accepted the `attendees` payload field but had no code path that acted on it.

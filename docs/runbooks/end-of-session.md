@@ -43,7 +43,20 @@ Check each of these against what happened this session:
 
 If nothing structural changed, skip this step. If unsure whether something counts as structural, ask Ray - a missed update is worse than a one-line "no change."
 
-### 4. Commit and push
+### 4. Grep the session's changes for cardinal-rule language violations
+
+Before committing, sweep any file touched this session for terminology that violates the "Central / America/Chicago, never CDT/CST" cardinal rule (see [roadmap R9](../roadmap.md#r9-timezone-convention-enforcement--standing-rule-enforced-at-end-of-session-2026-04-19)).
+
+```bash
+# Run from the repo root. Substitute whichever paths changed this session.
+git diff --name-only HEAD | xargs grep -In -E '\b(CDT|CST)\b' 2>/dev/null || echo "  clean"
+```
+
+Hits in **user-facing language** (email bodies, HTML copy, alert strings, docs prose) must be fixed before commit — replace with "Central" or "America/Chicago." Hits that are legitimate exceptions (Python identifiers like `CDT = ZoneInfo(...)`, rule-quoting text in this runbook or `project-plan.md`, or deliberate examples in `audit_shows.py`) can be left as-is; if unsure, ask Ray.
+
+If you find violations that pre-date this session and are out of scope for the current commit, file them as a new `B<n>` entry in [bugs.md](../bugs.md) rather than fixing in-line.
+
+### 5. Commit and push
 
 One commit is fine if the changes are related. Otherwise use separate commits. Standard format:
 
@@ -58,14 +71,14 @@ git -c user.name="LiveRadioDFW" -c user.email="info@liveradiodfw.com" commit -m 
 git push origin docs
 ```
 
-### 5. Confirm with Ray
+### 6. Confirm with Ray
 
 Reply to Ray with:
 - One-line summary of what was added/updated/closed
 - Commit SHA(s) as clickable links to the GitHub commit page
 - Any open questions or items Ray still needs to act on outside the thread
 
-### 6. Sanity-check the thread itself
+### 7. Sanity-check the thread itself
 
 Before Ray leaves, note whether any of these failed this session (if yes → they become new `J<n>` entries for the next cold-start test):
 

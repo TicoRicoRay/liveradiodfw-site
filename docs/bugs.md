@@ -220,6 +220,31 @@ CSS for the button styles lives in `css/style.css` — `.btn-primary` at ~L277, 
 
 ---
 
+## B17. `sync_calendar.py` alert-email copy uses "CDT" string (cardinal rule violation)
+
+**Symptom:** Two hard-coded f-strings in `sync_calendar.py` alert emails contain the literal string `"CDT"`, violating the project's cardinal rule that all user-facing language must say "Central" or "America/Chicago", never "CDT" / "CST" (DST-unsafe terminology causes silent off-by-an-hour bugs in other contexts).
+
+**Where:**
+- `lrdfw-ghpages/sync_calendar.py:677` — `f"  it will reappear on the website at the next daily sync (8 AM CDT)."`
+- `lrdfw-ghpages/sync_calendar.py:731` — `"be corrected at the next sync (daily at 8 AM CDT).\n\n"`
+
+The `CDT` variable name at line 60 (`CDT = ZoneInfo("America/Chicago")`) is a Python identifier, not user-facing, and is out of scope here. The `audit_shows.py` checker at lines 19/162-164 greps for CDT/CST leaks in rendered HTML but does not scan `sync_calendar.py` email bodies.
+
+**Impact:** Low-frequency, low-visibility. These email strings only appear in alert emails sent when the sync skips an event (`SKIP_PATTERNS` match) or hits an error. Ray is the only recipient. No public exposure. But it's a cardinal-rule violation that's been known and unfiled since 2026-04-18 (see B15 follow-ups section above, which flagged it but did not open a B entry).
+
+**Workaround:** None needed (impact is aesthetic consistency, not correctness).
+
+**Fix options:**
+1. **Replace both strings with "Central".** Simplest. `(8 AM CDT)` → `(8 AM Central)`. Two-line edit. No behavior change.
+2. **Replace with "America/Chicago"** for maximum precision. More formal; slightly less natural in prose. Reject unless the emails are ever read by anything automated.
+3. **Extend `audit_shows.py` to also grep `sync_calendar.py`** for CDT/CST so this class of violation is caught at the linter level going forward. Pairs well with option 1 or 2.
+
+Recommend option 1 + option 3 together. Pair them with R9's new end-of-session grep hook so future violations are caught at commit time, not session-months later.
+
+**Status:** Open. Filed 2026-04-19 as part of R9 (timezone convention enforcement) close-out. Not top-priority.
+
+---
+
 ## B15. Calendar sync has no convention for cancelled or rescheduled shows ~~[OPEN]~~ → **FIXED 2026-04-18**
 
 **Symptom:** Before this fix `sync_calendar.py` had no business logic for cancellations or reschedulings. If a show was cancelled or rescheduled, Ray's only clean options were (a) delete the GCal event and lose the audit trail, or (b) edit the event in place and have the public site continue to advertise a show that wasn't happening. First real occurrence: tonight's Apr 18 2026 OG Cellars show was weather-cancelled and rescheduled to Aug 1 2026.
