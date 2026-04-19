@@ -1,6 +1,6 @@
 # Live Radio DFW - Roadmap
 
-_Last updated: 2026-04-19 (R4 enriched, R19/R20/R21 filed from GSC audit)_
+_Last updated: 2026-04-19 (R19 shipped, R14 enriched, R4/R19/R20/R21 filed earlier from GSC audit)_
 
 Future plans, grouped by theme. Things we've decided or want to do but haven't scheduled.
 
@@ -178,7 +178,36 @@ Replace the current calendar-date chips on the homepage, `/shows`, `/past-shows`
 
 **Priority:** Medium. Visual polish, not critical path. Good candidate after a batch of placeholder descriptions get enriched (R16 follow-up) so the upgraded icons sit alongside real copy instead of placeholders.
 
-### R19. `/lander` conversion audit
+### R19. `/lander` conversion audit ~~[OPEN]~~ → **SHIPPED 2026-04-19 AM**
+
+**Shipped 2026-04-19** — [commit `043866c`](https://github.com/TicoRicoRay/liveradiodfw-site/commit/043866c) (and prior [commit `eae3ad8`](https://github.com/TicoRicoRay/liveradiodfw-site/commit/eae3ad8)). Lives at [liveradiodfw.com/lander](https://www.liveradiodfw.com/lander).
+
+**What changed:**
+- Title: `Risky Business DFW & Jackson Crossing are now Live Radio DFW` → `Live Radio DFW - Dallas-Fort Worth Tribute & Cover Band for Hire`. SERP-visible line now signals booking intent, geography, and the tribute/cover dual framing (venue-booker + party-planner) instead of two legacy band names.
+- Meta description: `DFW tribute & cover band performing themed shows to the 80s, 70s, classic rock, and oldies eras. 100+ songs, 5 vocalists, fully insured. Weddings, corporate, private.` — 154 chars, commercial-intent first.
+- H1: `We're Now Live Radio DFW` → `Dallas-Fort Worth Tribute & Cover Band for Your Next Event`.
+- Opening paragraph: booking-intent lede, tribute-shows-to-eras-not-artists framing (MTV 80s, free-form 70s rock, classic rock radio canon, oldies songbook), self-updating copy ("book an individual themed Station, or mix several together") so future Station additions don't require a copy fix.
+- New H2 `Our Themed Tribute Shows` over the existing Stations block (reframes them as tribute products, not a merger explainer).
+- New H2 `Custom Tribute Shows` presents three ready-to-book named products (A Tribute To MTV, Graduation Night, Texas Music Night) framed as reader-facing value rather than internal positioning. First draft used memo-speak ("versatility is what we offer, marketable theming is what the nicer venues want, we bridge the two") and Ray flagged that it was tuned for our internal conversation, not for venue buyers or party planners. Final copy opens reader-side ("some events call for more than a standard cover-band set") and translates "marketable theming" into buyer language ("a show with a theme — something you can promote, something with a hook"). See R14 for the full final copy and craft notes.
+- Merger section preserved but retitled `From Risky Business DFW and Jackson Crossing` and moved below the fold — still owns bookmark-search traffic (Risky Business DFW / Jackson Crossing name queries) without burying commercial intent above it.
+- CTA: three equal-weight buttons (Book / Shows / Homepage) → single primary (Book Live Radio DFW) + ghost secondary (See Upcoming Shows). Homepage button removed — visitor is already on a band page, homepage is a lateral move that dilutes intent. Aligns with `-marketing` Section 11 one-primary-CTA guideline.
+
+**Philosophy notes for future SEO/copy work:**
+
+1. **Honesty drove framing, not the other way around.** The band performs themed tribute shows (to eras, moments, cultural audiences) but is not a tribute act in the single-artist sense. That nuance became a sales advantage instead of a liability.
+2. **Audience-check every paragraph twice:** once for the copywriter's intent, again for each intended reader's seat. The first Custom Tribute Shows draft passed my internal check but failed Ray's audience check — words that worked between us ("nicer venues," "we bridge the two") read wrong in front of actual venues and planners. Reuse this pattern when other pages get the same treatment: draft, then re-read from each audience's seat before shipping.
+3. **Demonstrate positioning through products, don't announce it.** The final Custom Tribute Shows paragraph doesn't say "we bridge cover-band flexibility and tribute-show theming" — it shows the bridge by putting the named-show menu in front of the reader. Rule of thumb: if a sentence narrates our strategy ("versatility is what we offer"), rewrite it to either demonstrate the strategy or cut it.
+
+**Re-indexing:** `submit-url-for-indexing` via the Pipedream connector returned null. Google's Indexing API is officially limited to `JobPosting` and `BroadcastEvent` schema types; non-matching URLs get silent no-ops. Filed as a connector limitation in `architecture/connectors.md`. The actual path to re-indexing for band URLs is either (a) wait for Google's normal re-crawl cadence or (b) Ray uses GSC's URL Inspection tool "Request indexing" (a separate mechanism that does work for arbitrary URLs). Recommended: Ray request re-index from GSC UI when convenient, or let natural re-crawl run.
+
+**Measurement plan:** GSC comparison window 2026-04-19 (baseline) vs 2026-05-17 (~4 weeks post-deploy). Key metrics to watch on `/lander`:
+- CTR on `dallas cover bands`, `cover bands in dallas`, `80s cover band dallas`, `dfw cover bands`, `live bands for events in dfw` — these are where the CTR lift should show up if the title/meta rewrite worked.
+- Average position on the above queries (secondary, slower to move, expected to drift positive as CTR engagement improves).
+- Impressions on `tribute band`-family queries in case the dual framing opens a new query cluster.
+
+Success = meaningful CTR lift on any of the five primary queries within 4 weeks. Failure modes worth noting: if impressions drop sharply, the title change may have de-matched some ranking queries — iterate. If impressions stay flat but CTR doesn't move, the snippet change wasn't strong enough — consider a more aggressive meta description.
+
+**Original problem statement** (preserved for historical context):
 
 GSC audit 2026-04-19 revealed `/lander` is ranking (weakly, avg position 32.8) for high-intent commercial queries but converting almost none of them: 109 impressions, 1 click, CTR 0.9% over last 28 days. Ranks for the exact queries we want to win:
 
@@ -341,6 +370,19 @@ The authoritative brand voice lives in `liveradiodfw-marketing/MARKETING_STYLE_G
 **Priority:** Low. No user-visible bug, but the drift compounds every session. Worth one clean pass.
 
 ### R14. Enrich press-kit and booking pages with marketing-repo content
+
+**Positioning language shipped on `/lander` 2026-04-19 (R19) is the candidate press-kit starting point.** First draft used internal-memo framing ("versatility is what we offer, marketable theming is what the nicer venues want, we bridge the two") and Ray rightly flagged that those words were tuned for an internal conversation between us, not for the page's actual readers. Final shipped copy demonstrates the positioning through the product menu instead of announcing it:
+
+> Some events call for more than a standard cover-band set. When you want a show with a theme — something you can promote, something with a hook — we bring a ready-to-book menu: A Tribute To MTV, Graduation Night, Texas Music Night, and more. Each one is a complete setlist plus the marketing package to promote it: a named show, a story, and the songs that deliver it. Built around an era, an audience, or a cultural moment rather than a single artist. Have a theme of your own? We'll build the setlist around it.
+
+**Key craft decisions that should carry to press-kit work:**
+- "Show with a theme — something you can promote, something with a hook" is the reader-facing translation of "marketable theming." Venue buyers recognize that as their actual pain.
+- "Complete setlist plus the marketing package to promote it: a named show, a story, and the songs that deliver it" surfaces the real differentiator (ready-made promotional assets per show) in concrete terms a talent buyer scans in one pass.
+- Avoid internal-memo phrasing on public pages. Any time we find ourselves writing "we bridge X and Y" or "versatility is what we offer," that's a sign we're narrating our own strategy rather than selling a product.
+- The tribute-to-era-not-a-single-artist framing is the honest-and-useful way to claim tribute-show capability without overclaiming — reuse verbatim on press-kit.
+
+When press-kit work starts, this copy (not the first-draft internal-memo version) is the starting point for the opening paragraph of the venue-facing pitch — don't rewrite from scratch.
+
 
 `press-kit.html` exists as an EPK (bio, photos, stage plot) but does not surface the setlist theme analysis, merger narrative, or talent-buyer-oriented proof points (crowds drawn, venues played, price range, logistics). `book.html` is purely an inquiry form, not a sales page; there is no page aimed at a venue talent buyer asking "why should we book you over another band." The content to answer those questions now lives in `liveradiodfw-marketing` (setlist theme analysis, intro campaign drafts, style guide positioning).
 
