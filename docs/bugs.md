@@ -1,6 +1,6 @@
 # Live Radio DFW - Bug List
 
-_Last updated: 2026-04-20 PM (B6 closed — videos now play on first click; B12 + B17 + B18 + B19 fixed earlier today; B7 Part 2 re-confirmed as top priority with sync_calendar.py still in active daily use post-Outlook-decommission)_
+_Last updated: 2026-04-20 PM (B16 Stage 1 confirmed shipped — closing B16 and opening B16.2 for Stage 2 auto-publish trigger; B20 filed for 22 legacy Bandzoogle-era past-show descriptions that miss v2 warm-invitation voice; B6 closed earlier today; B12 + B17 + B18 + B19 also fixed earlier today; B7 Part 2 re-confirmed as top priority with sync_calendar.py still in active daily use post-Outlook-calendar-decommission)_
 
 Current known defects and correctness issues. Fixed bugs move to [postmortems/](postmortems/) or the "Recently completed" section of [project-plan.md](project-plan.md). For planned work that isn't a defect, see [roadmap.md](roadmap.md).
 
@@ -194,7 +194,7 @@ CSS for the button styles lives in `css/style.css` — `.btn-primary` at ~L277, 
 
 ---
 
-## B16. New shows added by sync have no `description`; no alert when description is missing; no placeholder on the rendered page
+## B16. New shows added by sync have no `description`; no alert when description is missing; no placeholder on the rendered page ~~[OPEN]~~ → **FIXED 2026-04-20 PM (Stage 1 only; Stage 2 → B16.2)**
 
 **Symptom:** When the daily sync adds a new show to `shows.json`, it populates only the 12 calendar-owned fields. The `description` field — which drives the `<About This Show>` block on the show-detail page — is hand-curated and therefore absent on every fresh add. There is no alert-email warning, no on-page signal, and no automatic draft. First caught in the wild today: the Aug 1 OG Cellars show that got added via the B15 cancellation/reschedule run landed with no description, which Ray caught while spot-checking the live page.
 
@@ -218,7 +218,27 @@ CSS for the button styles lives in `css/style.css` — `.btn-primary` at ~L277, 
 
 **Stage 2 (future, NOT B16 scope):** once Ray and Jarvis both feel confident that the machine-generated drafts have the right tone and quality across a few real examples, flip the default to *publish the generated description immediately + notify Ray in case there are problems*. Rationale (Ray, 2026-04-18): "some content better than none — and easy to correct." Trigger to flip: when the last 3-5 machine drafts have needed only minor or no edits before Ray approved. Track in this file as a follow-up.
 
-**Status:** Open — Stage 1 fix landing in the same session this entry was filed. Stage 2 trigger to watch: next 3-5 new venues/shows, log whether the draft was accepted as-is or edited. Revisit when trigger met.
+**Status:** ~~Open — Stage 1 fix landing in the same session this entry was filed. Stage 2 trigger to watch: next 3-5 new venues/shows, log whether the draft was accepted as-is or edited. Revisit when trigger met.~~ **CLOSED 2026-04-20 PM.** Stage 1 verified shipped and live: `generate_description_draft()` at `sync_calendar.py:243` (deterministic, opener-rotating, DRAFT-prefixed, 300-600 char output, no em-dashes, no exclamation points); `check_missing_info()` flags missing descriptions on public shows; alert email inlines the draft under "Proposed description draft"; `build_show_pages.py` renders the "Show details coming soon" placeholder for empty descriptions; Aug 1 OG Cellars backfilled (557 chars). Test harness `test_description_handling.py` passes all 19 cases (14 for `generate_description_draft`, 5 for `check_missing_info`). Stage 2 (flip to auto-publish generated drafts by default with alert email as safety net) tracked as B16.2 below so this entry can close cleanly.
+
+---
+
+## B16.2. Stage 2 rollout for auto-generated show descriptions
+
+**Symptom:** Not a defect — a planned follow-up to B16 (closed). Currently a show added by the daily sync with no hand-curated description gets (a) a visible "Show details coming soon" placeholder on the rendered page and (b) an alert email with a machine-generated v2-voice draft inlined for Ray to review and paste back. That's safer than auto-publishing but leaves a window where the public page is thin until Ray acts.
+
+**Decision criteria (per Ray, 2026-04-18):** "some content better than none — and easy to correct." Flip the default to publish the generated description immediately + notify Ray in case there are problems. Trigger to flip: **the last 3-5 machine drafts have needed only minor or no edits before Ray approved.**
+
+**Current evidence:** 0 of 3-5 evaluated. Only natural test case since Stage 1 shipped was the OG Cellars Aug 1 backfill, and Ray hand-wrote that rather than approving a draft. Need 3-5 organic new-venue sync adds before the trigger can be evaluated.
+
+**What "flip" looks like:**
+1. In `sync_calendar.py`, when a new show is added with no description, call `generate_description_draft(show)` and write the result (stripped of the `[DRAFT ...]` prefix) into `show['description']` before the `shows.json` write.
+2. Keep the alert email path intact but re-label: "Auto-published description — review and edit if needed."
+3. Keep the `build_show_pages.py` treatment of any `[DRAFT` prefix as placeholder-rendering, so the draft-prefix safety net still catches anything that slips through without the prefix strip.
+4. Consider adding a `description_source: "auto"` field on auto-published shows so future audits can find and prioritize them for human review.
+
+**Impact:** Positive on SEO/UX (no more "coming soon" placeholder on live pages). Risk: a bad draft goes live for a window. Mitigation: `generate_description_draft` already refuses to draft when venue or city is missing, and strips DFW-Area-only placeholder cities. Quality observed against the 7 shows that seeded the voice model is high.
+
+**Status:** Waiting on trigger. When the next 3-5 new-venue sync adds happen, log each draft's quality (accepted as-is / minor edit / full rewrite). If 3-5 consecutive are accepted as-is or minor-edit only, flip Stage 2. If mixed, stay in Stage 1 and iterate on the draft template.
 
 ---
 
@@ -682,6 +702,38 @@ These aren't band bugs - they're limitations in how Jarvis (the AI assistant) ca
 **Feature request to Perplexity:** Per-thread or per-Space connector allow-lists. Would fix J7, J3 (indirectly — Spaces already have their own connector limitation, but configurable per-project connectors would remove the reason to use Spaces this way), and reduce cognitive load on cardinal rules.
 
 **Status:** Open, external platform limitation. Logged 2026-04-17 during calendar SoT cleanup as an explicit structural root cause (previously only surfaced implicitly via J7).
+
+---
+
+## B20. Legacy Bandzoogle-era past-show descriptions miss v2 warm-invitation voice
+
+**Symptom:** 22 past-show descriptions in `shows.json` predate the v2 warm-invitation voice rewrite (2026-04-19/20) and fall outside the cohort of 65 that Ray reviewed one-at-a-time. They originated in the Bandzoogle import era and carry voice violations: exclamation points (v2 rule: none), the phrase "Cover band" (should be omitted or phrased as "Live Radio DFW"), or they're short stubs (50-200 chars) without the v2 pattern of venue specifics, geographic call-outs, practical logistics, and family/dog-friendliness cues.
+
+**Why this matters now:** Ray asked for an honest read of the shipped descriptions on 2026-04-20 PM. The 65-show v2 cohort reads great — not cookie-cutter — but these 22 stragglers are the anti-pattern ("We love this family-friendly outdoor venue and hope you can come join us for a fun night of music." x3 identical copies on FRESH by Brookshire's). On an SEO + user-experience axis they're exactly the failure mode B16 was designed to prevent going forward — we just didn't backfill the pre-v2 population yet.
+
+**Where:**
+- `/tmp/lrdfw-lander/shows.json` — 22 entries, dates 2024-08-09 through 2025-11-29 (all past shows)
+- Full audit with current text: `/home/user/workspace/lrdfw-past-shows/b20_stragglers_audit.txt` (generated 2026-04-20)
+
+**Exact breakdown (n=22):**
+- 6 use "Cover band" phrase — all Lion & Crown Pub dates (2024-11-16, 2025-03-15, 2025-05-03, 2025-05-31, 2025-09-06, 2025-11-29)
+- 5 have exclamation points — 2024-08-09 Harvest Hall ("totally rad vibes... ultimate 80s tribute band" — worst offender, full rewrite warranted), 2025-06-28 Harvest Hall, 2025-08-09 Frisco Rail Yard, 2025-08-23 Harvest Hall (borderline — 411-char v2-quality prose, only flagged for 2 exclamation points; could be a minimal edit), and one other
+- 16 under 200 chars — most overlap with the above; short stubs without v2 structure
+- 3 identical copies on FRESH by Brookshire's (2025-04-05, 2025-05-24, 2025-07-12): `"We love this family-friendly outdoor venue and hope you can come join us for a fun night of music."`
+
+**Impact:** Medium. Past-show pages are indexed and searchable, so thin/duplicated descriptions dilute the SEO benefit that the v2 cohort earned. Not urgent — none are upcoming shows, none violate cardinal rules like "dive bar" or "CDT," and they won't regress without intervention. But they read inconsistently to any human browsing past-shows chronologically, and they undercut the v2 baseline for future work.
+
+**Fix plan:**
+1. Use `/home/user/workspace/lrdfw-past-shows/b20_stragglers_audit.txt` as the input list.
+2. Rewrite each in v2 warm-invitation voice following the same pattern as the 65-show cohort: opener rotation (Come join us / Live Radio DFW returns to / Catch us at / Meet us at / We're back at), venue specifics (what's there physically, history if known, food/drink details), geographic call-out (city + nearby communities), practical logistics (parking, cover charge, family/dog-friendly), no em-dashes, no exclamation points, no "dive"/"dive bar," present-or-evergreen tense.
+3. For Harvest Hall 2025-08-23 (411-char v2-quality prose flagged only for 2 exclamation points): the minimal edit option is replace "!" with "." — faster than rewriting good copy.
+4. For the 3 identical FRESH by Brookshire's stubs: produce 3 distinct rewrites so repeat visitors see variation across the chronology.
+5. Run through `shows_patch.py` → `build_show_pages.py` → `build_includes.py` → commit + push to gh-pages. Same pipeline as the v2 cohort.
+6. Optionally: extend `audit_shows.py` to grep published descriptions for `!`, `cover band`, and length < 200, so future Bandzoogle-style regressions are caught at commit time. Pairs well with the R9 end-of-session grep hook idea from B17.
+
+**Effort:** ~22 short rewrites at v2 quality, plus 1 punctuation-only fix. Likely a focused session on its own — not mid-sprint material.
+
+**Status:** Open. Filed 2026-04-20 PM after honest audit of the 95 published descriptions in `shows.json`. Audit file preserved at `/home/user/workspace/lrdfw-past-shows/b20_stragglers_audit.txt`. Not blocking; schedule when there's an hour of focused time.
 
 ---
 
