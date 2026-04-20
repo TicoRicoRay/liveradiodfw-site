@@ -225,7 +225,7 @@ def build_show_page(show):
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <script>!function(){{var e=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',e)}}();</script>
+  <script>!function(){{try{{var s=localStorage.getItem('theme');var e=s||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',e)}}catch(_){{document.documentElement.setAttribute('data-theme','light')}}}}();</script>
   <link rel="icon" href="../favicon.ico" sizes="any">
   <link rel="icon" href="../img/favicon-32.png" type="image/png">
   <link rel="apple-touch-icon" href="../img/apple-touch-icon.png">

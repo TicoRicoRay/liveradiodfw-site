@@ -5,19 +5,24 @@
 document.addEventListener('DOMContentLoaded', function () {
 
   // --- Dark Mode Toggle ---
+  // Precedence on every page load: saved choice (localStorage) > OS preference > light.
+  // The inline head script in every HTML file sets data-theme *before* paint using the
+  // same precedence, so this block just reads what's already there and wires the toggle.
+  // See B12: earlier behavior re-read OS preference on every page load, overriding the
+  // user's last click as soon as they navigated. Fixed 2026-04-20 PM.
   const themeToggle = document.querySelector('[data-theme-toggle]');
   const root = document.documentElement;
-  let currentTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  root.setAttribute('data-theme', currentTheme);
+  let currentTheme = root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
   updateThemeIcon();
 
-  if (themeToggle) {
-    themeToggle.addEventListener('click', function () {
+  document.querySelectorAll('[data-theme-toggle]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
       currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
       root.setAttribute('data-theme', currentTheme);
+      try { localStorage.setItem('theme', currentTheme); } catch (_) { /* private mode: choice is session-only */ }
       updateThemeIcon();
     });
-  }
+  });
 
   function updateThemeIcon() {
     const toggles = document.querySelectorAll('[data-theme-toggle]');
