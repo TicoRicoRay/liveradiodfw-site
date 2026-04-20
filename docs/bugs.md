@@ -1,6 +1,6 @@
 # Live Radio DFW - Bug List
 
-_Last updated: 2026-04-20 PM (B17 + B19 fixed: 'CDT' string scrub in sync alert email; `validFrom` added to Offer schema)_
+_Last updated: 2026-04-20 PM (B17 + B18 + B19 fixed: 'CDT' scrub in sync alert email; `shows_patch.py` hardened against `[DRAFT…]` prefix leakage; `validFrom` added to Offer schema)_
 
 Current known defects and correctness issues. Fixed bugs move to [postmortems/](postmortems/) or the "Recently completed" section of [project-plan.md](project-plan.md). For planned work that isn't a defect, see [roadmap.md](roadmap.md).
 
@@ -259,7 +259,7 @@ Recommend option 1 + option 3 together. Pair them with R9's new end-of-session g
 
 ---
 
-## B18. Past-shows drafts pipeline silently regresses live pages to "Show details coming soon" placeholder
+## B18. Past-shows drafts pipeline silently regresses live pages to "Show details coming soon" placeholder ~~[OPEN]~~ → **FIXED 2026-04-20 PM**
 
 **Symptom:** Running `lrdfw-past-shows/shows_patch.py` against `/tmp/lrdfw-lander/shows.json` followed by `build_show_pages.py` + `build_includes.py` reverted 64 approved past-show descriptions back to the `.show-page-description-placeholder` → *"Show details coming soon. In the meantime, see the date, time, and location above or reach out via the Contact page."* boilerplate. Caught and reverted at commit staging on 2026-04-19 PM before push; the live site was never affected.
 
@@ -284,7 +284,24 @@ Recommend option 1 + option 3 together. Pair them with R9's new end-of-session g
 
 **Lesson (also worth logging in the end-of-session runbook):** when a patch script writes through to generated HTML, always sanity-check `git status --short | wc -l` against the intended change size before `git add`. A 47x file-count multiplier caught this one; a smaller multiplier might not.
 
-**Status:** Open. Low-urgency because the invariant is currently satisfied in `drafts.json` and the past-shows draft cycle is effectively finished, but worth landing option 1 before the next time anyone touches `shows_patch.py` or `drafts.json`.
+**Status:** ~~Open. Low-urgency because the invariant is currently satisfied in `drafts.json` and the past-shows draft cycle is effectively finished, but worth landing option 1 before the next time anyone touches `shows_patch.py` or `drafts.json`.~~ **FIXED 2026-04-20 PM** — shipped **option 1 + option 2** together (strip-on-write defense in depth + refuse-on-violation strict mode). Hardened `/home/user/workspace/lrdfw-past-shows/shows_patch.py`:
+
+- Added `DRAFT_PREFIX_RE = re.compile(r"^\[DRAFT[^\]]*\]\s*")` as the single source of truth for the sentinel pattern.
+- **Strict mode is the default.** Any draft whose description starts with `[DRAFT…]` causes the script to print the offending `(date, venue)` tuples to stderr and `sys.exit(2)` **without touching shows.json**. This is the behavior that would have caught B18 automatically on 2026-04-19 PM instead of relying on a human eyeballing `git status`.
+- **Strip-on-write runs unconditionally.** Even with `--no-strict`, the prefix is regex-stripped before writing into `shows.json`, so `build_show_pages.py` can never see the sentinel via this path again.
+- Added a `--no-strict` escape hatch for intentional "write the stripped content even though drafts.json still has the prefix" flows. Prints a `WARNING:` line naming the count of drafts being stripped so it's impossible to miss.
+
+**Scope note:** The script lives under `/home/user/workspace/lrdfw-past-shows/` (Jarvis-side workspace), not under either git repo. It is not tracked, does not ship to `gh-pages`, and is not part of the published site. If the workspace were ever reset, the hardened version would be lost, but the bug it prevents is also only reachable through a manual Jarvis session, so the surface area is bounded. If Ray wants durability he can keep a copy in `liveradiodfw-marketing` alongside the other session-helper scripts; filing that as optional follow-up rather than required.
+
+**Verification:** three smoke tests passed 2026-04-20 PM:
+
+1. **Happy path:** clean `drafts.json` (current state), `shows_patch.py` ran green, 65 unchanged / 0 updates, `shows.json` md5 identical before and after (true idempotency). 
+2. **Strict refuse:** injected the `[DRAFT - v2 warm-invitation voice, pending approval]` prefix into the first two entries of `drafts.json`; script printed the two offending `(date, venue)` pairs to stderr, exited 2, and `shows.json` md5 was unchanged. 
+3. **`--no-strict` strip:** same injected input; script printed the `WARNING:` line, stripped both prefixes, and the final `shows.json` contained zero `[DRAFT` occurrences across all 65 descriptions.
+
+**Relation to R9:** R9's end-of-session grep hook catches `CDT`/`CST` violations at commit time; this fix adds analogous defense for the `[DRAFT…]` sentinel, but inline in the tool that writes the data rather than as a post-commit grep. Both patterns — reject-at-source with a clear error — are worth adopting for any future Jarvis helper that writes to a file the build pipeline consumes.
+
+**Follow-up deferred:** option 4 (replace the `[DRAFT…]` string sentinel with a real `"status": "draft"|"ready"` field in `shows.json` schema) remains a cleaner long-term design, but is out of scope given the past-shows draft cycle is effectively finished. Revisit only if a future workstream needs multi-pass drafting through this pipeline.
 
 ---
 
