@@ -1,6 +1,6 @@
 # Live Radio DFW - Bug List
 
-_Last updated: 2026-04-19 (B18 filed: past-shows drafts pipeline prefix pitfall)_
+_Last updated: 2026-04-20 AM (B19 filed: GSC non-critical warning on `validFrom` in `offers`)_
 
 Current known defects and correctness issues. Fixed bugs move to [postmortems/](postmortems/) or the "Recently completed" section of [project-plan.md](project-plan.md). For planned work that isn't a defect, see [roadmap.md](roadmap.md).
 
@@ -242,6 +242,20 @@ The `CDT` variable name at line 60 (`CDT = ZoneInfo("America/Chicago")`) is a Py
 Recommend option 1 + option 3 together. Pair them with R9's new end-of-session grep hook so future violations are caught at commit time, not session-months later.
 
 **Status:** Open. Filed 2026-04-19 as part of R9 (timezone convention enforcement) close-out. Not top-priority.
+
+---
+
+## B19. Google Search Console: structured-data warning — missing `validFrom` field in `offers`
+
+**Symptom:** Ray received an email from Google today (2026-04-20 AM) flagging a non-critical Search Console issue: `Missing field "validFrom" (in "offers")`. Google's own wording: *"This is a non-critical issue. Items with these issues are valid, but could be presented with more features or be optimized for more relevant queries."*
+
+**Where:** Unknown pending diagnosis. Almost certainly one of the structured-data blobs embedded in show-detail pages (`/shows/*.html`) or the `Event` + nested `Offer` schema emitted during build. The `offers` field path points at `schema.org/Offer`, whose `validFrom` property is optional but recommended when a `price` is set.
+
+**Impact:** Low — Google explicitly flags it as non-critical and confirms items remain valid and indexed. May affect rich-result eligibility or query targeting for show pages but does not block indexing.
+
+**Next step:** When Ray is back, open the Search Console issue to capture (a) the exact URL(s) flagged, (b) which schema emitter is responsible (build pipeline vs. `sync_calendar.py` vs. a template file), and (c) whether adding `validFrom` is a one-line schema patch or needs a real date source. Natural pair with B16 (new-show description handling) since both live in the show-page build path.
+
+**Status:** Open. Filed 2026-04-20 AM from inbound GSC email, parked per Ray's request. No diagnosis yet.
 
 ---
 
