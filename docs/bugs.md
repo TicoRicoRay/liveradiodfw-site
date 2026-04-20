@@ -1,6 +1,6 @@
 # Live Radio DFW - Bug List
 
-_Last updated: 2026-04-20 AM (B19 filed: GSC non-critical warning on `validFrom` in `offers`)_
+_Last updated: 2026-04-20 PM (B17 + B19 fixed: 'CDT' string scrub in sync alert email; `validFrom` added to Offer schema)_
 
 Current known defects and correctness issues. Fixed bugs move to [postmortems/](postmortems/) or the "Recently completed" section of [project-plan.md](project-plan.md). For planned work that isn't a defect, see [roadmap.md](roadmap.md).
 
@@ -220,7 +220,7 @@ CSS for the button styles lives in `css/style.css` — `.btn-primary` at ~L277, 
 
 ---
 
-## B17. `sync_calendar.py` alert-email copy uses "CDT" string (cardinal rule violation)
+## B17. `sync_calendar.py` alert-email copy uses "CDT" string (cardinal rule violation) ~~[OPEN]~~ → **FIXED 2026-04-20 PM**
 
 **Symptom:** Two hard-coded f-strings in `sync_calendar.py` alert emails contain the literal string `"CDT"`, violating the project's cardinal rule that all user-facing language must say "Central" or "America/Chicago", never "CDT" / "CST" (DST-unsafe terminology causes silent off-by-an-hour bugs in other contexts).
 
@@ -241,11 +241,11 @@ The `CDT` variable name at line 60 (`CDT = ZoneInfo("America/Chicago")`) is a Py
 
 Recommend option 1 + option 3 together. Pair them with R9's new end-of-session grep hook so future violations are caught at commit time, not session-months later.
 
-**Status:** Open. Filed 2026-04-19 as part of R9 (timezone convention enforcement) close-out. Not top-priority.
+**Status:** ~~Open. Filed 2026-04-19 as part of R9 (timezone convention enforcement) close-out. Not top-priority.~~ **FIXED 2026-04-20 PM** — both user-facing "CDT" strings in `sync_calendar.py` (the removal-notice email at line 677 and the summary-email footer at line 731) replaced with "Central". Shipped as commit [`4cabd7c`](https://github.com/TicoRicoRay/liveradiodfw-site/commit/4cabd7c) on `gh-pages`. Scope note: line 60's `CDT = ZoneInfo("America/Chicago")` variable name is a code identifier, not user-facing prose, and was left alone to keep the diff minimal and B17 scope-pure. If a future pass wants full naming hygiene, renaming that variable to `CENTRAL` plus its two callsites at lines 337–338 is a trivial follow-up.
 
 ---
 
-## B19. Google Search Console: structured-data warning — missing `validFrom` field in `offers`
+## B19. Google Search Console: structured-data warning — missing `validFrom` field in `offers` ~~[OPEN]~~ → **FIXED 2026-04-20 PM**
 
 **Symptom:** Ray received an email from Google today (2026-04-20 AM) flagging a non-critical Search Console issue: `Missing field "validFrom" (in "offers")`. Google's own wording: *"This is a non-critical issue. Items with these issues are valid, but could be presented with more features or be optimized for more relevant queries."*
 
@@ -255,7 +255,7 @@ Recommend option 1 + option 3 together. Pair them with R9's new end-of-session g
 
 **Next step:** When Ray is back, open the Search Console issue to capture (a) the exact URL(s) flagged, (b) which schema emitter is responsible (build pipeline vs. `sync_calendar.py` vs. a template file), and (c) whether adding `validFrom` is a one-line schema patch or needs a real date source. Natural pair with B16 (new-show description handling) since both live in the show-page build path.
 
-**Status:** Open. Filed 2026-04-20 AM from inbound GSC email, parked per Ray's request. No diagnosis yet.
+**Status:** ~~Open. Filed 2026-04-20 AM from inbound GSC email, parked per Ray's request. No diagnosis yet.~~ **FIXED 2026-04-20 PM** — diagnosed and shipped same day. Emitter was `build_show_pages.py` line 173 (the `jsonld_obj["offers"]` block, emitted only for upcoming shows — `is_past` branch correctly omits Offer entirely). Added `validFrom` as a build-time UTC timestamp, written in strict ISO 8601 with a `Z` suffix (e.g., `"2026-04-20T21:06:10Z"`). Rationale for build-time vs. a show-specific on-sale date: for free, no-ticket shows we don't track a real on-sale moment, so build-time is the cleanest honest semantics — "the offer is valid from when we published this page, until the event starts." Cost: build-time timestamp means every rebuild produces a diff on all upcoming show pages, but the existing pipeline already touches every file on every `build_includes.py` run (nav/footer injection), so churn delta is zero. While in the file, also upgraded the deprecated `datetime.utcnow()` call to `datetime.now(timezone.utc)` to kill the Python 3.12+ `DeprecationWarning`. Shipped as commit [`ea37eae`](https://github.com/TicoRicoRay/liveradiodfw-site/commit/ea37eae) on `gh-pages` — 9 files: the builder + 8 upcoming show pages. **Verification:** eyeball-checked JSON-LD on `frisco-rail-yard-2026-05-09.html` (has `validFrom`) and `frisco-rail-yard-2025-09-13.html` (past show, no `offers` block). Next step is for Ray to re-run the GSC rich-results validator on any upcoming show URL in a few days once Google re-crawls; the warning should clear on its own.
 
 ---
 
