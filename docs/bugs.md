@@ -1,6 +1,6 @@
 # Live Radio DFW - Bug List
 
-_Last updated: 2026-04-20 PM (B17 + B18 + B19 fixed: 'CDT' scrub in sync alert email; `shows_patch.py` hardened against `[DRAFT…]` prefix leakage; `validFrom` added to Offer schema)_
+_Last updated: 2026-04-20 PM (B17 + B18 + B19 + B12 fixed: 'CDT' scrub in sync alert email; `shows_patch.py` hardened against `[DRAFT…]` prefix leakage; `validFrom` added to Offer schema; theme choice now persists across pages via localStorage)_
 
 Current known defects and correctness issues. Fixed bugs move to [postmortems/](postmortems/) or the "Recently completed" section of [project-plan.md](project-plan.md). For planned work that isn't a defect, see [roadmap.md](roadmap.md).
 
@@ -362,7 +362,7 @@ No explicit width or height — dimensions are purely content-driven. Three rows
 
 ---
 
-## B12. Light-mode selection doesn't persist across pages
+## B12. Light-mode selection doesn't persist across pages ~~[OPEN]~~ → **FIXED 2026-04-20 PM**
 
 **Symptom:** User visits any page on `liveradiodfw.com`, clicks the sun/moon icon in the top nav to switch to light mode, then navigates to another page — reverts to dark mode. Same in reverse (pick dark on a light-default system and navigate; reverts to light). Every page load honors the OS-level `prefers-color-scheme` and ignores whatever the user last clicked.
 
@@ -408,7 +408,21 @@ try { localStorage.setItem('theme', currentTheme); } catch (err) {}
 
 `try/catch` guards private-browsing modes where localStorage is unavailable. Keep the existing `prefers-color-scheme` fallback so first-time visitors still get the right theme for their OS.
 
-**Status:** Open. Low-complexity, high-visibility fix — worth batching but also fine to ship on its own whenever there's a CSS/JS touch.
+**Status:** ~~Open. Low-complexity, high-visibility fix — worth batching but also fine to ship on its own whenever there's a CSS/JS touch.~~ **FIXED 2026-04-20 PM** — shipped in commit [`f3bba3d`](https://github.com/TicoRicoRay/liveradiodfw-site/commit/f3bba3d) on `gh-pages`, 116 files changed.
+
+**Root cause:** two independent code paths set `data-theme` on every page load, neither persisting. (1) An inline head script in each HTML file (`!function(){var e=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';...}()`) read the OS preference pre-paint. (2) `js/main.js` `DOMContentLoaded` handler re-read the same `matchMedia` and re-applied it post-paint, overwriting anything the user had clicked. The toggle click handler flipped an in-memory `currentTheme` variable but never wrote to `localStorage` — so the next page load, or even a hard refresh on the same page, threw the choice away.
+
+**Fix (three pieces, all in one commit):**
+
+1. **Inline head script** — now reads `localStorage.getItem('theme')` first, falls back to OS preference, then hard-fallback to `'light'`. Wrapped in `try/catch` so Safari private mode, `file://` origins, and other `localStorage`-throwing contexts don't leave the page themeless. Still runs pre-paint so there's no flash of wrong theme on navigation.
+2. **`main.js` toggle handler** — reads the current theme from the DOM (which the inline script already set correctly) instead of re-reading `matchMedia`, and now writes `localStorage.setItem('theme', ...)` on every click. `try/catch` on the setItem means private-mode clicks still visually toggle for the session, they just don't persist across tabs.
+3. **`build_show_pages.py` template** — updated to emit the new inline snippet so regenerated show pages stay in sync. All 95 show pages rebuilt.
+
+**Silent second bug fixed in passing:** the original `main.js` used `document.querySelector('[data-theme-toggle]')` to find the toggle (first match only) and attached the click handler only to that one element. The nav has both a desktop toggle (`index.html` line 92) and a mobile overlay toggle (line 135) — the mobile one had never fired. Swapped to `querySelectorAll` + `forEach`; both toggles now wire up. Not filed separately because it was adjacent code and would've been weirder to split.
+
+**Files touched:** 114 HTML files (19 top-level hand-written + 95 regenerated show pages) for the inline snippet; `js/main.js` for the toggle wiring; `build_show_pages.py` for the template. Commit size inflated to 116 because the validFrom timestamp refresh on 8 upcoming show pages rode along as a free side effect of running `build_show_pages.py` (validFrom is `datetime.now(timezone.utc)` per B19).
+
+**Verification:** unit-tested the precedence logic in Node with a mock DOM + mock localStorage + mock `matchMedia`. Four precedence cases passed (no-stored × OS-dark, no-stored × OS-light, stored=dark × OS-light, stored=light × OS-dark), plus a simulated "click toggle → navigate to new page" scenario where the stored value correctly overrode the still-dark OS preference on the new page. Ray to confirm on live site — both the navigate-and-come-back flow and the desktop ↔ mobile toggle both work.
 
 **Cross-reference:** [roadmap.md R11](roadmap.md) — extend `build_includes.py` to cover head-level snippets. Shipping R11 first makes this bug's fix a one-file edit to `includes/head-boot.html` instead of a 15-file sweep. R11 is the preferred ordering but this bug is independently shippable if we don't want to wait.
 
