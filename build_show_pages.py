@@ -30,7 +30,7 @@ Usage:
 import json
 import re
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from html import escape as html_escape
 from pathlib import Path
 
@@ -170,12 +170,17 @@ def build_show_page(show):
         "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
     }
     if not is_past:
+        # validFrom per schema.org/Offer: when the offer becomes available.
+        # For free, no-ticket shows we don't track a real on-sale date, so we
+        # use build time (UTC). This closes a non-critical GSC warning
+        # (B19, 2026-04-20): "Missing field 'validFrom' (in 'offers')".
         jsonld_obj["offers"] = {
             "@type": "Offer",
             "price": "0" if ticket_price == "Free" else ticket_price.replace("$", ""),
             "priceCurrency": "USD",
             "availability": "https://schema.org/InStock",
             "url": canonical,
+            "validFrom": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         }
     jsonld = json.dumps(jsonld_obj, indent=2)
 
