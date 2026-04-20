@@ -674,7 +674,7 @@ async def main():
                 f"  This show was on the website but is no longer on the band calendar.\n"
                 f"  It has been automatically removed from the website.\n"
                 f"  If this was a mistake, re-add the event to the calendar and\n"
-                f"  it will reappear on the website at the next daily sync (8 AM CDT)."
+                f"  it will reappear on the website at the next daily sync (8 AM Central)."
             )
 
     if updates:
@@ -728,7 +728,7 @@ async def main():
             "show pages (e.g. marketing descriptions) are hand-curated and are\n"
             "preserved across every sync.\n\n"
             "If anything above looks wrong, update the calendar and it will\n"
-            "be corrected at the next sync (daily at 8 AM CDT).\n\n"
+            "be corrected at the next sync (daily at 8 AM Central).\n\n"
             "— Jarvis (LiveRadioDFW Calendar Sync)"
         )
         action_count = len(removals) + len(updates) + len(missing_info)
