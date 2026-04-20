@@ -1,6 +1,6 @@
 # Live Radio DFW - Bug List
 
-_Last updated: 2026-04-20 PM (B17 + B18 + B19 + B12 fixed: 'CDT' scrub in sync alert email; `shows_patch.py` hardened against `[DRAFT…]` prefix leakage; `validFrom` added to Offer schema; theme choice now persists across pages via localStorage)_
+_Last updated: 2026-04-20 PM (B6 closed — videos now play on first click; B12 + B17 + B18 + B19 fixed earlier today; B7 Part 2 re-confirmed as top priority with sync_calendar.py still in active daily use post-Outlook-decommission)_
 
 Current known defects and correctness issues. Fixed bugs move to [postmortems/](postmortems/) or the "Recently completed" section of [project-plan.md](project-plan.md). For planned work that isn't a defect, see [roadmap.md](roadmap.md).
 
@@ -155,6 +155,8 @@ A half-complete bug entry is worse than no entry. If symptom or impact aren't cl
 **Update 2026-04-17 PM — Part 1 of (a) complete:** Passphrase was rotated this session. New passphrase is in Ray's 1Password (Secure Note "LiveRadioDFW Calendar webhook passphrase"), deployed to the Apps Script Web App (Version 2, 2026-04-17 ~8:52 PM Central), and written to `gh-pages/sync_calendar.py`. Old passphrase `El3Q…` is revoked. End-to-end smoke test passed (list + create + update + delete via `requests.post`). **Residual exposure:** the new passphrase is still hard-coded in `gh-pages/sync_calendar.py` and therefore still fetchable at `https://www.liveradiodfw.com/sync_calendar.py` and from GitHub raw. Part 2 of (a) — move the script off `gh-pages` — remains open.
 
 **Status:** Partially addressed. Passphrase rotated (Part 1 of fix option (a)); sync script not yet moved off `gh-pages` (Part 2). Remains top priority until Part 2 lands.
+
+**Clarification 2026-04-20 PM:** Ray asked whether `sync_calendar.py` is even still used post-Outlook-decommission (2026-04-17) now that Google Calendar is sole SoT. Answer: **yes, still daily.** The script has always been a one-way GCal-→-website sync, not an Outlook↔GCal bridge — Google Calendar is the source, `shows.json` + static show pages are the destination. With Outlook gone, this script is the *only* path from the single SoT calendar to the public site: without it, new shows never appear, cancellations never remove cards, venue/time edits never propagate. It's scheduled daily via a Perplexity `schedule_cron` in a prior thread (see J1 blind spot and B1 for DST drift). The script also exports library helpers (`is_private_event`, `generate_description_draft`, `is_gig_event`, `WEBHOOK_URL`, `PASSPHRASE`) imported by `test_is_private_event.py`, `test_description_handling.py`, `test_cancellation_reschedule.py`, `import_historic.py`, `import_bandzoogle.py`, and `fetch_historic.py` — so even if we ever stopped scheduling the cron, we couldn't delete the file without refactoring six callers. Part 2 fix (relocate the file + load passphrase from env) stays the correct remediation path.
 
 ---
 
@@ -555,7 +557,7 @@ Discovered 2026-04-17 PM during a smoke-test of the sync against a deliberate te
 
 ---
 
-## B6. Videos on site require two clicks to play
+## B6. Videos on site require two clicks to play ~~[OPEN]~~ → **FIXED (resolved upstream, 2026-04-20 PM)**
 
 **Symptom:** Every embedded video on `liveradiodfw.com` requires two clicks to start playing. First click registers but does not initiate playback; second click plays the video.
 
@@ -577,7 +579,7 @@ Discovered 2026-04-17 PM during a smoke-test of the sync against a deliberate te
 3. Check for a poster/overlay element intercepting the first click
 4. Open the prior thread (if locatable) to recover what was already tried, to avoid re-treading
 
-**Status:** Open. Reproducible on live site. Priority TBD - nuisance level, not outage.
+**Status:** ~~Open. Reproducible on live site. Priority TBD - nuisance level, not outage.~~ **FIXED (resolved upstream, 2026-04-20 PM)** — Ray confirmed on live site this afternoon that videos now play on first click across pages. No code change landed in this repo to fix it in-session, so the resolution was either (a) a prior-thread fix that finally propagated through Cloudflare / browser cache, (b) a side effect of the `videos.html` or main.js changes shipped earlier today, or (c) a YouTube / Vimeo embed-script update on the player vendor side. Leaving the diagnostic bullets in place for reference: if the symptom reappears, that checklist is still the right starting point. Closing as WORKING rather than spending more time bisecting the cause.
 
 ---
 
