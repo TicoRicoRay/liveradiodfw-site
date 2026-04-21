@@ -719,6 +719,24 @@ These aren't band bugs - they're limitations in how Jarvis (the AI assistant) ca
 
 ---
 
+## J10. Jarvis ships untested scripts when the test environment is the user's box
+
+**Symptom:** Any code that can only be executed on Ray's Windows box — PowerShell scripts, `.bat` wrappers, anything hitting Windows Task Scheduler or Windows-specific APIs — gets committed and pushed by Jarvis without a real execution test. Syntax errors, wrong parameter kinds (switch-vs-boolean, positional-vs-named), and false-positive success messages slip through because Jarvis can only read the docs, not run the script.
+
+**How it surfaced:** B7 Part 2 install on 2026-04-21 PM. `setup_sync_task_scheduler.ps1` shipped (commit [`ee94c10`](https://github.com/TicoRicoRay/liveradiodfw-marketing/commit/ee94c10)) with `-WakeToRun $false` — but `-WakeToRun` is a **switch parameter**, not a **boolean parameter**. PowerShell parsed `$false` as a positional argument, couldn't bind it, returned `$null` from `New-ScheduledTaskSettingsSet`, which then caused `Register-ScheduledTask` to fail. Compounding the failure: an **unconditional** `Write-Host "registered successfully"` at the bottom of the script printed a green success banner *below* the red error output, so the script gaslit Ray into thinking it worked. Ray caught it anyway (good pattern-match on "why is there a stack trace above a success message"), but a less paranoid operator would have walked away thinking the task was registered. Fixed in commit [`1a50a7c`](https://github.com/TicoRicoRay/liveradiodfw-marketing/commit/1a50a7c) by (a) dropping `-WakeToRun $false` since the default already means don't-wake, and (b) adding `$ErrorActionPreference = "Stop"` + a post-registration `Get-ScheduledTask` check so the success banner only prints when the task actually exists.
+
+**Root cause:** Jarvis conflates "I read the cmdlet reference and it says these parameters exist" with "I verified this script runs." For cross-platform scripts where Jarvis CAN execute (bash, Python, JS), the sandbox catches most of these. For Windows-native scripts, there's no equivalent smoke test — they ship on the reputation of the documentation alone.
+
+**Mitigation:** When shipping Windows-only code:
+1. **Every success message must be guarded** by an affirmative post-condition check (the thing you tried to do, did it happen?). Never print "it worked" unconditionally at the end of a script.
+2. **`$ErrorActionPreference = "Stop"`** at the top of every PS1 so non-terminating cmdlet errors become terminating. PowerShell's default of continuing after errors is the wrong default for install scripts.
+3. **Switch parameters (`[switch]`) in PowerShell never take a value** — they're either present (true) or absent (false). Any parameter where Microsoft docs show `[-ParamName]` with no `<type>` is a switch. Double-check the docs before writing `-Foo $true` or `-Foo $false`.
+4. **Consider a lint pass** — `Invoke-ScriptAnalyzer` on PS1 files would have caught this specific class of error. Could run via GitHub Actions on PR.
+
+**Status:** Open (as a pattern) / specific instance fixed. Logged 2026-04-21 PM during B7 install. Mitigation #1 and #2 are the most important and cost nothing to apply retroactively to future PS1 scripts. #4 is aspirational.
+
+---
+
 ## B20. Legacy Bandzoogle-era past-show descriptions miss v2 warm-invitation voice
 
 **Symptom:** 22 past-show descriptions in `shows.json` predate the v2 warm-invitation voice rewrite (2026-04-19/20) and fall outside the cohort of 65 that Ray reviewed one-at-a-time. They originated in the Bandzoogle import era and carry voice violations: exclamation points (v2 rule: none), the phrase "Cover band" (should be omitted or phrased as "Live Radio DFW"), or they're short stubs (50-200 chars) without the v2 pattern of venue specifics, geographic call-outs, practical logistics, and family/dog-friendliness cues.
