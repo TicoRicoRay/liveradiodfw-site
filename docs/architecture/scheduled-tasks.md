@@ -1,6 +1,6 @@
 # Scheduled Tasks - Live Radio DFW
 
-_Last updated: 2026-04-21_
+_Last updated: 2026-04-21 (B7 Part 2 shipped — daily calendar sync migrating to Windows Task Scheduler)_
 
 Every scheduled/recurring job that touches the band, where it runs, what it does, and how to find or modify it. Nothing automated should exist off this list - if a future agent creates a new scheduled task, add it here the same day.
 
@@ -12,31 +12,32 @@ Perplexity `schedule_cron` tasks are **thread-scoped**. A task created in thread
 
 ## 1. Daily calendar sync
 
+**Status 2026-04-21:** Migrating from Perplexity `schedule_cron` → Windows Task Scheduler as part of B7 Part 2. During a 3-day parallel-run verification window both tasks fire daily; once the Windows task is confirmed green, the Perplexity task gets deleted. The Perplexity row is kept below for history; the Windows row is the new primary.
+
+### Primary host (new, 2026-04-21 onward)
+
 | Field | Value |
 |---|---|
-| **What** | `sync_calendar.py` runs end-to-end: calls Apps Script webhook → parses ticket prices from event descriptions → non-destructively merges into `shows.json` → regenerates per-show HTML pages → git commit + push to `gh-pages` → emails `info@liveradiodfw.com` on missing data |
-| **Where it runs** | Perplexity `schedule_cron` task |
-| **Owned by** | Unknown prior thread (NOT this one). `schedule_cron(list)` returns empty here. |
-| **When it fires** | 13:11 UTC daily (fixed UTC) |
-| **Effective local time** | 8:11 AM Central in summer, **7:11 AM Central in winter** - this is the DST drift bug |
-| **Commits as** | `LiveRadioDFW <info@liveradiodfw.com>` via HTTPS + PAT, unsigned |
-| **Cost** | Burns Perplexity credits per run |
-| **Bug filed** | [bugs.md B1](../bugs.md) - DST-unsafe schedule |
-| **Manual run** | `cd /path/to/liveradiodfw-site && python3 sync_calendar.py` on the server that hosts the cron (which we don't have) - in practice, run manually from whichever thread you're in, or ping the webhook directly |
+| **What** | `sync_runner.py` runs end-to-end: loads `.env` → calls Apps Script webhook → parses ticket prices → imports pure logic from `sync_lib.py` (pulled fresh from `gh-pages` at run start) → non-destructively merges into `shows.json` → regenerates per-show HTML pages → git commit + push to `gh-pages` → emails `info@liveradiodfw.com` on missing data |
+| **Where it runs** | **Windows Task Scheduler on Ray's PC.** Task name: `LiveRadioDFW Daily Calendar Sync`. Install dir: `C:\LiveRadioDFW\sync\`. |
+| **Runbook** | [runbooks/windows-sync-task.md](../runbooks/windows-sync-task.md) — install, operate, change procedures, troubleshooting. |
+| **When it fires** | **8:00 AM Central daily**, DST-safe by construction (Task Scheduler uses local time and handles DST automatically). Closes [bugs.md B1](../bugs.md#b1-calendar-sync-cron-drifts-across-dst) once the Perplexity cron is retired. |
+| **Secrets** | `C:\LiveRadioDFW\sync\.env` (never committed). Source of truth for values: 1Password Secure Note "LiveRadioDFW Calendar webhook passphrase." |
+| **Commits as** | `LiveRadioDFW <info@liveradiodfw.com>` via HTTPS + Git Credential Manager on the Windows box. |
+| **Cost** | Zero Perplexity credits. Runs on local machine. |
+| **Manual run** | `cd C:\LiveRadioDFW\sync && python sync_runner.py` |
+| **Closes** | [bugs.md B7](../bugs.md#b7-webhook-passphrase-and-url-are-publicly-readable-on-the-live-site) (exposure) and [bugs.md B1](../bugs.md#b1-calendar-sync-cron-drifts-across-dst) (DST drift) as a pair. |
 
-### How to find the owning thread
+### Legacy host (being decommissioned, keep for history + parallel-run window)
 
-1. Open Perplexity in-app
-2. Go to scheduled tasks / cron view
-3. Look for a task named something like "LiveRadioDFW calendar sync" or "daily sync"
-4. Note the thread that owns it and document here
-
-### How to fix the DST drift
-
-Once the owning thread is found:
-1. From that thread, call `schedule_cron(action="update", cron_id=..., cron=<Central-aware expression>)` using Python to convert Central → UTC properly
-2. Verify the next firing time looks right for Central (8:00 AM year-round)
-3. Document the owning thread name + task ID in this file
+| Field | Value |
+|---|---|
+| **What** | Same as above, but ran the pre-split monolithic `sync_calendar.py` until 2026-04-21. `sync_calendar.py` has since been removed from `gh-pages` (rename → `sync_lib.py`). |
+| **Where it runs** | Perplexity `schedule_cron` task named "LiveRadioDFW Daily Calendar Sync" |
+| **Owned by** | Perplexity thread "More Band Marketing" (confirmed 2026-04-21 via the Tasks UI). `schedule_cron(list)` returns empty from any other thread — see [bugs.md J1](../bugs.md#j1-scheduled-tasks-are-invisible-across-threads). |
+| **When it fires** | 13:11 UTC daily (fixed UTC) — the DST drift bug. |
+| **Retire after** | Windows Task Scheduler runs cleanly for 3 consecutive days with identical commit shape. |
+| **How to retire** | Open the "More Band Marketing" Perplexity thread → Tasks view → delete the `LiveRadioDFW Daily Calendar Sync` task. Then move this row into "Deleted / defunct tasks" below with a date. |
 
 ---
 

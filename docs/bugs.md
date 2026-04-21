@@ -130,7 +130,7 @@ A half-complete bug entry is worse than no entry. If symptom or impact aren't cl
 
 ---
 
-## B7. Webhook passphrase and URL are publicly readable on the live site
+## B7. Webhook passphrase and URL are publicly readable on the live site ~~[OPEN]~~ → **FIXED 2026-04-21 (Part 2 shipped, exposure closed)**
 
 **Symptom:** `sync_calendar.py` lives on the `gh-pages` branch and hard-codes the Apps Script webhook URL and passphrase (lines 44–45). Because `gh-pages` is the live site served via GitHub Pages + Cloudflare, the file is fetchable at `https://www.liveradiodfw.com/sync_calendar.py` (200 OK, observed 2026-04-17) and also readable directly from the public GitHub repo.
 
@@ -154,7 +154,21 @@ A half-complete bug entry is worse than no entry. If symptom or impact aren't cl
 
 **Update 2026-04-17 PM — Part 1 of (a) complete:** Passphrase was rotated this session. New passphrase is in Ray's 1Password (Secure Note "LiveRadioDFW Calendar webhook passphrase"), deployed to the Apps Script Web App (Version 2, 2026-04-17 ~8:52 PM Central), and written to `gh-pages/sync_calendar.py`. Old passphrase `El3Q…` is revoked. End-to-end smoke test passed (list + create + update + delete via `requests.post`). **Residual exposure:** the new passphrase is still hard-coded in `gh-pages/sync_calendar.py` and therefore still fetchable at `https://www.liveradiodfw.com/sync_calendar.py` and from GitHub raw. Part 2 of (a) — move the script off `gh-pages` — remains open.
 
-**Status:** Partially addressed. Passphrase rotated (Part 1 of fix option (a)); sync script not yet moved off `gh-pages` (Part 2). Remains top priority until Part 2 lands.
+**Status:** ~~Partially addressed. Passphrase rotated (Part 1 of fix option (a)); sync script not yet moved off `gh-pages` (Part 2). Remains top priority until Part 2 lands.~~ **Closed 2026-04-21.**
+
+**Part 2 close-out 2026-04-21** (commit [`b125405`](https://github.com/TicoRicoRay/liveradiodfw-site/commit/b125405) on `gh-pages`, [`aca5b21`](https://github.com/TicoRicoRay/liveradiodfw-site/commit/aca5b21) on `docs`). Fix option (a) shipped per Ray's 2026-04-21 decisions (1a Windows Task Scheduler host, 2a library/runner split, 3a `.env` file for secrets):
+
+- **`sync_calendar.py` is gone from `gh-pages`.** The monolith was split into `sync_lib.py` (pure functions, no secrets, stays on `gh-pages`) and `sync_runner.py` (orchestration + secrets + git push, lives on Ray's Windows box at `C:\LiveRadioDFW\sync\`, never committed anywhere public). The rename preserved git history (git detected `sync_calendar.py -> sync_lib.py` as a 55% rename).
+- **`fetch_historic.py` also deleted.** One-shot historic fetch (2021-04-01 → 2024-08-08) already completed; output `calendar_historic_*.json` preserved in-tree. It was the sixth caller and carried the same secret-leak risk; deleting was cleaner than refactoring a file that has no future callers.
+- **5 remaining callers updated** (`test_is_private_event.py`, `test_description_handling.py`, `test_cancellation_reschedule.py`, `import_historic.py`, `import_bandzoogle.py`) to `from sync_lib import …`. All 49 tests green against the new library (18 + 18 + 13 = 49 across the three test files).
+- **Secrets load from `.env`** in the runner's directory via a minimal inline dotenv loader (no new dependencies). `.env.example` ships alongside the runner as the template. Values source of truth: 1Password Secure Note "LiveRadioDFW Calendar webhook passphrase."
+- **Windows Task Scheduler takes over as host.** Install runbook: [`runbooks/windows-sync-task.md`](runbooks/windows-sync-task.md). Uses local Central time with automatic DST handling — this sets up the fix for [B1](bugs.md#b1-calendar-sync-cron-drifts-across-dst) as a side effect. Mandatory 3-day parallel-run check with the old Perplexity cron before the Perplexity task is deleted.
+- **Verified exposure is closed** 2026-04-21 12:53 PM Central:
+  - `https://www.liveradiodfw.com/sync_calendar.py` → **HTTP 404** (GitHub Pages rebuild + Cloudflare edge cache both caught up within 30 seconds of the push).
+  - `https://raw.githubusercontent.com/TicoRicoRay/liveradiodfw-site/gh-pages/sync_calendar.py` → **HTTP 404.**
+  - New `https://raw.githubusercontent.com/TicoRicoRay/liveradiodfw-site/gh-pages/sync_lib.py` → HTTP 200, and `grep` for the passphrase value returns zero hits.
+- **Handoff to Ray:** three-file package (`sync_runner.py`, `.env.example`, `windows-sync-task.md`) delivered as `b7-windows-handoff.zip` in the session workspace. Install takes roughly 30 minutes of hands-on time plus the 3-day parallel-run verification window.
+- **B1 unblocked.** Once the Windows task is green and the Perplexity cron is retired, B1 closes in the same motion — Windows Task Scheduler's local-time trigger is DST-safe by construction.
 
 **Clarification 2026-04-20 PM:** Ray asked whether `sync_calendar.py` is even still used post-Outlook-decommission (2026-04-17) now that Google Calendar is sole SoT. Answer: **yes, still daily.** The script has always been a one-way GCal-→-website sync, not an Outlook↔GCal bridge — Google Calendar is the source, `shows.json` + static show pages are the destination. With Outlook gone, this script is the *only* path from the single SoT calendar to the public site: without it, new shows never appear, cancellations never remove cards, venue/time edits never propagate. It's scheduled daily via a Perplexity `schedule_cron` in a prior thread (see J1 blind spot and B1 for DST drift). The script also exports library helpers (`is_private_event`, `generate_description_draft`, `is_gig_event`, `WEBHOOK_URL`, `PASSPHRASE`) imported by `test_is_private_event.py`, `test_description_handling.py`, `test_cancellation_reschedule.py`, `import_historic.py`, `import_bandzoogle.py`, and `fetch_historic.py` — so even if we ever stopped scheduling the cron, we couldn't delete the file without refactoring six callers. Part 2 fix (relocate the file + load passphrase from env) stays the correct remediation path.
 
