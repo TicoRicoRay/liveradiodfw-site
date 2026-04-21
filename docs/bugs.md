@@ -799,6 +799,30 @@ This is the root cause of a pattern we've hit for weeks: each session Jarvis wou
 
 ---
 
+## B22. `sync_runner.py` alert email is stubbed on Windows (Perplexity-only transport doesn't exist there)
+
+**Symptom:** On the Windows box, `sync_runner.py` called `asyncio.create_subprocess_exec("external-tool", "call", ...)` to route alert emails to `info@liveradiodfw.com` through the Outlook connector. The `external-tool` binary is a **Perplexity-sandbox-only** helper — it exists inside the agent's sandbox, not on a Windows machine. Every sync that produced any changes would FATAL with `[WinError 2] The system cannot find the file specified` **after** a successful git push, interrupting the final summary print.
+
+**How it surfaced:** Ray's first Windows smoke test during B7 install on 2026-04-21 2:00 PM Central. The sync correctly detected 1 legitimate change (a `Gatherings®` mojibake cleanup on the 2026-09-18 Private Event), regenerated all 95 show pages, ran `build_includes`, committed, and pushed [`06bc1cb`](https://github.com/TicoRicoRay/liveradiodfw-site/commit/06bc1cb) to `gh-pages`. Then the `send_alert_email` call tripped `[WinError 2]`. Nothing was lost — the push was complete — but the trailing `=== Summary ===` block never printed and the email was never delivered.
+
+**Stopgap (shipped 2026-04-21 PM, commit [`afcfe45`](https://github.com/TicoRicoRay/liveradiodfw-marketing/commit/afcfe45) on `-marketing`):** Replaced the `subprocess_exec` call with a stub that prints the intended email contents to stdout (Subject / To / Body) and returns `True` so callers treat the alert as delivered. The change summary is still visible in `sync.log` (Task Scheduler wrapper captures stdout), and the actual commit shape is always visible in `-site` `gh-pages` git log. Losing the email is cosmetic for now — no data loss, no workflow breaks.
+
+**Proper fix (this bug):** Restore real mail delivery from the Windows box. Options:
+
+1. **Direct SMTP via Gmail app password.** `info@liveradiodfw.com` is a Google Workspace account — an app password + `smtplib` ~20 lines gets us back to parity. Pros: no new service, credentials live in `.env`, passes through the same spam filters as legitimate human mail from the same account. Cons: app passwords are security-sensitive; need to be scoped narrowly and stored in 1Password. **Recommended.**
+2. **Transactional email service** (Mailgun free tier, SendGrid free tier, Postmark, etc.). Pros: higher deliverability, structured send/bounce APIs, retries handled. Cons: another vendor, another API key in `.env`, another account to maintain for one recipient.
+3. **GitHub Issues as the alert channel.** Instead of email, open an issue in `-site` (or a dedicated `-ops` repo) when the sync flags missing data. Pros: version-controlled audit trail, no mail infra, uses existing GitHub PAT that's already in `.env`. Cons: Ray has to remember to check issues — email arrives in the inbox he's already watching.
+
+**Recommended path:** Option 1 (Gmail SMTP app password). Write `send_alert_email_smtp(subject, body)` as a drop-in replacement that reads `LIVERADIODFW_GMAIL_APP_PASSWORD` and `LIVERADIODFW_GMAIL_USER` from `.env`, sends via `smtplib.SMTP_SSL('smtp.gmail.com', 465)` with TLS, returns `True` on success / prints + returns `False` on any exception so failures never FATAL the runner. Add the two new keys to `.env.example`, document in `1Password → LiveRadioDFW Gmail app password` secure note, update the runbook with the one extra step.
+
+**Why this matters:** The alert email is the only proactive signal when the sync detects missing descriptions, missing ticket prices, or new shows that need hand-curation. Without it, Ray has to actively watch `git log` on `gh-pages` or skim `sync.log` — both of which he won't remember to do daily. The sync will still work correctly in silence, but the "hey look at this" loop is broken. B16/B16.2 (description drafts pipeline) depends on this loop; B18 surfaced specifically because the email warned us.
+
+**Effort:** ~30 minutes hands-on plus Gmail app password setup on Ray's end. Low risk (stopgap stub is already safe; this is restoring a nice-to-have).
+
+**Status:** Open. Filed 2026-04-21 PM same session as the stopgap. Not urgent — sync works correctly without it, just silently. Schedule after B21 forensics settles out, because some of those six orphaned tasks may also need email and a shared SMTP helper would cover them all.
+
+---
+
 ## Fixed recently (moved here for context; full history in postmortems)
 
 - **2026-04-18 midday - B8 private-event filter broadened to word-boundary match:** Event titles like `LR - Test Event (Private)`, `LR - Johnson Wedding - private`, `LR - Private BBQ`, and `[PRIVATE] Corporate Xmas` used to slip past `is_private_event` (which only matched the three exact substrings `private party`, `private event`, `gathering`). Any of those leaks would have published a residential address, a `MusicEvent` schema.org block, a canonical URL, and a meta description to Google. Fix: swap the three substring checks for two compiled regexes — `\bprivate\b` and `\bgatherings?\b`, both case-insensitive — run against the raw calendar title (still before the `LR -` prefix strip, so parenthesised / bracketed disambiguators are available). Word boundaries prevent false matches on substrings like `privateer`. Shipped with a new `test_is_private_event.py` harness that exercises 18 title variants (pre-fix: 6 failures; post-fix: 18/18 pass) so future regressions on this function will be caught locally before deploy. Live-calendar smoke test produced the same 10 gigs and same 2:8 private:public split as pre-fix, so no current event changed classification. Also added a tiny `.gitignore` (first in the repo) to keep `__pycache__/` out of future commits now that tests are in play.
