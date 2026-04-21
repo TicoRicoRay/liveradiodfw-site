@@ -8,7 +8,7 @@ Run from repo root:
     python3 test_description_handling.py
 """
 import sys
-from sync_calendar import generate_description_draft, check_missing_info
+from sync_lib import generate_description_draft, check_missing_info
 
 
 def public_show(**overrides):

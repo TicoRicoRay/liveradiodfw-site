@@ -1,63 +1,35 @@
 #!/usr/bin/env python3
 """
-sync_calendar.py — Daily Calendar ↔ Website Sync for LiveRadioDFW
-==================================================================
-Pulls events from the band's Google Calendar via webhook,
-compares against shows.json, and:
-  1. Adds new confirmed gig events to shows.json
-  2. Auto-REMOVES shows deleted from calendar + emails info@ to confirm
-  3. Auto-UPDATES changed details (time, location, title) + emails info@
-  4. Emails info@liveradiodfw.com if required info is missing
-  5. Runs build_shows.py to regenerate show HTML
-  5b. Runs build_show_pages.py to regenerate individual show pages
-  5c. Runs build_includes.py to stamp nav/footer into all pages
-  6. Commits and pushes to GitHub if changes were made
+sync_lib.py — Pure library functions for the LiveRadioDFW calendar sync.
+========================================================================
 
-Designed to run as a daily cron job.
-Calendar is the source of truth — FOR CALENDAR-OWNED FIELDS ONLY.
+This module is the SAFE-TO-PUBLISH half of the calendar-sync code.  It
+contains only pure functions and public constants — **no webhook URL,
+no passphrase, no network calls, no git operations, no email sending**.
 
-⚠️  NON-DESTRUCTIVE SYNC (updated 2026-04-17):
-  Calendar owns ONLY the fields listed in CALENDAR_OWNED_FIELDS below.
-  Any other field on a show entry (e.g. "description", future hand-curated
-  fields) is PRESERVED by the sync. When updating an existing show we
-  merge calendar-owned fields over the existing entry instead of replacing
-  the whole dict. This prevents the sync from silently wiping hand-written
-  copy on every run.
+It lives on the `gh-pages` branch so the live site's test files and
+historic-import scripts can keep importing it:
 
-GIG DETECTION RULES:
-  - "LR -" prefix = confirmed LiveRadioDFW gig → auto-add to website
-  - Known venue names (from shows.json history) → auto-add
-  - "Private Party" / "Private Event" → auto-add as private
-  - Everything else (rehearsals, personal, other bands, holds) → skip
+    from sync_lib import is_private_event, is_gig_event, ...
 
-CANCELLATION / RESCHEDULE CONVENTION (added 2026-04-18, B15):
-  When a show is cancelled or rescheduled, DO NOT delete the original
-  Google Calendar event. Instead:
-    1. Rename the original event with a parenthetical suffix at the end:
-         "<original title> (Rescheduled due to Weather)"
-         "<original title> (Cancelled)"
-    2. If rescheduled, create a brand-new event for the new date
-       (the sync will pick it up via the normal KNOWN_VENUES / "LR -" path).
-  The renamed original stays on the calendar as a band-facing audit record
-  of what happened, but is filtered out of shows.json so the public site
-  never sends fans to a dead show. See SKIP_PATTERNS below.
+The orchestration layer that *does* hold secrets — fetching the
+calendar over HTTPS, writing shows.json, invoking build scripts,
+committing to git, sending alert emails — lives in `sync_runner.py`
+on Ray's Windows box, outside the repo.
+
+History: extracted from the former `sync_calendar.py` during B7 Part 2
+(2026-04-21) to eliminate the public exposure of the webhook
+passphrase at https://www.liveradiodfw.com/sync_calendar.py.
 """
 
-import json
-import subprocess
-import sys
 import re
-import asyncio
-from datetime import datetime, date, timedelta
-from pathlib import Path
+import hashlib
+from datetime import datetime
 from zoneinfo import ZoneInfo
 
-# ── Config ────────────────────────────────────────────────────────────────────
-WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbz9nOyNo-_YOeU0x4rnq76Y5iuxyiZOSUES2m7Lye4TmXZ6wyQNG9cUp7r9ithYTlbLeA/exec"
-PASSPHRASE = "L7D3U7cLUHDcjHSpPjVsomp5LqufSFHj"
-BASE = Path(__file__).parent
-ALERT_EMAIL = "info@liveradiodfw.com"
-CDT = ZoneInfo("America/Chicago")
+# ── Shared constants (safe to publish) ───────────────────────────────────────
+
+CENTRAL_TZ = ZoneInfo("America/Chicago")
 
 # Fields that are populated from the Google Calendar event.
 # These are the ONLY fields the sync is allowed to overwrite on existing shows.
@@ -123,25 +95,8 @@ KNOWN_VENUES = [
 # info@liveradiodfw.com so a human can add "Tickets: $XX" to the calendar.
 TICKET_PRICE_MISSING = ""
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
 
-def fetch_calendar_events():
-    """Pull all future events from the band's Google Calendar via webhook."""
-    import requests
-    today = date.today()
-    end_date = today + timedelta(days=365)
-    payload = {
-        "passphrase": PASSPHRASE,
-        "action": "list",
-        "start": today.isoformat(),
-        "end": end_date.isoformat()
-    }
-    resp = requests.post(WEBHOOK_URL, json=payload, allow_redirects=True)
-    data = json.loads(resp.text)
-    if data.get("status") != "ok":
-        raise RuntimeError(f"Webhook error: {data}")
-    return data["events"]
-
+# ── Gig detection ────────────────────────────────────────────────────────────
 
 def is_gig_event(event):
     """Determine if a calendar event is a confirmed LiveRadioDFW gig."""
@@ -192,9 +147,10 @@ def is_gig_event(event):
 # The function is deliberately called with the RAW calendar title
 # (before the 'LR -' prefix strip) so any disambiguating context in the
 # raw title — including parenthesized (Private) and bracketed [PRIVATE]
-# — is available at privacy-decision time. See sync_calendar.py line 213.
+# — is available at privacy-decision time.
 _PRIVATE_WORD_RE = re.compile(r"\bprivate\b", re.IGNORECASE)
 _GATHERING_WORD_RE = re.compile(r"\bgatherings?\b", re.IGNORECASE)
+
 
 def is_private_event(title):
     """Return True when the event title indicates a private booking.
@@ -212,6 +168,8 @@ def is_private_event(title):
         return False
     return bool(_PRIVATE_WORD_RE.search(title) or _GATHERING_WORD_RE.search(title))
 
+
+# ── Ticket-price parsing ─────────────────────────────────────────────────────
 
 def parse_ticket_price(description):
     """Extract ticket price from event description.
@@ -239,6 +197,8 @@ def parse_ticket_price(description):
         return val
     return TICKET_PRICE_MISSING
 
+
+# ── Description draft generation (B16 Stage 1) ───────────────────────────────
 
 def generate_description_draft(show):
     """Compose a 3-5 sentence machine-generated description draft from the
@@ -268,7 +228,6 @@ def generate_description_draft(show):
     if not venue or not city or city == "DFW Area":
         return ""
     ticket = show.get("ticket_price", "")
-    time_str = show.get("time", "")
     day_name = show.get("day_name", "")
     date_str = show.get("date", "")
 
@@ -282,7 +241,6 @@ def generate_description_draft(show):
     ]
     # Stable hash across processes (Python's built-in hash() is randomized
     # per-process via PYTHONHASHSEED; we need the same draft every run).
-    import hashlib
     key = hashlib.sha256(f"{date_str}|{venue}".encode()).digest()
     opener = openers[key[0] % len(openers)]
 
@@ -330,12 +288,12 @@ def generate_description_draft(show):
     return f"{flag} {body}"
 
 
+# ── Event → show conversion ──────────────────────────────────────────────────
+
 def calendar_event_to_show(event):
     """Convert a calendar event to a shows.json entry."""
     start_utc = datetime.fromisoformat(event["start"].replace("Z", "+00:00"))
-    end_utc = datetime.fromisoformat(event["end"].replace("Z", "+00:00"))
-    local_start = start_utc.astimezone(CDT)
-    local_end = end_utc.astimezone(CDT)
+    local_start = start_utc.astimezone(CENTRAL_TZ)
 
     # Title: strip "LR - " prefix
     raw_title = event.get("title", "").strip()
@@ -454,6 +412,8 @@ def calendar_event_to_show(event):
     }
 
 
+# ── Missing-info detection ───────────────────────────────────────────────────
+
 def check_missing_info(show, event):
     """Check if a show entry is missing required information for the website."""
     missing = []
@@ -481,52 +441,9 @@ def check_missing_info(show, event):
     return missing
 
 
-async def send_alert_email(subject, body):
-    """Send an alert email to info@liveradiodfw.com."""
-    proc = await asyncio.create_subprocess_exec(
-        "external-tool", "call", json.dumps({
-            "source_id": "outlook",
-            "tool_name": "send_email",
-            "arguments": {
-                "action": {
-                    "action": "send",
-                    "to": [ALERT_EMAIL],
-                    "cc": [],
-                    "bcc": [],
-                    "subject": subject,
-                    "body": body
-                }
-            }
-        }),
-        stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
-    )
-    stdout, stderr = await proc.communicate()
-    if proc.returncode != 0:
-        print(f"  WARNING: Failed to send email: {stderr.decode()}", file=sys.stderr)
-        return False
-    return True
+# ── Merge helpers ────────────────────────────────────────────────────────────
 
-
-def git_commit_and_push(message):
-    """Commit changes and push to GitHub."""
-    subprocess.run(["git", "add", "-A"],
-                   cwd=BASE, check=True)
-
-    result = subprocess.run(["git", "diff", "--cached", "--quiet"],
-                            cwd=BASE, capture_output=True)
-    if result.returncode == 0:
-        print("No file changes to commit.")
-        return False
-
-    subprocess.run(["git", "commit", "-m", message], cwd=BASE, check=True)
-    subprocess.run(["git", "push", "origin", "gh-pages"], cwd=BASE, check=True)
-    print("Pushed to GitHub")
-    return True
-
-
-# ── Main Sync ─────────────────────────────────────────────────────────────────
-
-def _detail_diffs(old_show, new_show):
+def detail_diffs(old_show, new_show):
     """Compare two show dicts across calendar-owned fields only.
     Returns list of (field, old_val, new_val) tuples.
     Hand-curated fields (anything outside CALENDAR_OWNED_FIELDS) are
@@ -542,7 +459,7 @@ def _detail_diffs(old_show, new_show):
     return diffs
 
 
-def _merge_calendar_fields(existing, fresh):
+def merge_calendar_fields(existing, fresh):
     """Return a copy of `existing` with only CALENDAR_OWNED_FIELDS overwritten
     by values from `fresh`. Preserves every other key on `existing`
     (descriptions, flyer paths, or any future hand-curated fields).
@@ -554,210 +471,8 @@ def _merge_calendar_fields(existing, fresh):
     return merged
 
 
-async def main():
-    print(f"=== LiveRadioDFW Calendar Sync — {datetime.now().strftime('%Y-%m-%d %H:%M')} ===\n")
-
-    # 1. Load current shows.json
-    with open(BASE / "shows.json") as f:
-        current_shows = json.load(f)
-
-    current_by_date = {s["date"]: s for s in current_shows}
-    print(f"Current shows.json: {len(current_shows)} entries")
-
-    # 2. Fetch calendar events
-    cal_events = fetch_calendar_events()
-    print(f"Calendar events fetched: {len(cal_events)} total")
-
-    # 3. Filter to confirmed gigs
-    gigs = [e for e in cal_events if is_gig_event(e)]
-    print(f"Confirmed gigs: {len(gigs)}")
-    for g in gigs:
-        print(f"  - {g['title']}")
-
-    # 4. Convert to show entries and compare
-    adds = []
-    updates = []       # list of (old_show, merged_show, diffs)
-    missing_info = []
-
-    cal_dates = set()  # track all calendar gig dates for deletion check
-
-    for event in gigs:
-        show = calendar_event_to_show(event)
-        cal_dates.add(show["date"])
-
-        # Build the effective show dict the site will actually ship so that
-        # hand-curated fields (e.g. description) are visible to
-        # check_missing_info() for existing shows. For new adds there is no
-        # existing entry, so effective == show.
-        if show["date"] in current_by_date:
-            effective = _merge_calendar_fields(current_by_date[show["date"]], show)
-        else:
-            effective = show
-
-        # Check for missing required info (runs against effective dict so we
-        # respect existing hand-curated fields like description).
-        missing = check_missing_info(effective, event)
-        if missing:
-            missing_info.append((effective, missing))
-
-        if show["date"] not in current_by_date:
-            # New show not on website
-            adds.append(show)
-            print(f"  + NEW: {show['title']} on {show['date']}")
-        else:
-            # Existing show — check for detail changes in calendar-owned fields.
-            # Merge instead of replace so we don't wipe hand-curated fields.
-            old_show = current_by_date[show["date"]]
-            diffs = _detail_diffs(old_show, show)
-            if diffs:
-                merged = _merge_calendar_fields(old_show, show)
-                updates.append((old_show, merged, diffs))
-                print(f"  ~ UPDATED: {show['title']} on {show['date']}")
-                for field, old_val, new_val in diffs:
-                    print(f"      {field}: '{old_val}' → '{new_val}'")
-
-    # 5. Check for shows on website that disappeared from calendar
-    #    Calendar is source of truth → auto-remove + email info@ for safety
-    removals = []  # list of show dicts removed
-    for show in current_shows:
-        show_date = datetime.strptime(show["date"], "%Y-%m-%d").date()
-        if show_date >= date.today() and show["date"] not in cal_dates:
-            removals.append(show)
-            print(f"  ✕ REMOVED: {show['title']} on {show['date']} — not on calendar")
-
-    # 6. Apply changes to shows.json
-    changed = False
-    commit_parts = []
-
-    # 6a. Additions
-    if adds:
-        for show in adds:
-            current_shows.append(show)
-        commit_parts.extend(f"Added {s['title']} ({s['date']})" for s in adds)
-
-    # 6b. Removals
-    if removals:
-        removal_dates = {s["date"] for s in removals}
-        current_shows = [s for s in current_shows if s["date"] not in removal_dates]
-        commit_parts.extend(f"Removed {s['title']} ({s['date']})" for s in removals)
-
-    # 6c. Updates — merge calendar-owned fields into existing entry,
-    #     preserving all hand-curated fields (description, etc.).
-    if updates:
-        for old_show, merged_show, diffs in updates:
-            for i, s in enumerate(current_shows):
-                if s["date"] == merged_show["date"]:
-                    current_shows[i] = merged_show
-                    break
-            changed_fields = ", ".join(f[0] for f in diffs)
-            commit_parts.append(f"Updated {merged_show['title']} ({merged_show['date']}): {changed_fields}")
-
-    if adds or removals or updates:
-        current_shows.sort(key=lambda s: s["date"])
-        with open(BASE / "shows.json", "w") as f:
-            json.dump(current_shows, f, indent=2)
-            f.write("\n")
-        subprocess.run([sys.executable, str(BASE / "build_shows.py")], check=True)
-        subprocess.run([sys.executable, str(BASE / "build_show_pages.py")], check=True)
-        subprocess.run([sys.executable, str(BASE / "build_includes.py")], check=True)
-        commit_msg = "Auto-sync: " + "; ".join(commit_parts)
-        changed = git_commit_and_push(commit_msg)
-
-    # 7. Send alert emails
-    email_parts = []
-
-    if removals:
-        for show in removals:
-            email_parts.append(
-                f"🗑 REMOVED from website:\n"
-                f"  {show['title']} on {show['date']}\n"
-                f"  This show was on the website but is no longer on the band calendar.\n"
-                f"  It has been automatically removed from the website.\n"
-                f"  If this was a mistake, re-add the event to the calendar and\n"
-                f"  it will reappear on the website at the next daily sync (8 AM Central)."
-            )
-
-    if updates:
-        for old_show, new_show, diffs in updates:
-            changes_text = "\n".join(
-                f"    {field}: '{old_val}' → '{new_val}'"
-                for field, old_val, new_val in diffs
-            )
-            email_parts.append(
-                f"📝 UPDATED on website:\n"
-                f"  {new_show['title']} on {new_show['date']}\n"
-                f"  The following details changed on the calendar and have been\n"
-                f"  automatically updated on the website:\n"
-                f"{changes_text}"
-            )
-
-    if missing_info:
-        for show, fields in missing_info:
-            block = (
-                f"⚠️ MISSING INFO:\n"
-                f"  {show['title']} on {show['date']}\n"
-                + "\n".join(f"    Missing: {f}" for f in fields)
-            )
-            # B16 Stage 1: if the description is what's missing, propose a
-            # machine-generated draft inline so Ray can review/edit/approve
-            # without having to leave the email.
-            needs_desc = any("About-this-show description" in f for f in fields)
-            if needs_desc:
-                draft = generate_description_draft(show)
-                if draft:
-                    block += (
-                        "\n\n  Proposed description draft (review and enrich "
-                        "with venue-specific details before publish):\n"
-                        f"    {draft}"
-                    )
-                else:
-                    block += (
-                        "\n\n  Could not auto-draft a description for this show "
-                        "(missing venue, city, or other required fields)."
-                    )
-            email_parts.append(block)
-
-    if email_parts:
-        body = (
-            "Hey team,\n\n"
-            "The daily calendar sync made the following changes:\n\n"
-            + "\n\n".join(email_parts)
-            + "\n\n"
-            "Calendar is the source of truth for scheduling fields (time, venue,\n"
-            "address, title, maps_url, private, ticket_price). All other fields on\n"
-            "show pages (e.g. marketing descriptions) are hand-curated and are\n"
-            "preserved across every sync.\n\n"
-            "If anything above looks wrong, update the calendar and it will\n"
-            "be corrected at the next sync (daily at 8 AM Central).\n\n"
-            "— Jarvis (LiveRadioDFW Calendar Sync)"
-        )
-        action_count = len(removals) + len(updates) + len(missing_info)
-        subject = f"[LiveRadioDFW] Calendar sync — {action_count} change(s) applied"
-        sent = await send_alert_email(subject, body)
-        if sent:
-            print(f"\nAlert email sent ({action_count} items)")
-
-    # 8. Summary
-    print(f"\n=== Summary ===")
-    if adds:
-        print(f"Added to website: {len(adds)}")
-        for s in adds:
-            print(f"  + {s['title']} on {s['date']}")
-    if removals:
-        print(f"Removed from website: {len(removals)}")
-        for s in removals:
-            print(f"  ✕ {s['title']} on {s['date']}")
-    if updates:
-        print(f"Updated on website: {len(updates)}")
-        for old_s, new_s, diffs in updates:
-            print(f"  ~ {new_s['title']} on {new_s['date']}")
-    if missing_info:
-        print(f"Missing info alerts: {len(missing_info)}")
-    if not adds and not removals and not updates and not missing_info:
-        print("Everything in sync. No issues found.")
-
-    return adds, removals, updates, missing_info
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+# ── Back-compat shims ────────────────────────────────────────────────────────
+# The original sync_calendar.py exposed these as underscore-prefixed helpers;
+# keep aliases so nothing existing breaks if it was reaching for them.
+_detail_diffs = detail_diffs
+_merge_calendar_fields = merge_calendar_fields

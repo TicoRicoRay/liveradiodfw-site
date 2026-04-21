@@ -5,7 +5,7 @@ Run from repo root:
     python3 test_is_private_event.py
 """
 import sys
-from sync_calendar import is_private_event
+from sync_lib import is_private_event
 
 CASES = [
     # (title, expected, why)

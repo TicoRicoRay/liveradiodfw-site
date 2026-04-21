@@ -16,7 +16,7 @@ and merges those 33 past shows into shows.json with:
   - description strategy (B16 Stage 1):
       * Bandzoogle description >= 50 chars AND not mentioning
         "Jackson Crossing" (prior band name) -> use verbatim
-      * otherwise -> generate_description_draft() from sync_calendar.py,
+      * otherwise -> generate_description_draft() from sync_lib.py,
         which prefixes "[DRAFT - ...]" and is gated by build_show_pages.py
         so it never publishes to the public site
 
@@ -37,10 +37,10 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-# Re-use the description draft helper from sync_calendar.py so past-show
+# Re-use the description draft helper from sync_lib.py so past-show
 # drafts match the exact voice calibration B16 Stage 1 already ships.
 sys.path.insert(0, str(Path(__file__).parent))
-from sync_calendar import generate_description_draft  # noqa: E402
+from sync_lib import generate_description_draft  # noqa: E402
 
 BASE = Path(__file__).parent
 RAW = BASE / "bandzoogle_raw.json"
@@ -52,7 +52,7 @@ MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
 # Canonical venue names (keys are lowercased lookup values).
-# Pulled from existing shows.json and sync_calendar output. When a Bandzoogle
+# Pulled from existing shows.json and sync_lib output. When a Bandzoogle
 # venue_name matches one of these loosely, we replace with the canonical form
 # so the site doesn't end up with "Fresh by Brookshires" AND
 # "FRESH by Brookshire's" as two separate venues.
@@ -122,7 +122,7 @@ def build_maps_url(venue, address):
 
 def format_time(time_str):
     """Bandzoogle times are already "7:30 PM" form. Normalize to
-    "7:30 PM" (zero-padded minutes) to match sync_calendar output."""
+    "7:30 PM" (zero-padded minutes) to match sync_lib output."""
     if not time_str:
         return "TBA"
     s = time_str.strip().upper()
@@ -137,7 +137,7 @@ def format_time(time_str):
 
 def is_private_from_raw(raw):
     """A Bandzoogle entry is private when the venue/title signals it and
-    there's no public street address. Mirrors sync_calendar.is_private_event
+    there's no public street address. Mirrors sync_lib.is_private_event
     in spirit but works on the raw Bandzoogle fields."""
     title = (raw.get("title") or "").lower()
     venue = (raw.get("venue_name") or "").lower()

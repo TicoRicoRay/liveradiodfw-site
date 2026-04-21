@@ -34,7 +34,7 @@ from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from sync_calendar import generate_description_draft  # noqa: E402
+from sync_lib import generate_description_draft  # noqa: E402
 from import_bandzoogle import (  # noqa: E402
     sanitize_prior_band_names,
     should_regenerate_description,

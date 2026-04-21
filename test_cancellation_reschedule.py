@@ -8,7 +8,7 @@ Run from repo root:
     python3 test_cancellation_reschedule.py
 """
 import sys
-from sync_calendar import is_gig_event
+from sync_lib import is_gig_event
 
 
 def ev(title, start="2026-04-19T00:15:00.000Z", end="2026-04-19T02:45:00.000Z",
