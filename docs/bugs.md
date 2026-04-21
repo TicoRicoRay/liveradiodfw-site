@@ -815,6 +815,19 @@ This is the root cause of a pattern we've hit for weeks: each session Jarvis wou
 
 **Status:** Open. Filed 2026-04-21 PM the moment Ray surfaced the screenshot. Not blocking the B7 install in progress right now — but the next session that has spare cycles should forensics this thread before anything else, because Monthly Venue Discovery (R23) now fires in ~4 days and we have five more tasks with zero documentation.
 
+**Follow-up 2026-04-21 PM (later, post-B25 merge):** Checked Outlook inbox for Perplexity support replies — `from:perplexity.ai`, `from:support@perplexity.ai`, and keyword queries `Perplexity support` / `Perplexity ticket` / `Perplexity thread credits` all returned zero results. No ticket response has arrived at `rmyers@futurebright.com`. Two plausible explanations: (a) tickets were filed from a different address (e.g. Ray's personal account), or (b) Perplexity support replies live in-product (support-ticket UI) rather than in email. Next follow-up actions, in order of leverage:
+
+1. **Ray: check whichever inbox the support ticket confirmations actually went to.** If tickets were filed via the in-app "Report a problem" flow, confirmations may be in the Perplexity notifications panel, not email.
+2. **Ray: in the Perplexity app on phone (same place the B21 screenshot came from), pull up the support-ticket thread(s) and screenshot the latest state** so we can tell whether tickets are "Open / Waiting on support" vs "Waiting on user." If support has replied with a question and is waiting on Ray, that's the real blocker.
+3. **If both tickets are still "Open / Waiting on support" with no activity in 3+ business days, escalate.** Reply-all on each ticket with a one-paragraph consolidated summary: two tickets open for the same underlying issue (thread refuses to load with a credits error while account has credits; six scheduled tasks in that thread cannot be stopped via the UI's Stop button), and a polite ask to merge the tickets and assign them.
+4. **In parallel, prep Track A work from the fix plan above** so the forensics session is fast when the thread unblocks: create `/workspace/b21_task_prompts/` with one placeholder `.md` per task (Show Calendar Check, Pre-Send Warning, Availability Check Reminder, Monthly Setlist Review, Monthly Venue Discovery, Bark.com Lead Monitor), each with task name + fire cadence from the screenshot + blank `Prompt:` / `Destination:` / `Hypothesis:` sections. Watch destination side-effects around next-fire windows to populate hypotheses — especially Bark.com Lead Monitor (fires hourly) and Pre-Send Warning (fires nightly).
+5. **Do NOT file a new Perplexity support ticket for the six tasks specifically.** The existing two tickets already cover the root cause (thread won't load); opening a third ticket creates triage churn. If support asks for more specifics, we can provide the screenshot + the six-task table from this bug entry.
+
+**What we'll NOT do while blocked:**
+- Delete, retire, or migrate any of the six tasks before extracting prompts. The B7 lesson applies: whatever logic each task runs lives only in its prompt; losing prompts = losing logic.
+- Recreate suspected equivalents of the five undocumented tasks. Re-creating would double-fire during the blocked period and cost credits on work we don't yet understand.
+- Treat R23's ~4-day deadline (fires ~2026-04-25) as firm until we verify from a task-detail view. Screenshot timestamps are our only source for that date; confirm before planning migration work around it.
+
 ---
 
 ## B22. `sync_runner.py` alert email is stubbed on Windows (Perplexity-only transport doesn't exist there)
