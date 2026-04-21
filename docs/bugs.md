@@ -1,6 +1,6 @@
 # Live Radio DFW - Bug List
 
-_Last updated: 2026-04-21 PM (B7 Part 2 install LIVE on Ray's Windows box, first production sync pushed to gh-pages; B21 filed for 6 orphaned tasks in inaccessible Perplexity thread; B22 filed for sync_runner alert email stub, reframed as production-safety watchdog; B23 filed for -marketing repo cruft audit; J10 filed for the untested-PowerShell-script blind spot)_
+_Last updated: 2026-04-21 PM (B25 filed for canonical/og:url not enforced site-wide; fix PR on master in flight; B7 Part 2 install LIVE on Ray's Windows box, first production sync pushed to gh-pages; B21 filed for 6 orphaned tasks in inaccessible Perplexity thread; B22 filed for sync_runner alert email stub, reframed as production-safety watchdog; B23 filed for -marketing repo cruft audit; J10 filed for the untested-PowerShell-script blind spot)_
 
 Current known defects and correctness issues. Fixed bugs move to [postmortems/](postmortems/) or the "Recently completed" section of [project-plan.md](project-plan.md). For planned work that isn't a defect, see [roadmap.md](roadmap.md).
 
@@ -902,6 +902,28 @@ Implication for the fix: the email can't just send on success — it must **alwa
 **Recommendation:** Option 1. One rule change, matches an existing site pattern, testable in 10 seconds by toggling dark mode after push. Filed as a design-polish item, not a blocker.
 
 **Status:** Open. Filed 2026-04-21 PM from user screenshot during v1.1 style-guide audit session. Low-to-medium urgency. Good candidate to bundle with the Round 4 em-dash batch pass since both touch the site repo.
+
+---
+
+## B25. Canonical URL and og:url not enforced site-wide; new pages ship without them
+
+**Symptom:** `https://www.liveradiodfw.com/lander` (GitHub Pages clean-URL) and `https://www.liveradiodfw.com/lander.html` both return HTTP 200 with byte-identical content. This is a duplicate-content / split-link-equity risk at Google's canonicalization layer. Audit of the repo shows only 3 pages (`index.html`, `about.html`, `lander.html`) currently carry a `<link rel="canonical">`; the other 13 root pages and all 95 `shows/*.html` pages have none. `og:url` has the same inconsistency. Nothing in the build pipeline enforces the rule, so every new page added going forward will ship without it unless someone remembers.
+
+**Where:** Every HTML page under the site root and `shows/`. Specifically the `<head>` block of each page. Also `sitemap.xml`, which currently lists `.html` URLs that don't match the extensionless canonicals on the 3 pages that do have them.
+
+**Impact:** Google treats `/lander` and `/lander.html` as duplicate URLs and picks a canonical on its own, potentially splitting backlink equity and producing inconsistent SERP URLs ([Google: Consolidate duplicate URLs](https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls)). Multiplied across 108 pages (13 root + 95 show archive). Low individual-page severity, but a systemic gap that compounds as the site grows. Each new show page sync adds another affected URL.
+
+**Workaround:** Manually adding `<link rel="canonical">` to each new page. Not scalable — `build_shows.py` generates show pages from templates, so any manual pattern drifts the moment a template regenerates.
+
+**Fix options (simple to invasive):**
+
+1. **Extend `build_includes.py` to manage a `BEGIN_CANONICAL`/`END_CANONICAL` block** the same way it already manages nav and footer. Single point of maintenance, auto-inserts markers on pages that don't have them, derives the extensionless URL from the file path (`index.html` → `/`, `about.html` → `/about`, `shows/foo-2026-05-09.html` → `/shows/foo-2026-05-09`). Also regenerate `sitemap.xml` from the same page list so canonical and sitemap can never disagree. Exclude `thanks.html`, `home.html` (already `noindex`), and `nav.html` (fragment) from both canonical and sitemap. Idempotent re-runs. Ships in the existing build pipeline called by `sync_calendar.py`.
+2. **Hand-edit every page once and add canonical to the `build_shows.py` template.** Lowest initial code change but splits the enforcement across two scripts and fixes it only for show pages; the 13 root pages stay manual.
+3. **Add a pre-push git hook that fails on missing canonical.** Enforces presence but doesn't generate the value, still a manual task per page.
+
+**Recommendation:** Option 1. Covers all pages (root + generated show archive + future pages) from one file, reuses the existing marker pattern, and removes the memory-tax. Scope: canonical + og:url + sitemap regen in the same PR since they all derive from the same URL rule.
+
+**Status:** Open. Filed 2026-04-21 PM. Fix PR on `master` being opened in the same session.
 
 ---
 
