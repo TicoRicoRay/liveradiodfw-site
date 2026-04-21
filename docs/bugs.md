@@ -1,6 +1,6 @@
 # Live Radio DFW - Bug List
 
-_Last updated: 2026-04-21 PM (B25 filed for canonical/og:url not enforced site-wide; fix PR on master in flight; B7 Part 2 install LIVE on Ray's Windows box, first production sync pushed to gh-pages; B21 filed for 6 orphaned tasks in inaccessible Perplexity thread; B22 filed for sync_runner alert email stub, reframed as production-safety watchdog; B23 filed for -marketing repo cruft audit; J10 filed for the untested-PowerShell-script blind spot)_
+_Last updated: 2026-04-21 PM (B26 filed for dual nav source-of-truth spin-off; B25 filed for canonical/og:url not enforced site-wide, fix PR on master in flight; B7 Part 2 install LIVE on Ray's Windows box, first production sync pushed to gh-pages; B21 filed for 6 orphaned tasks in inaccessible Perplexity thread; B22 filed for sync_runner alert email stub, reframed as production-safety watchdog; B23 filed for -marketing repo cruft audit; J10 filed for the untested-PowerShell-script blind spot)_
 
 Current known defects and correctness issues. Fixed bugs move to [postmortems/](postmortems/) or the "Recently completed" section of [project-plan.md](project-plan.md). For planned work that isn't a defect, see [roadmap.md](roadmap.md).
 
@@ -924,6 +924,28 @@ Implication for the fix: the email can't just send on success — it must **alwa
 **Recommendation:** Option 1. Covers all pages (root + generated show archive + future pages) from one file, reuses the existing marker pattern, and removes the memory-tax. Scope: canonical + og:url + sitemap regen in the same PR since they all derive from the same URL rule.
 
 **Status:** Open. Filed 2026-04-21 PM. Fix PR on `master` being opened in the same session.
+
+---
+
+## B26. Dual source-of-truth for nav: root `nav.html` and `includes/nav.html`
+
+**Symptom:** The repo has two nav templates serving the same purpose: `nav.html` in the site root (used by the older `build_nav.py` script) and `includes/nav.html` (used by the newer `build_includes.py`, the current single-point-of-maintenance builder). The two files are content-identical except that `includes/nav.html` carries the `<!-- BEGIN_NAV -->` / `<!-- END_NAV -->` markers the builder needs. Surfaced 2026-04-21 during B25 work when confirming that root `nav.html` is not an orphan — it is still the source of truth for `build_nav.py`, even though `build_nav.py` is no longer called by any automation (only referenced in `README.md`). If someone edits one copy and not the other, nav drifts silently. `build_includes.py` wins in practice because it is the one wired into `sync_calendar.py`, but there is nothing stopping a future contributor from editing the root copy and thinking it took effect.
+
+**Where:** `nav.html` (root, 71 lines), `includes/nav.html` (73 lines — identical plus markers), `build_nav.py` (reads root copy, unused in automation), `README.md` (references `build_nav.py` as an update step). `build_includes.py` reads `includes/nav.html` — the correct single source going forward.
+
+**Impact:** Silent drift risk. Low probability today because the duplicate is identical and the older builder isn't running, but the failure mode is "someone edits the wrong file, commits and pushes, site looks fine in their local test because they ran `build_nav.py`, but production pipeline uses the other copy and nav regresses." The cost grows with the team (if more contributors appear) and with time (institutional knowledge of which file wins decays).
+
+**Workaround:** None needed operationally today — `build_includes.py` is the only builder called by `sync_calendar.py`, so `includes/nav.html` is what actually ships. But documenting which file wins is itself a tax every session.
+
+**Fix options (simple to invasive):**
+
+1. **Delete `nav.html` from root and `build_nav.py`. Update `README.md` to point at `build_includes.py` as the one-and-only nav updater.** `build_includes.py` already handles nav stamping correctly for every page including `shows/*`. Zero behavior change on the live site. Tidiest outcome. One commit.
+2. **Keep `nav.html` in root as a symlink or build-time copy of `includes/nav.html`.** Preserves `build_nav.py` as a fallback path but removes drift risk. Adds a build step. Not worth the ceremony when option 1 is available.
+3. **Leave as-is, add a big warning comment at the top of root `nav.html` saying "DO NOT EDIT, see includes/nav.html".** Cheapest, weakest. Humans ignore comments.
+
+**Recommendation:** Option 1. `build_nav.py` is dead code in practice; root `nav.html` is a stale copy. Delete both, update `README.md`. Same session can verify nothing else references `build_nav.py` (already checked: only `README.md`).
+
+**Status:** Open. Filed 2026-04-21 PM as a spin-off from B25. Low urgency but easy win.
 
 ---
 

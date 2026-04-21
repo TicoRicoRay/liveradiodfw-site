@@ -129,7 +129,7 @@ Active Page Rules on the `liveradiodfw.com` zone. Free plan includes 3 rules; we
 
 | # | Match pattern | Setting | Value | Purpose |
 |---|---|---|---|---|
-| 1 | `*liveradiodfw.com/home*` | Forwarding URL | 301 → `https://www.liveradiodfw.com/` | Legacy deindex cleanup. Catches any hit on `/home`, `/home.html`, `/home/`, `/home?...`, on apex or www, case-insensitive. Closes the duplicate-content exposure from a period when `home.html` was kept as scaffolding after Google had cached the old Bandzoogle `/home`. See [roadmap R3](../roadmap.md#r3-google-search-console-cleanup-open--done-2026-04-19). |
+| 1 | `*liveradiodfw.com/home*` | Forwarding URL | 301 → `https://www.liveradiodfw.com/` | Legacy deindex cleanup. Catches any hit on `/home`, `/home.html`, `/home/`, `/home?...`, on apex or www, case-insensitive. Closes the duplicate-content exposure from a period when `home.html` was kept as scaffolding after Google had cached the old Bandzoogle `/home`. **`home.html` was deleted from the repo in B25 (2026-04-21);** the rule is kept as belt-and-suspenders insurance against any remaining external links to `/home` or `/home.html`. See [roadmap R3](../roadmap.md#r3-google-search-console-cleanup-open--done-2026-04-19). |
 
 **Why Page Rules and not Redirect Rules:** this zone's Cloudflare UI currently exposes legacy Page Rules only (no modern Redirect Rules or Bulk Redirects menu). When that changes, we can migrate this single rule without behavior change.
 

@@ -93,7 +93,7 @@ Set up UptimeRobot (free tier) for `https://www.liveradiodfw.com` with SMS + ema
 3. **`/home` handled differently than planned.** The original plan assumed `/home` was a redirect that needed re-indexing. It was actually a duplicate of the home page served at a second URL (GitHub Pages extensionless routing of `home.html`), created earlier specifically because Google had cached `/home` from the old Bandzoogle site. Search Console confirmed `/home` is no longer in Google's index, meaning the legacy cached URL problem for `/home` is already solved. Replaced the duplicate-content scaffolding with a proper Cloudflare Page Rule 301: `*liveradiodfw.com/home*` → `https://www.liveradiodfw.com/` (301 Permanent Redirect). Verified with curl against every realistic variant (apex/www, trailing slash, `.html`, query string, case variants) — all return 301 to the canonical root, and `/`, `/shows`, `/about` stay 200. See [dns-and-pages.md](runbooks/dns-and-pages.md#cloudflare-page-rules) for the rule config.
 4. **URL-inspection sweep of cached dead URLs** is rolled forward into R4 (which always covered this territory via wildcard redirects). R4 can now be evaluated against current GSC 404/redirect-error counts rather than a stale cached-URL export. Reassess 2026-05-03 after Google has had ~2 weeks to crawl the post-R5/R16 state.
 
-**Follow-up:** `home.html` still exists in the `gh-pages` repo as a duplicate of `index.html`. Google deindexed it and the 301 catches any hits, so it's harmless — but it's dead weight. Safe to delete in a future cleanup session (file a new R if it needs tracking).
+**Follow-up:** ~~`home.html` still exists in the `gh-pages` repo as a duplicate of `index.html`.~~ **Done 2026-04-21 (B25):** `home.html` deleted from the repo. The Cloudflare Page Rule remains in place as belt-and-suspenders insurance against any external inbound links to `/home` or `/home.html`.
 
 **Priority:** ~~(not scored)~~ N/A (closed).
 
@@ -110,7 +110,7 @@ Google has cached individual old show pages and legacy Bandzoogle URL patterns. 
 
 1. **`.html` Bandzoogle variants** (low-volume but index-budget waste, position 1 for exact-match so Google treats them as canonical for direct lookups):
    - `/book.html` (6 imps), `/contact.html` (2), `/corporate-events.html` (6), `/members.html` (6), `/press-kit.html` (2), `/private-parties.html` (6)
-   - Fix: single wildcard `*.html` → strip-extension redirect, or per-path list (6 entries fits well under the 20-rule Cloudflare free plan limit).
+   - **Partially mitigated 2026-04-21 (B25):** every page now emits `<link rel="canonical" href="https://www.liveradiodfw.com/<slug>">` (no `.html`) and the sitemap lists only extensionless URLs. Google will consolidate the `.html` variants onto the canonical on its own schedule. Cloudflare wildcard 301s still worth doing for immediate redirect at the edge (avoids relying on Google to re-crawl), but lower urgency now. Single wildcard `*.html` → strip-extension, or per-path list (6 entries fits well under the 20-rule Cloudflare free plan limit).
 2. **Bandzoogle event-URL pattern** `/event/<id>/<id>/<slug>` (zombie URLs from pre-migration era):
    - Observed: `/event/5710250/691552668/live-radio-all-80s-hits`, `/event/5900541/707881016/fresh-by-brookshires-fate-tx`, `/event/5900542/...`, `/event/6055650/...`, `/event/6100957/...`, `/event/6364768/...`, `/event/6378412/...`, `/event/6379565/...` (8 distinct event URLs, 18 total imps)
    - Fix: single wildcard `*liveradiodfw.com/event/*` → `https://www.liveradiodfw.com/shows` (one rule).
@@ -301,7 +301,7 @@ Frisco (19), Allen (19), Fate (16), Grapevine (9), Carrollton (5), The Colony (4
 Cut line: cities with ≥3 shows get a page in the first batch — **10 pages**: Frisco, Allen, Fate, Grapevine, Carrollton, The Colony, Royse City, Plano, Addison, Lewisville. The rest wait until they hit the threshold via natural booking cadence.
 
 **Page shape (one per city):**
-- URL: `/cover-band-{city-slug}.html` (or similar, TBD with R13 style-guide pass on URL conventions)
+- URL: `/cover-band-{city-slug}` (extensionless, matches site-wide canonical convention established 2026-04-21 B25). Actual file lives at `cover-band-{city-slug}.html` in the repo; GitHub Pages serves it extensionless.
 - `<title>` and `<h1>` targeting the intent query: e.g. *"Cover Band in Frisco, TX | Live Radio DFW"*
 - Meta description built from real stats: *"Live Radio DFW has played 14 shows in Frisco at venues like The Frisco Bar & Grill and Frisco Rail Yard. Book us for your Frisco event."*
 - Intro paragraph with city + venues naturally worked in (no keyword stuffing)
