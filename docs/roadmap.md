@@ -418,6 +418,34 @@ The authoritative brand voice lives in `liveradiodfw-marketing/MARKETING_STYLE_G
 
 ---
 
+### R24. Windows Task Scheduler "run whether user is logged on or not" for daily calendar sync
+
+**Context:** B7 Part 2 install on 2026-04-21 PM registered `LiveRadioDFW Daily Calendar Sync` on Windows Task Scheduler via `setup_sync_task_scheduler.ps1`. The task is in `Ready` state and will run daily at 8:00 AM Central. **However**, the task is currently configured as **"Run only when user is logged on"**, which means if Ray reboots the machine overnight and doesn't sign back in before 8 AM, the sync silently skips that day.
+
+**Why it's in this state:** Switching to "Run whether user is logged on or not" requires typing Ray's local Windows account password into a credential prompt. Ray uses **Windows Hello (PIN / biometrics)** for daily unlock and does not have the underlying account password memorized or saved anywhere. Resetting the password via `netplwiz` would work but carries a small DPAPI side-effect footprint (some Edge-saved credentials, some Wi-Fi profiles may need re-entry). We punted on the password reset rather than take that risk for what is currently a theoretical failure mode.
+
+**Why it's probably fine for now:** Ray is active on this machine daily. Screen-lock does NOT count as logged-off — his session persists. The only scenario that breaks the sync is a reboot followed by nobody signing back in before 8 AM. The 3-day parallel run against the old Perplexity cron (post-B7 close-out) will expose any skipped days immediately: if the Perplexity sync pushes a diff the Windows sync missed, we know the "logged on" mode bit us. Until that happens, the risk is purely hypothetical.
+
+**The fix path, when we commit to it:**
+1. Reset the local Windows password for account `myers` via `netplwiz` (Windows key + R → `netplwiz` → select user → Reset Password). Choose something long, save in 1Password as `Windows login - myers`.
+2. Re-authenticate Hello (it should continue working unchanged, but confirm).
+3. Task Scheduler → right-click `LiveRadioDFW Daily Calendar Sync` → Properties → General tab.
+4. Select "Run whether user is logged on or not" (leave "Do not store password" UNCHECKED — we need network access for git push).
+5. Enter the new password at the credential prompt.
+6. Verify: right-click task → Run → confirm it executes successfully from stdout/sync.log. Then reboot, **don't sign in**, wait past 8 AM, confirm the sync ran anyway.
+7. Add the new password to the runbook's "Required credentials" section (pointer to 1Password entry; never the password itself).
+8. Note in the runbook that any future Windows password change will break the task and requires re-entering the new password in Properties.
+
+**Fallback if we never want to touch the password:** Accept "logged on" mode as the contract. Add a note to `runbooks/windows-sync-task.md` that any day that starts with a rebooted-and-not-signed-in machine will skip the sync, and that the remedy is to sign in and run the task manually (right-click → Run). Acceptable for a personal dev box that Ray lives on every day.
+
+**Dependencies:** B21 forensics completion doesn't block this, but *does* provide useful context — one of the six orphaned Perplexity tasks (the one running hourly) may reveal patterns about how often a truly-daily cadence matters vs. a more flexible window.
+
+**Priority:** Low. File-and-forget until the parallel run surfaces a missed day. Re-open with urgency only if the "logged on" mode produces a real production gap.
+
+**Status:** Open. Filed 2026-04-21 PM during B7 install close-out.
+
+---
+
 ### R14. Enrich press-kit and booking pages with marketing-repo content ~~[OPEN]~~ → **PRESS-KIT OPENING SHIPPED 2026-04-19 (remainder open)**
 
 **Partial ship 2026-04-19 (commits [`42965d4`](https://github.com/TicoRicoRay/liveradiodfw-site/commit/42965d4), [`e850c1a`](https://github.com/TicoRicoRay/liveradiodfw-site/commit/e850c1a)):** Press-kit opening paragraph rewritten to match `/lander` positioning (ready-to-book themed shows named inline, tributes-to-eras-not-artists framing, drops the "Station shows tailored to any event" internal-memo phrasing from the prior draft). New "For venues and planners" proof block added below the bio with seven facts-only bullets: **together since 2021** (leading; Ray flagged this as a deliberate differentiator given how flaky many bands are), five-piece/five-vocalists, 100+ songs/six decades, ready-to-book themed shows, in-ear monitors, fully insured, DFW-based. "Start here" pin added to the Band Overview video. First draft of the opening paragraph said "formed from the merger" without a year, which was accurate-but-weak; Ray corrected mid-session with the important nuance that the musicians have been together since 2021, even though the Live Radio DFW name itself is post-merger. Final bio leads with "Same musicians playing together since 2021, now under one name after merging Risky Business DFW and Jackson Crossing" — honest about the rename, credits the five-year history. Lesson logged: when the band has a rename-but-continuity story, lead with the continuity; the rename is the footnote. What is explicitly NOT done in this pass and still open: recent-venues strip (depends on R5 or hand-curation), set-length options grid (needs Ray's input on which lengths are real), starts-at price figure (needs Ray), standalone "Why book us" page or `book.html` section addition, R13 style-guide alignment pass. Remainder of R14 stays open for those items.
