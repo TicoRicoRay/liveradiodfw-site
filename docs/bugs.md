@@ -768,6 +768,8 @@ These aren't band bugs - they're limitations in how Jarvis (the AI assistant) ca
 
 **Ray's framing (direct quote, 2026-04-21):** _"it's an old hung session that i think will answer a lot of our 'where did this get lost' questions. when I started working with you, I made the mistake of assuming perplexity computer max could do ongoing projects (Wrong!)"_
 
+**CRITICAL UPDATE (2026-04-21 later, Ray's second message on B21):** The owning thread isn't just "hung" — it is **inaccessible**. The thread refuses to load with a spurious "you need more credits" error even though Ray has credits. **Ray currently has TWO open support tickets with Perplexity** trying to resolve this. **He cannot even stop the tasks from running** — the Tasks UI exposes a "Stop task" button per task, but tapping it in this state has not worked, presumably because the stop action requires the owning thread to respond and the thread is blocked. Consequence: the six crons keep firing on whatever schedule they were set on, Ray is burning Perplexity credits on runs he can't see, can't inspect, and can't halt, and the task prompts live only inside a thread he cannot currently open.
+
 This is the root cause of a pattern we've hit for weeks: each session Jarvis would re-discover "there's a cron somewhere we can't see," and [bugs.md J1 (scheduled tasks are invisible across threads)](#j1-scheduled-tasks-are-invisible-across-threads) explained why, but we never had the full list of what was actually running. This screenshot is the first time we've seen the full inventory. Every one of these tasks has been firing for an unknown number of weeks or months without ever landing in `architecture/scheduled-tasks.md` or `runbooks/` — meaning their logic lives only in the owning thread's task prompt. If that thread is ever pruned, archived, or manually closed before we extract, that logic is gone.
 
 **Why this matters now:**
@@ -776,13 +778,20 @@ This is the root cause of a pattern we've hit for weeks: each session Jarvis wou
 3. **Bark.com Lead Monitor fires every ~hour by the looks of it** (next run in 33 min at screenshot time). If that's running venue-lead collection or spamming, we need to know.
 4. **Pre-Send Warning fires nightly** (19h to next run). This is almost certainly tied to something that runs the next morning — likely a heads-up before a campaign or the Availability Check. We need to understand the sequence before we unplug anything.
 
-**Fix plan (multi-step, not this session):**
-1. **First:** add a new section to `architecture/scheduled-tasks.md` placeholdering all six by name, with "Next fire" from the screenshot and "Documentation status: UNKNOWN — task prompt lives only in hung Perplexity thread, B21 pending." This stops the inventory from looking complete when it's not.
+**Fix plan (gated on Perplexity support ticket resolution):**
+
+*Track A — things we can do without access to the thread:*
+1. **First:** add a new section to `architecture/scheduled-tasks.md` placeholdering all six by name, with "Next fire" from the screenshot and "Documentation status: UNKNOWN — task prompt lives only in a thread Ray cannot currently open; see B21." This stops the inventory from looking complete when it's not.
 2. **Correct R23 next-fire date** in `roadmap.md` and `scheduled-tasks.md` row 3 from ~2026-05-01 to ~2026-04-25. Treat R23 as a ~4-day deadline, not ~10.
-3. **Forensics session** (likely its own 60–90 min block): open the hung thread on the Perplexity app; for each of the six tasks, open its task view, screenshot or copy the prompt verbatim, save to `/workspace/b21_task_prompts/<task_name>.md`. Do NOT delete any task until prompts are extracted and understood.
-4. **Classify each:** does it edit data (destination?), send mail (to whom?), post to an external service (which API?), or just log/summarize? Decide per-task: extract to `-marketing` repo and migrate to Windows Task Scheduler (same pattern as B7), consolidate with an existing cron, or retire.
-5. **Extract before migrating.** Apply the same lesson from B7: sibling `.py` file + `.env` in `-marketing`, `setup_*_task_scheduler.ps1`, runbook alongside. Every extraction decommissions one Perplexity cron and makes that task's logic survive the owning thread.
-6. **After all six are extracted**, retire the hung thread.
+3. **Check the Tasks UI task-detail view** (tap on a task, not the thread) for any exposed prompt / cron-spec / last-run / next-run / owner-thread-id info. Some task-management UIs surface this without requiring the owning thread to load. If any field is visible, screenshot it. Save everything to `/workspace/b21_task_prompts/<task_name>.md`.
+4. **Observe destination side-effects** for each task around its next-fire window to reverse-engineer what it does. Candidates: `info@liveradiodfw.com` inbox for new emails, Mailchimp audience `97cca06eff` and any other band audiences for `other_adds` / campaign activity, GitHub commit history on both band repos, Bark.com inbox / leads panel, Google Calendar change log, any known shared Google Doc. Match observed side-effects to task names to classify before we ever see the prompts.
+5. **Document hypotheses per task** based on observed side-effects + task name + fire cadence, so when the thread unblocks we know what to confirm and what to rebuild.
+
+*Track B — things that require the thread to unblock (Ray's two open Perplexity support tickets):*
+6. **Forensics session** (60–90 min): once the thread opens, for each of the six tasks, open its task view, copy the prompt verbatim, save to `/workspace/b21_task_prompts/<task_name>.md`. **Do NOT delete any task until prompts are extracted and understood.**
+7. **Classify each:** does it edit data (destination?), send mail (to whom?), post to an external service (which API?), or just log/summarize? Decide per-task: extract to `-marketing` repo and migrate to Windows Task Scheduler (same pattern as B7), consolidate with an existing cron, or retire.
+8. **Extract before migrating.** Apply the same lesson from B7: sibling `.py` file + `.env` in `-marketing`, `setup_*_task_scheduler.ps1`, runbook alongside. Every extraction decommissions one Perplexity cron and makes that task's logic survive the owning thread.
+9. **After all six are extracted**, retire the hung thread (or leave it and let the tasks die naturally once Perplexity unblocks stop-task).
 
 **Meta-lesson (for the J-series):** Every Perplexity thread that owns a `schedule_cron` task is a single point of failure — if the thread is lost, the cron's source of truth dies with it, because [`schedule_cron(list)`](#j1-scheduled-tasks-are-invisible-across-threads) only returns tasks owned by the current thread. The B7 pattern (runner + runbook + `setup_*.ps1` all in a durable public repo) needs to become the standard for any `schedule_cron` that does real work. A roadmap item may fall out of this ("Migrate all band crons to the Windows box") once we know what the remaining five do.
 
