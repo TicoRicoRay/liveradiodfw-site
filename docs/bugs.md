@@ -751,6 +751,45 @@ These aren't band bugs - they're limitations in how Jarvis (the AI assistant) ca
 
 ---
 
+## B21. Six scheduled tasks orphaned in a hung old Perplexity thread
+
+**Symptom:** 2026-04-21 PM — while Ray was inspecting the Perplexity Tasks UI on his phone during a break, he surfaced a screenshot of an **old hung thread** that still owns SIX scheduled `LiveRadioDFW` tasks. Until this screenshot surfaced, Jarvis only knew about two of them (the Daily Calendar Sync we're retiring in B7, and the Monthly Profile Audit we just filed as R23). The other four — and the fact that the Monthly Profile Audit's next fire is **~4 days out, not ~10** — were completely missing from our durable inventory.
+
+**The six tasks captured in the screenshot (2026-04-21 ~1:41 PM Central):**
+
+| # | Task name | Next run | Was on inventory? |
+|---|---|---|---|
+| 1 | LiveRadioDFW Show Calendar Check | in 6 days | **No** |
+| 2 | LiveRadioDFW Pre-Send Warning | in 19h 21m (fires tonight / tomorrow AM) | **No** |
+| 3 | LiveRadioDFW Availability Check Reminder | in 7 days | **No** |
+| 4 | LiveRadioDFW Monthly Setlist Review | in 4 days | **No** |
+| 5 | LiveRadioDFW Monthly Venue Discovery | in 4 days (~2026-04-25, not ~2026-05-01) | Yes — this is R23; **date was wrong on our inventory** |
+| 6 | LiveRadioDFW Bark.com Lead Monitor | in 33 minutes | **No** |
+
+**Ray's framing (direct quote, 2026-04-21):** _"it's an old hung session that i think will answer a lot of our 'where did this get lost' questions. when I started working with you, I made the mistake of assuming perplexity computer max could do ongoing projects (Wrong!)"_
+
+This is the root cause of a pattern we've hit for weeks: each session Jarvis would re-discover "there's a cron somewhere we can't see," and [bugs.md J1 (scheduled tasks are invisible across threads)](#j1-scheduled-tasks-are-invisible-across-threads) explained why, but we never had the full list of what was actually running. This screenshot is the first time we've seen the full inventory. Every one of these tasks has been firing for an unknown number of weeks or months without ever landing in `architecture/scheduled-tasks.md` or `runbooks/` — meaning their logic lives only in the owning thread's task prompt. If that thread is ever pruned, archived, or manually closed before we extract, that logic is gone.
+
+**Why this matters now:**
+1. **R23 (Monthly Venue Discovery) fires in ~4 days, not ~10.** The `architecture/scheduled-tasks.md` row 3 estimate of ~2026-05-01 is off by ~6 days — actual next fire is ~2026-04-25. This changes the urgency of R23 forensics significantly.
+2. **Four other automations exist that we have zero documentation for.** Until we forensics the thread, we don't know what Pre-Send Warning, Bark.com Lead Monitor, Availability Check Reminder, Monthly Setlist Review, or Show Calendar Check actually do, what data they touch, or what breaks if they stop.
+3. **Bark.com Lead Monitor fires every ~hour by the looks of it** (next run in 33 min at screenshot time). If that's running venue-lead collection or spamming, we need to know.
+4. **Pre-Send Warning fires nightly** (19h to next run). This is almost certainly tied to something that runs the next morning — likely a heads-up before a campaign or the Availability Check. We need to understand the sequence before we unplug anything.
+
+**Fix plan (multi-step, not this session):**
+1. **First:** add a new section to `architecture/scheduled-tasks.md` placeholdering all six by name, with "Next fire" from the screenshot and "Documentation status: UNKNOWN — task prompt lives only in hung Perplexity thread, B21 pending." This stops the inventory from looking complete when it's not.
+2. **Correct R23 next-fire date** in `roadmap.md` and `scheduled-tasks.md` row 3 from ~2026-05-01 to ~2026-04-25. Treat R23 as a ~4-day deadline, not ~10.
+3. **Forensics session** (likely its own 60–90 min block): open the hung thread on the Perplexity app; for each of the six tasks, open its task view, screenshot or copy the prompt verbatim, save to `/workspace/b21_task_prompts/<task_name>.md`. Do NOT delete any task until prompts are extracted and understood.
+4. **Classify each:** does it edit data (destination?), send mail (to whom?), post to an external service (which API?), or just log/summarize? Decide per-task: extract to `-marketing` repo and migrate to Windows Task Scheduler (same pattern as B7), consolidate with an existing cron, or retire.
+5. **Extract before migrating.** Apply the same lesson from B7: sibling `.py` file + `.env` in `-marketing`, `setup_*_task_scheduler.ps1`, runbook alongside. Every extraction decommissions one Perplexity cron and makes that task's logic survive the owning thread.
+6. **After all six are extracted**, retire the hung thread.
+
+**Meta-lesson (for the J-series):** Every Perplexity thread that owns a `schedule_cron` task is a single point of failure — if the thread is lost, the cron's source of truth dies with it, because [`schedule_cron(list)`](#j1-scheduled-tasks-are-invisible-across-threads) only returns tasks owned by the current thread. The B7 pattern (runner + runbook + `setup_*.ps1` all in a durable public repo) needs to become the standard for any `schedule_cron` that does real work. A roadmap item may fall out of this ("Migrate all band crons to the Windows box") once we know what the remaining five do.
+
+**Status:** Open. Filed 2026-04-21 PM the moment Ray surfaced the screenshot. Not blocking the B7 install in progress right now — but the next session that has spare cycles should forensics this thread before anything else, because Monthly Venue Discovery (R23) now fires in ~4 days and we have five more tasks with zero documentation.
+
+---
+
 ## Fixed recently (moved here for context; full history in postmortems)
 
 - **2026-04-18 midday - B8 private-event filter broadened to word-boundary match:** Event titles like `LR - Test Event (Private)`, `LR - Johnson Wedding - private`, `LR - Private BBQ`, and `[PRIVATE] Corporate Xmas` used to slip past `is_private_event` (which only matched the three exact substrings `private party`, `private event`, `gathering`). Any of those leaks would have published a residential address, a `MusicEvent` schema.org block, a canonical URL, and a meta description to Google. Fix: swap the three substring checks for two compiled regexes — `\bprivate\b` and `\bgatherings?\b`, both case-insensitive — run against the raw calendar title (still before the `LR -` prefix strip, so parenthesised / bracketed disambiguators are available). Word boundaries prevent false matches on substrings like `privateer`. Shipped with a new `test_is_private_event.py` harness that exercises 18 title variants (pre-fix: 6 failures; post-fix: 18/18 pass) so future regressions on this function will be caught locally before deploy. Live-calendar smoke test produced the same 10 gigs and same 2:8 private:public split as pre-fix, so no current event changed classification. Also added a tiny `.gitignore` (first in the repo) to keep `__pycache__/` out of future commits now that tests are in play.
