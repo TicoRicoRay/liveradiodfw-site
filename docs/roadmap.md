@@ -1,6 +1,6 @@
 # Live Radio DFW - Roadmap
 
-_Last updated: 2026-04-19 (R22 filed from /lander smell-test; R19 shipped, R14 enriched, R4/R19/R20/R21 filed earlier from GSC audit)_
+_Last updated: 2026-04-21 (R23 filed to preserve the Monthly Profile Audit venue-discovery cron; R22 filed 2026-04-19 from /lander smell-test; R19 shipped, R14 enriched, R4/R19/R20/R21 filed earlier from GSC audit)_
 
 Future plans, grouped by theme. Things we've decided or want to do but haven't scheduled.
 
@@ -397,6 +397,26 @@ The authoritative brand voice lives in `liveradiodfw-marketing/MARKETING_STYLE_G
 **Depends on:** Nothing. Jarvis can run the audit solo and surface findings for review.
 
 **Priority:** Low. No user-visible bug, but the drift compounds every session. Worth one clean pass.
+
+### R23. Preserve and document the Monthly Profile Audit venue-discovery cron
+
+**Context:** The Monthly Profile Audit is the first band-marketing project Ray ever ran with Jarvis. It searches the DFW metroplex for new live-music venues and adds any net-new finds into the Mailchimp **Venues audience** (`97cca06eff`) so the monthly availability email reaches them. It is currently live as a Perplexity `schedule_cron` task named "LiveRadioDFW Monthly Profile Audit" (next fire ~2026-05-01), owned by the Perplexity thread "More Band Marketing" — invisible from every other thread per [bugs.md J1](bugs.md#j1-scheduled-tasks-are-invisible-across-threads). The script logic lives only inside that thread's message history. None of it is committed anywhere. If that thread is lost, restarted, or garbage-collected, the job and its source both vanish. Mailchimp activity confirms it is working — 15 `other_adds` hit the Venues audience on 2026-03-30 (one-day spike consistent with a monthly batch), and a trickle of 1-3 hand-processed adds afterward.
+
+**Why now:** Two compounding loss vectors. (1) J1 — the cron is thread-scoped and Ray starts a fresh thread most days because Perplexity drifts within a long session; Ray cannot see or edit this task from any new thread. (2) The script itself was never extracted from conversation history, so even if the cron is found it can silently stop working with no recoverable source. The job fires again around 2026-05-01, which is the natural moment to verify it ran, pull the logic out, and migrate it somewhere durable.
+
+**Plan:**
+- **Forensics:** Open the Perplexity "More Band Marketing" thread, locate the scheduled task's `task` prompt (that is the full spec that runs each month), and copy it verbatim into `liveradiodfw-marketing/venue_discovery/` (new folder). Also pull any prior-run outputs still visible in the thread — the sources it searches, the filtering heuristics, the "is this a live-music venue" decision logic, whatever dedupe strategy it uses against the existing Venues audience.
+- **Mailchimp audit:** Pull the last 12 months of `other_adds` on Venues audience `97cca06eff` and any tags/merge-fields the job writes. Document the contact shape the job produces (email, venue name, city, tags, any merge fields) in `architecture/marketing-automation.md` so future edits don't break the shape the availability email expects.
+- **Extract and rewrite as a committed script:** Produce `liveradiodfw-marketing/venue_discovery/discover_venues.py` that codifies the logic. Secrets (Mailchimp API key, any search API keys) read from `.env` or OS env, not hard-coded — same pattern we're establishing for B7 Part 2's `sync_runner.py`.
+- **Migrate to the Windows box alongside `sync_runner.py`:** Once B7 Part 2 lands, the Windows Task Scheduler is the durable host for all band crons. Add a Monthly Profile Audit task there (last-Sunday-of-month or similar; settle cadence when we see the real cron's firing pattern). Delete the Perplexity `schedule_cron` task in the same move so we don't double-fire.
+- **Document in `architecture/scheduled-tasks.md`:** Add a third row (alongside Daily calendar sync and Monthly availability email) the same day the Perplexity cron is replicated, BEFORE deleting the Perplexity version. Cardinal rule per that file's "Rules for adding new scheduled tasks."
+- **Close loop:** Link this R23 entry from J1 as an instance of the blind spot, and from the new Windows Task Scheduler runbook (B7 Part 2 deliverable) as the second job that box now owns.
+
+**Depends on:** Nothing blocks forensics or the Mailchimp audit. Migration depends on B7 Part 2 landing the Windows Task Scheduler + `.env` pattern (the Monthly Profile Audit is the second customer for that infrastructure, not the first).
+
+**Priority:** High. The job fires again around 2026-05-01 — that is the last easy checkpoint before another month of drift. First band-marketing project Ray built with Jarvis; losing the source would be a real regression.
+
+---
 
 ### R14. Enrich press-kit and booking pages with marketing-repo content ~~[OPEN]~~ → **PRESS-KIT OPENING SHIPPED 2026-04-19 (remainder open)**
 

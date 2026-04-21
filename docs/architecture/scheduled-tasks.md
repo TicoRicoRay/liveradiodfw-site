@@ -1,6 +1,6 @@
 # Scheduled Tasks - Live Radio DFW
 
-_Last updated: 2026-04-17_
+_Last updated: 2026-04-21_
 
 Every scheduled/recurring job that touches the band, where it runs, what it does, and how to find or modify it. Nothing automated should exist off this list - if a future agent creates a new scheduled task, add it here the same day.
 
@@ -62,6 +62,33 @@ On Windows: open Task Scheduler, find "LiveRadioDFW Availability Email" (or what
 ### How to force a send
 
 Run `run_availability.bat` manually. Note that the last-Tuesday gate in the scripts will block sends on other days unless you comment it out temporarily.
+
+---
+
+## 3. Monthly Profile Audit (venue discovery)
+
+| Field | Value |
+|---|---|
+| **What** | Searches the DFW metroplex for new live-music venues and adds any net-new finds to the Mailchimp **Venues audience** (`97cca06eff`) so they land on the monthly availability-email list. First band-marketing project Ray built with Jarvis. |
+| **Where it runs** | Perplexity `schedule_cron` task named "LiveRadioDFW Monthly Profile Audit" |
+| **Owned by** | Perplexity thread "More Band Marketing" (per Ray's Perplexity Tasks view 2026-04-21). `schedule_cron(list)` returns empty from any other thread — see [bugs.md J1](../bugs.md#j1-scheduled-tasks-are-invisible-across-threads). |
+| **When it fires** | Monthly — next fire observed ~2026-05-01 from the Perplexity Tasks UI (10-day countdown on 2026-04-21). Exact cron expression not yet extracted; lives inside the owning thread. |
+| **Evidence it's working** | Mailchimp Venues audience activity 2026-03-30 shows **15 `other_adds` in one day** — the monthly batch. Afterwards a trickle of 1-3 subs/day as Ray hand-processes incoming adds. Verified via Mailchimp API 2026-04-21. |
+| **Script location** | **Not yet extracted.** Script logic currently lives only inside the owning Perplexity thread's task prompt. Loss risk is real — see R23. |
+| **Cost** | Burns Perplexity credits per run. |
+| **Roadmap entry** | [roadmap.md R23](../roadmap.md#r23-preserve-and-document-the-monthly-profile-audit-venue-discovery-cron) — extract, commit to `-marketing`, migrate to Ray's Windows Task Scheduler alongside the B7-Part-2 `sync_runner.py`, then delete the Perplexity task. |
+| **Cardinal reminder** | The owning thread ("More Band Marketing") is the ONLY place the script currently exists. Do not archive or lose that thread until R23 ships. |
+
+### How to find and edit the owning thread
+
+1. Open Perplexity in-app → Tasks view (as of 2026-04-21 the icon sits above History/Spaces/Customize/Computer in the left nav).
+2. Find "LiveRadioDFW Monthly Profile Audit."
+3. Click through to the owning thread — it's labeled "More Band Marketing" unless Ray has renamed it.
+4. The task prompt in that thread IS the full spec — copy it verbatim before editing.
+
+### How to verify the last run fired
+
+Query Mailchimp Venues audience activity for the last 45 days (API: `/3.0/lists/97cca06eff/activity`). A single-day spike of 5+ `other_adds` is the cron firing. Trickle adds on other days are Ray hand-processing.
 
 ---
 
