@@ -1,6 +1,6 @@
 # Scheduled Tasks - Live Radio DFW
 
-_Last updated: 2026-04-21 PM (B7 Part 2 shipped; runner now lives in the public `liveradiodfw-marketing` repo — `git clone` once, `git pull` forever, no zip handoff)_
+_Last updated: 2026-04-21 PM (B7 Part 2 **installed live on Ray's Windows box**; Windows Task Scheduler entry registered green and Ready; 3-day parallel-run window runs 2026-04-22 through 2026-04-24)_
 
 Every scheduled/recurring job that touches the band, where it runs, what it does, and how to find or modify it. Nothing automated should exist off this list - if a future agent creates a new scheduled task, add it here the same day.
 
@@ -12,7 +12,9 @@ Perplexity `schedule_cron` tasks are **thread-scoped**. A task created in thread
 
 ## 1. Daily calendar sync
 
-**Status 2026-04-21:** Migrating from Perplexity `schedule_cron` → Windows Task Scheduler as part of B7 Part 2. During a 3-day parallel-run verification window both tasks fire daily; once the Windows task is confirmed green, the Perplexity task gets deleted. The Perplexity row is kept below for history; the Windows row is the new primary.
+**Status 2026-04-21 PM:** Windows Task Scheduler entry **registered and Ready on Ray's box as of this afternoon** (B7 Part 2 install complete). Task name `LiveRadioDFW Daily Calendar Sync` at root path `\`, daily 8:00 AM Central trigger, verified via `Get-ScheduledTask`. Manual smoke-test run of `python sync_runner.py` returned clean "Everything in sync. No issues found" (stub-email path). **First scheduled production fire: 2026-04-22 08:00 Central.** Parallel-run verification window: **2026-04-22 through 2026-04-24**, both the Windows task and the Perplexity `schedule_cron` fire daily; once Windows logs 3 consecutive clean runs with identical commit shape, the Perplexity task gets deleted. The Perplexity row is kept below for history; the Windows row is the new primary.
+
+**Known caveat (tracked by [roadmap.md R24](../roadmap.md#r24-windows-task-scheduler-run-whether-logged-on-mode-switch)):** the Windows task runs in "Run only when user is logged on" mode, not "run whether logged on or not." Ray uses Windows Hello for daily unlock and the local account password isn't saved anywhere, so the set-and-forget mode switch was deferred. If Ray is logged in (screen locked is fine), the task fires. If the PC is fully logged out or shut down at 8 AM, the day is skipped. Watch the 3-day parallel-run for skipped days; promote R24 if the miss rate bites.
 
 ### Primary host (new, 2026-04-21 onward)
 
@@ -26,7 +28,8 @@ Perplexity `schedule_cron` tasks are **thread-scoped**. A task created in thread
 | **Commits as** | `LiveRadioDFW <info@liveradiodfw.com>` via HTTPS + Git Credential Manager on the Windows box. |
 | **Cost** | Zero Perplexity credits. Runs on local machine. |
 | **Manual run** | `cd C:\Tools\LiveRadioDFW\liveradiodfw-marketing && python sync_runner.py` |
-| **Task registration** | One-time: run `.\setup_sync_task_scheduler.ps1` as Administrator from the repo root (registers the Task Scheduler entry). Re-run if the schedule changes. |
+| **Task registration** | One-time: run `.\setup_sync_task_scheduler.ps1` as Administrator from the repo root (registers the Task Scheduler entry). Re-run if the schedule changes. **Install history:** first registration attempt 2026-04-21 PM failed (`-WakeToRun $false`, WakeToRun is a switch param, takes no value); fix pushed as `-marketing` commit `1a50a7c`; second attempt clean green. Filed as [bugs.md J10](../bugs.md#j10-jarvis-ships-untested-windows-scripts) (pattern: Jarvis ships untested Windows PowerShell when test environment is the user's box). |
+| **Logon mode** | "Run only when user is logged on", see status block above + [roadmap.md R24](../roadmap.md#r24-windows-task-scheduler-run-whether-logged-on-mode-switch). Switch to "run whether logged on or not" deferred because it requires the local account password (Ray uses Windows Hello only). |
 | **Closes** | [bugs.md B7](../bugs.md#b7-webhook-passphrase-and-url-are-publicly-readable-on-the-live-site) (exposure) and [bugs.md B1](../bugs.md#b1-calendar-sync-cron-drifts-across-dst) (DST drift) as a pair. |
 
 ### Legacy host (being decommissioned, keep for history + parallel-run window)

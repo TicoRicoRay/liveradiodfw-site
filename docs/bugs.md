@@ -1,6 +1,6 @@
 # Live Radio DFW - Bug List
 
-_Last updated: 2026-04-20 PM (B16 Stage 1 confirmed shipped — closing B16 and opening B16.2 for Stage 2 auto-publish trigger; B20 filed for 22 legacy Bandzoogle-era past-show descriptions that miss v2 warm-invitation voice; B6 closed earlier today; B12 + B17 + B18 + B19 also fixed earlier today; B7 Part 2 re-confirmed as top priority with sync_calendar.py still in active daily use post-Outlook-calendar-decommission)_
+_Last updated: 2026-04-21 PM (B7 Part 2 install LIVE on Ray's Windows box, first production sync pushed to gh-pages; B21 filed for 6 orphaned tasks in inaccessible Perplexity thread; B22 filed for sync_runner alert email stub, reframed as production-safety watchdog; B23 filed for -marketing repo cruft audit; J10 filed for the untested-PowerShell-script blind spot)_
 
 Current known defects and correctness issues. Fixed bugs move to [postmortems/](postmortems/) or the "Recently completed" section of [project-plan.md](project-plan.md). For planned work that isn't a defect, see [roadmap.md](roadmap.md).
 
@@ -849,6 +849,36 @@ Implication for the fix: the email can't just send on success — it must **alwa
 **Effort:** ~45-60 minutes hands-on once Ray sets up the Gmail app password. Breakdown: ~20 min for `send_alert_email_smtp` + config wiring; ~20 min to build the richer body (diff summary, warning list, threshold-based subject prefix); ~10 min for a dry-run test that exercises both a clean run and a "suspicious" run (e.g., simulate a >3-show delta) to confirm the 🚩 REVIEW prefix triggers.
 
 **Status:** Open. Filed 2026-04-21 PM same session as the stopgap. **Urgency bumped** per 2026-04-21 PM clarification from Ray — the watchdog framing means this gates full B7 close-out. The sync runs correctly without it, but *we lose the one thing standing between a bad automated push and a user-facing outage*. Schedule **immediately after B21 forensics or in parallel**, because some of those six orphaned tasks may also need the same SMTP helper and we should build it once.
+
+---
+
+## B23. `-marketing` repo cruft audit: unclear file provenance and a broken README reference
+
+**Symptom:** Inventory of the `liveradiodfw-marketing` repo (2026-04-21 PM during B7 install close-out) surfaced several files whose current status is unclear and one broken README reference. Specifically:
+
+1. **Two Mailchimp email templates co-existing**, `email_template_draft.html` (320 lines) and `new_template.html` (351 lines). Both committed in the same 2026-04-18 bundle ([`71df18f`](https://github.com/TicoRicoRay/liveradiodfw-marketing/commit/71df18f)). Neither is opened as a file by `send_availability_email.py`; the sender fetches template HTML from Mailchimp over the API (campaign ID `6f64a2aba3`). So these two HTML files are source-material reference copies, possibly iterations of the same thing. One is likely cruft.
+2. **Merger intro campaign artifacts**, `intro_campaign.html` and `intro_email_drafts.md` from the Risky Business DFW + Jackson Crossing → Live Radio DFW rollover. Status unclear: was the merger intro campaign ever actually sent? If yes, these are historical records (keep and label). If no, they are a parked plan that needs a status marker.
+3. **One-off daily summary**, `daily_summary_2026-04-12.md`, a 125-line session log from 2026-04-12 that references "Computer" (pre-Jarvis naming) and lists website bug fixes from that day. No other daily summaries exist in the repo; session handoff has since moved to `docs/project-plan.md` "Pick up here next session." The file is either the start of a convention we abandoned, or a keepsake. Needs a disposition decision.
+4. **Broken README reference**, `README.md` lists `GITHUB_PAGES_CHECKLIST.md` under "Operational notes" but no such file exists in the repo. Either it was never created, or it was deleted and the README wasn't updated. Either way the README is currently lying.
+5. **Two PS1 scripts with confusingly similar names**, `setup_task_scheduler.ps1` (monthly availability email) and `setup_sync_task_scheduler.ps1` (new B7 daily calendar sync). Both are valid and in active use, but a tired operator standing in the repo could easily run the wrong one. README does not call out the distinction.
+
+**Where:** `liveradiodfw-marketing` repo root. Specifically the six files and one README bullet listed above.
+
+**Impact:** Low. Nothing is broken at runtime, both PS1 scripts work, the scheduled tasks they register are running, `send_availability_email.py` pulls its template over the API and does not depend on the local HTML files. The issue is discoverability and maintenance burden. Future-Ray (or next-session-Jarvis) walking through the repo for the first time in six months has to re-derive what each file is for. Specific failure modes: (a) Jarvis cites a stale intro-campaign draft as canonical when Ray has moved on, (b) Ray runs the wrong PS1 and ends up with two tasks both firing weekly or two tasks both firing daily, (c) a cleanup sweep deletes `email_template_draft.html` thinking it's cruft when it's actually the source-of-truth template Ray last iterated, or vice-versa.
+
+**Workaround:** None required today. Use the README as guidance and ask Ray before deleting anything.
+
+**Fix options:**
+
+1. **Minimal cleanup (~15 min):** Fix the phantom `GITHUB_PAGES_CHECKLIST.md` reference, either remove the bullet from README or find and restore the file. Add a one-paragraph note to README explicitly distinguishing the two PS1 scripts ("`setup_task_scheduler.ps1` registers the **monthly availability email** task; `setup_sync_task_scheduler.ps1` registers the **daily calendar sync** task, do not confuse"). No file deletions, no provenance questions asked of Ray. Lowest cost, lowest value.
+
+2. **Full audit pass with Ray (~30-45 min):** Walk the 5 unclear files with Ray one at a time. For each: keep / archive / delete. Create an `archive/` subdirectory for historical drafts that are worth preserving but not active. Update README to accurately describe the final shape. Include the minimal cleanup above. Highest value, requires Ray's attention on each file.
+
+3. **Defer to natural churn (do nothing):** Let the cruft sit. Next time Ray needs to touch one of these files, triage then. Acceptable if we trust that future-us will not misread stale files as canonical. Given we literally filed this bug because the repo confused us, this option is probably wrong.
+
+**Recommended:** Option 2. Budget one 45-min session. The B7 install just demonstrated that a clean no-zip repo works beautifully, let's not let it accrete barnacles.
+
+**Status:** Open. Filed 2026-04-21 PM during B7 close-out wrap-up. Low urgency, does not block B7 formal close-out or any other work. Good candidate for a short-session filler when Ray has 45 minutes without the appetite for R22 or B22.
 
 ---
 

@@ -10,7 +10,7 @@ This is a free Google **personal** account on the band domain. The domain's emai
 
 - Event details (title, venue, date, time, location) live on this calendar
 - Ticket prices live in the event **description** (see [runbooks/edit-ticket-prices.md](../runbooks/edit-ticket-prices.md))
-- The site (`shows.json` + per-show HTML pages) is derived automatically by `sync_calendar.py` running daily at 8 AM Central, which reads the calendar via the **"LiveRadioDFW Calendar"** Apps Script webhook
+- The site (`shows.json` + per-show HTML pages) is derived automatically by `sync_runner.py` (from the [`liveradiodfw-marketing`](https://github.com/TicoRicoRay/liveradiodfw-marketing) repo, imports `sync_lib.py` from `gh-pages` at run start) running daily at 8 AM Central on Ray's Windows box via Task Scheduler, which reads the calendar via the **"LiveRadioDFW Calendar"** Apps Script webhook. See [architecture/scheduled-tasks.md](./scheduled-tasks.md#1-daily-calendar-sync) for the full task inventory.
 - **Never** hand-edit `shows.json` or `shows/*.html` — the sync will overwrite them
 - Master copy of the webhook code: [`scripts/LiveRadioDFWCalendar.gs`](../scripts/LiveRadioDFWCalendar.gs). Publish procedure: [runbooks/publish-calendar-webhook.md](../runbooks/publish-calendar-webhook.md)
 
