@@ -1,6 +1,6 @@
 # Live Radio DFW - Bug List
 
-_Last updated: 2026-04-21 PM (B26 filed for dual nav source-of-truth spin-off; B25 filed for canonical/og:url not enforced site-wide, fix PR on master in flight; B7 Part 2 install LIVE on Ray's Windows box, first production sync pushed to gh-pages; B21 filed for 6 orphaned tasks in inaccessible Perplexity thread; B22 filed for sync_runner alert email stub, reframed as production-safety watchdog; B23 filed for -marketing repo cruft audit; J10 filed for the untested-PowerShell-script blind spot)_
+_Last updated: 2026-04-21 PM (B27 filed for gh-pages/master docs terminology drift; B25 CLOSED, PR #1 merged `8ec7993`, live verified, sitemap 114 URLs 0 .html 0 non-www, /lander and /lander.html both canonicalize to /lander; B26 filed for dual nav source-of-truth spin-off; B7 Part 2 install LIVE on Ray's Windows box, first production sync pushed to master; B21 filed for 6 orphaned tasks in inaccessible Perplexity thread; B22 filed for sync_runner alert email stub, reframed as production-safety watchdog; B23 filed for -marketing repo cruft audit; J10 filed for the untested-PowerShell-script blind spot)_
 
 Current known defects and correctness issues. Fixed bugs move to [postmortems/](postmortems/) or the "Recently completed" section of [project-plan.md](project-plan.md). For planned work that isn't a defect, see [roadmap.md](roadmap.md).
 
@@ -946,6 +946,28 @@ Implication for the fix: the email can't just send on success — it must **alwa
 **Recommendation:** Option 1. `build_nav.py` is dead code in practice; root `nav.html` is a stale copy. Delete both, update `README.md`. Same session can verify nothing else references `build_nav.py` (already checked: only `README.md`).
 
 **Status:** Open. Filed 2026-04-21 PM as a spin-off from B25. Low urgency but easy win.
+
+---
+
+## B27. Docs reference `gh-pages` branch but the site has always served from `master`
+
+**Symptom:** 21 references to `gh-pages` are scattered across 6 docs files, but the `liveradiodfw-site` repo has only two branches: `docs` and `master`. GitHub Pages config confirms the live site is served from `master` at `/` (verified via `gh api repos/TicoRicoRay/liveradiodfw-site/pages` on 2026-04-21 PM: `source.branch=master`, `source.path=/`). Every sync commit referenced in docs (e.g. `06bc1cb`, `51da273`, `100d182`, `b125405`, `c506475`, `8ec7993`) is a descendant of `master`, not any other branch. Repo was created 2026-04-12 with `default_branch=master` and has been `master`-only since inception.
+
+**Where:** `docs/wrap-2026-04-20-pm.md` (6 hits), `docs/runbooks/publish-calendar-webhook.md` (4 hits), `docs/runbooks/dns-and-pages.md` (6 hits including the authoritative DNS/Pages reference), `docs/roadmap.md` (4 hits in R5-related entries), `docs/project-plan.md` (2 hits — one in the cardinal-rules startup phrase that future Jarvises read on every thread boot, and one in the B7 Part 2 context block). Full audit: `grep -rn "gh-pages" /tmp/lrdfw-docs/docs/`.
+
+**Impact:** Docs are authoritative. A future contributor (or future Jarvis) who reads `runbooks/dns-and-pages.md` will believe the site serves from `gh-pages`, try to `git checkout gh-pages`, fail, and either stop and ask or guess wrong. The startup phrase in `project-plan.md` line 14 is especially load-bearing because it's the cardinal-rules block Jarvis is supposed to absorb at thread start — it currently teaches the wrong branch. Also affects the B7 3-day parallel-run verification protocol (`project-plan.md` #1) which instructs comparing "`gh-pages` commit authors/timestamps" — the instruction works in practice only because the reader translates it to `master`, but the instruction itself is wrong.
+
+**Workaround:** Mentally substitute `master` every time you read `gh-pages` in any LRDFW doc. Works for Ray and for current Jarvis but degrades with every new thread.
+
+**Fix options (simple to invasive):**
+
+1. **Global search-and-replace `gh-pages` → `master` across `docs/`**, one commit on the `docs` branch. Low risk because every reference is already factually a `master` reference; this is pure terminology cleanup. Verify with `grep -rn "gh-pages" docs/` post-edit = 0 hits. Update the "Last updated" banner in `bugs.md` to note the scrub. One commit: `docs: scrub gh-pages → master (B27)`.
+2. **Fix only the high-traffic files first** (`project-plan.md` startup phrase, `runbooks/dns-and-pages.md`, `runbooks/publish-calendar-webhook.md`) and leave `wrap-2026-04-20-pm.md` + `roadmap.md` historical entries as-is. Smaller blast radius but leaves drift in files that future Jarvises still read.
+3. **Leave as-is and add a one-line disambiguation** at the top of `project-plan.md` ("Note: historical docs say `gh-pages`; the branch is and has always been `master`"). Cheapest, weakest; each future reader still has to do the mental substitution.
+
+**Recommendation:** Option 1. Pure terminology cleanup, zero behavior change, ~10 min of work with a single commit. Same-session verifiable via `grep`. Cardinal-rules startup phrase is the clincher — that block is read by every new Jarvis thread and must not teach a false branch name.
+
+**Status:** Open. Filed 2026-04-21 PM during B25 wrap-up when `git fetch origin gh-pages` returned `couldn't find remote ref gh-pages`, confirmed via branches API (only `docs` + `master`) and Pages API (`source.branch=master`). Low-urgency but zero-risk quick win.
 
 ---
 
