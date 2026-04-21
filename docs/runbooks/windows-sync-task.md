@@ -20,7 +20,7 @@ Consequence: the Windows install runs out of a `git clone` of `-marketing`. Ray 
 On Ray's Windows box, one time:
 
 ```powershell
-cd C:\LiveRadioDFW
+cd C:\Tools\LiveRadioDFW
 git clone https://github.com/TicoRicoRay/liveradiodfw-marketing.git
 cd liveradiodfw-marketing
 copy .env.example .env
@@ -33,7 +33,7 @@ python sync_runner.py           # smoke test manually
 For updates:
 
 ```powershell
-cd C:\LiveRadioDFW\liveradiodfw-marketing
+cd C:\Tools\LiveRadioDFW\liveradiodfw-marketing
 git pull
 ```
 
