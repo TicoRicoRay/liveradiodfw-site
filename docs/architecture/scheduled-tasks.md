@@ -1,6 +1,6 @@
 # Scheduled Tasks - Live Radio DFW
 
-_Last updated: 2026-04-21 (B7 Part 2 shipped — daily calendar sync migrating to Windows Task Scheduler)_
+_Last updated: 2026-04-21 PM (B7 Part 2 shipped; runner now lives in the public `liveradiodfw-marketing` repo — `git clone` once, `git pull` forever, no zip handoff)_
 
 Every scheduled/recurring job that touches the band, where it runs, what it does, and how to find or modify it. Nothing automated should exist off this list - if a future agent creates a new scheduled task, add it here the same day.
 
@@ -19,13 +19,14 @@ Perplexity `schedule_cron` tasks are **thread-scoped**. A task created in thread
 | Field | Value |
 |---|---|
 | **What** | `sync_runner.py` runs end-to-end: loads `.env` → calls Apps Script webhook → parses ticket prices → imports pure logic from `sync_lib.py` (pulled fresh from `gh-pages` at run start) → non-destructively merges into `shows.json` → regenerates per-show HTML pages → git commit + push to `gh-pages` → emails `info@liveradiodfw.com` on missing data |
-| **Where it runs** | **Windows Task Scheduler on Ray's PC.** Task name: `LiveRadioDFW Daily Calendar Sync`. Install dir: `C:\LiveRadioDFW\sync\`. |
-| **Runbook** | [runbooks/windows-sync-task.md](../runbooks/windows-sync-task.md) — install, operate, change procedures, troubleshooting. |
+| **Where it runs** | **Windows Task Scheduler on Ray's PC.** Task name: `LiveRadioDFW Daily Calendar Sync`. Install dir: `C:\LiveRadioDFW\liveradiodfw-marketing\` (a `git clone` of the public [`liveradiodfw-marketing`](https://github.com/TicoRicoRay/liveradiodfw-marketing) repo — Ray `git pull`s updates forever, no zip downloads). |
+| **Runbook** | [`liveradiodfw-marketing/docs/windows-sync-task.md`](https://github.com/TicoRicoRay/liveradiodfw-marketing/blob/master/docs/windows-sync-task.md) (canonical copy ships with the code it installs). |
 | **When it fires** | **8:00 AM Central daily**, DST-safe by construction (Task Scheduler uses local time and handles DST automatically). Closes [bugs.md B1](../bugs.md#b1-calendar-sync-cron-drifts-across-dst) once the Perplexity cron is retired. |
-| **Secrets** | `C:\LiveRadioDFW\sync\.env` (never committed). Source of truth for values: 1Password Secure Note "LiveRadioDFW Calendar webhook passphrase." |
+| **Secrets** | `C:\LiveRadioDFW\liveradiodfw-marketing\.env` (gitignored, hand-created from `.env.example`, never committed). Source of truth for values: 1Password Secure Note "LiveRadioDFW Calendar webhook passphrase." |
 | **Commits as** | `LiveRadioDFW <info@liveradiodfw.com>` via HTTPS + Git Credential Manager on the Windows box. |
 | **Cost** | Zero Perplexity credits. Runs on local machine. |
-| **Manual run** | `cd C:\LiveRadioDFW\sync && python sync_runner.py` |
+| **Manual run** | `cd C:\LiveRadioDFW\liveradiodfw-marketing && python sync_runner.py` |
+| **Task registration** | One-time: run `.\setup_sync_task_scheduler.ps1` as Administrator from the repo root (registers the Task Scheduler entry). Re-run if the schedule changes. |
 | **Closes** | [bugs.md B7](../bugs.md#b7-webhook-passphrase-and-url-are-publicly-readable-on-the-live-site) (exposure) and [bugs.md B1](../bugs.md#b1-calendar-sync-cron-drifts-across-dst) (DST drift) as a pair. |
 
 ### Legacy host (being decommissioned, keep for history + parallel-run window)
