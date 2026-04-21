@@ -48,10 +48,12 @@ SITE_ORIGIN = "https://liveradiodfw.com"  # no www, no trailing slash
 
 # Pages that should NOT appear in search results — excluded from canonical
 # stamping AND from sitemap. Paths are relative to repo root, forward slashes.
+# Rule: anything Google could see as duplicate content needs to be fixed, not
+# hidden. Only exclude files that are not real pages.
 NOINDEX_PAGES = {
-    "thanks.html",   # post-form confirmation
-    "home.html",     # legacy/orphan, already has <meta name=robots noindex>
-    "nav.html",      # include fragment, not a real page
+    "nav.html",      # legacy nav-template fragment in root (kept for build_nav.py);
+                     # not a real page, no <head>, cannot be canonicalized.
+                     # Dual-source cleanup with includes/nav.html is a separate bug.
 }
 
 # ── Load templates ────────────────────────────────────────────────────────────

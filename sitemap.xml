@@ -13,6 +13,7 @@
   <url><loc>https://liveradiodfw.com/shows</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://liveradiodfw.com/songs</loc><priority>0.9</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://liveradiodfw.com/store</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://liveradiodfw.com/thanks</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://liveradiodfw.com/the-all-70s-no-disco-hits-station</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://liveradiodfw.com/the-all-80s-hits-station</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://liveradiodfw.com/the-all-oldies-hits-station</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
