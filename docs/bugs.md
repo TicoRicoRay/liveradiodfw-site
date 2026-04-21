@@ -882,6 +882,29 @@ Implication for the fix: the email can't just send on success — it must **alwa
 
 ---
 
+## B24. Home page upcoming-show card has weak contrast in dark theme
+
+**Symptom:** In dark theme, the upcoming-show card on the home page (`.show-card-full` component) barely reads as a card against the page background. The card fill `#1e1e30` sits against body background `#12121e`, a difference of only ~12 points of lightness. The red date badge and white venue title are fine, but the card boundary and the secondary text (`Fate, TX` and the `Saturday April 25, 2026 · 6:00 PM · FREE` line) feel muddy. Reported by Ray with a screenshot captured 2026-04-21 during the v1.1 style-guide audit session.
+
+**Where:** `css/style.css`, the `[data-theme="dark"] .show-card-full` rule at line 1056 (fill + border), interacting with `[data-theme="dark"] body` at line 94 (background) and `--text-secondary: #a0a0b8` at line 90 (the dark-mode secondary text color used by `.show-card-full .show-details .venue-address`). Manifests on `index.html` upcoming-show section. Same component is used on `/shows.html`, so the fix will affect both pages.
+
+**Impact:** Weakens the visual hierarchy on the home page for the ~half of visitors who browse in dark mode. The upcoming show is a key conversion surface (it drives clicks to the show detail page and the add-to-calendar action); making it feel like flat body text reduces click affordance. Does not affect accessibility compliance (secondary text still passes WCAG AA at ~6.2:1), but it fails the "card clearly separates from background" design intent.
+
+**Workaround:** None for visitors. Ray can toggle to light mode, where `.show-card-full` is `#ffffff` on a light section and reads cleanly.
+
+**Fix options (simple to invasive):**
+
+1. **Lift the card fill and add a visible border.** Change `[data-theme="dark"] .show-card-full` from `background-color: #1e1e30; border-color: #2a2a40;` to something like `background-color: #252540; border-color: #3a3a58;`. Lowest-risk fix, matches the `.station-card` treatment already used in dark mode on line 117-118. One CSS edit, affects both home page and shows page consistently.
+2. **Add a soft box-shadow to create separation.** Keep the current fill, add `box-shadow: 0 1px 3px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.04)` on the dark variant. Creates depth without changing hue. Stacks with the existing `:hover` shadow.
+3. **Bump the secondary text color for dark mode.** Separate from card-fill: change `--text-secondary` in dark from `#a0a0b8` to `#b8b8d0` so `Fate, TX` and the date/time/price line feel crisper. Affects all secondary text site-wide in dark mode, so wider blast radius; do only if option 1 or 2 alone don't resolve the reported feel.
+4. **All three together.** If a single change doesn't feel right after deploy, combine. Recommend shipping option 1 alone first, then assessing.
+
+**Recommendation:** Option 1. One rule change, matches an existing site pattern, testable in 10 seconds by toggling dark mode after push. Filed as a design-polish item, not a blocker.
+
+**Status:** Open. Filed 2026-04-21 PM from user screenshot during v1.1 style-guide audit session. Low-to-medium urgency. Good candidate to bundle with the Round 4 em-dash batch pass since both touch the site repo.
+
+---
+
 ## Fixed recently (moved here for context; full history in postmortems)
 
 - **2026-04-18 midday - B8 private-event filter broadened to word-boundary match:** Event titles like `LR - Test Event (Private)`, `LR - Johnson Wedding - private`, `LR - Private BBQ`, and `[PRIVATE] Corporate Xmas` used to slip past `is_private_event` (which only matched the three exact substrings `private party`, `private event`, `gathering`). Any of those leaks would have published a residential address, a `MusicEvent` schema.org block, a canonical URL, and a meta description to Google. Fix: swap the three substring checks for two compiled regexes — `\bprivate\b` and `\bgatherings?\b`, both case-insensitive — run against the raw calendar title (still before the `LR -` prefix strip, so parenthesised / bracketed disambiguators are available). Word boundaries prevent false matches on substrings like `privateer`. Shipped with a new `test_is_private_event.py` harness that exercises 18 title variants (pre-fix: 6 failures; post-fix: 18/18 pass) so future regressions on this function will be caught locally before deploy. Live-calendar smoke test produced the same 10 gigs and same 2:8 private:public split as pre-fix, so no current event changed classification. Also added a tiny `.gitignore` (first in the repo) to keep `__pycache__/` out of future commits now that tests are in play.
