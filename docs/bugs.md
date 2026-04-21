@@ -905,7 +905,7 @@ Implication for the fix: the email can't just send on success — it must **alwa
 
 ---
 
-## B25. Canonical URL and og:url not enforced site-wide; new pages ship without them
+## B25. Canonical URL and og:url not enforced site-wide; new pages ship without them ~~[OPEN]~~ → **FIXED 2026-04-21 PM**
 
 **Symptom:** `https://www.liveradiodfw.com/lander` (GitHub Pages clean-URL) and `https://www.liveradiodfw.com/lander.html` both return HTTP 200 with byte-identical content. This is a duplicate-content / split-link-equity risk at Google's canonicalization layer. Audit of the repo shows only 3 pages (`index.html`, `about.html`, `lander.html`) currently carry a `<link rel="canonical">`; the other 13 root pages and all 95 `shows/*.html` pages have none. `og:url` has the same inconsistency. Nothing in the build pipeline enforces the rule, so every new page added going forward will ship without it unless someone remembers.
 
@@ -923,7 +923,7 @@ Implication for the fix: the email can't just send on success — it must **alwa
 
 **Recommendation:** Option 1. Covers all pages (root + generated show archive + future pages) from one file, reuses the existing marker pattern, and removes the memory-tax. Scope: canonical + og:url + sitemap regen in the same PR since they all derive from the same URL rule.
 
-**Status:** Open. Filed 2026-04-21 PM. Fix PR on `master` being opened in the same session.
+**Status:** Fixed 2026-04-21 PM. Shipped Option 1: `build_includes.py` now owns a third `BEGIN_CANONICAL`/`END_CANONICAL` marker block alongside nav/footer, derives extensionless URLs from file paths, and regenerates `sitemap.xml` from the same page list. Canonical host set to `https://www.liveradiodfw.com` (www, matching the live serving host; non-www 301s here via Cloudflare). PR #1 on `master` merged at 23:37:23Z as squash commit `8ec7993`, branch deleted. Session also resolved two audit findings in the same PR: (a) stripped `.html` from 5,450 internal hrefs across 117 files (nav, footer, body links, `includes/`, all stamped pages, and legacy `nav.html`); (b) added `BEGIN_FOOTER`/`END_FOOTER` markers to `thanks.html` so the builder stamps its footer (previously orphan). Live verified: `/`, `/lander`, `/book`, `/thanks`, `/about`, `/shows`, `/sitemap.xml` all 200. `/lander` and `/lander.html` both canonicalize to `https://www.liveradiodfw.com/lander` — original duplicate-content symptom resolved. Sitemap live: 114 URLs, 0 `.html`, 0 non-www, `/thanks` included, `/home` excluded (`home.html` deleted as part of exclusion-list cleanup; Cloudflare 301 rule kept as insurance). Google Indexing API pinged for `/`, `/lander`, `/thanks`. Sitemap resubmit in GSC UI pending (manual; connector has no sitemap endpoint). Spin-off bug filed: B26 (dual nav source-of-truth). Docs scrub also shipped in same session: `roadmap.md` R3/R4/R22 updated, `runbooks/dns-and-pages.md` updated, `project-plan.md` SEO-track context block added.
 
 ---
 
