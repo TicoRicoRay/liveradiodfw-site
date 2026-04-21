@@ -44,7 +44,7 @@ BASE = Path(__file__).parent
 INCLUDES = BASE / "includes"
 
 # ── Canonical URL config ──────────────────────────────────────────────────────
-SITE_ORIGIN = "https://liveradiodfw.com"  # no www, no trailing slash
+SITE_ORIGIN = "https://www.liveradiodfw.com"  # matches live serving host; non-www 301s here via Cloudflare
 
 # Pages that should NOT appear in search results — excluded from canonical
 # stamping AND from sitemap. Paths are relative to repo root, forward slashes.
@@ -238,9 +238,12 @@ def regenerate_sitemap(html_files):
             old,
         ):
             loc, pri, cf = m.group(1), m.group(2), m.group(3)
-            # Normalize old .html URL to the canonical extensionless form
-            # so we can match new pages to old metadata.
+            # Normalize old URL to the canonical form so we can match new
+            # pages to old metadata. Handles host changes (www/non-www) and
+            # .html -> extensionless.
             norm = loc
+            # Host: rewrite any liveradiodfw.com host to SITE_ORIGIN
+            norm = re.sub(r"https?://(www\.)?liveradiodfw\.com", SITE_ORIGIN, norm)
             if norm.endswith("/index.html"):
                 norm = norm[: -len("index.html")]
             elif norm.endswith(".html"):
@@ -251,6 +254,10 @@ def regenerate_sitemap(html_files):
         """Fallback priority/changefreq for pages not in the old sitemap."""
         if rel_str == "index.html":
             return ("1.0", "weekly")
+        if rel_str == "lander.html":
+            return ("0.9", "monthly")  # primary conversion landing page
+        if rel_str == "thanks.html":
+            return ("0.3", "yearly")   # post-form confirmation, low priority
         if rel_str.startswith("shows/"):
             return ("0.5", "yearly")
         return ("0.6", "monthly")
