@@ -1,6 +1,6 @@
 # Live Radio DFW - Bug List
 
-_Last updated: 2026-04-21 PM (B27 filed for gh-pages/master docs terminology drift; B25 CLOSED, PR #1 merged `8ec7993`, live verified, sitemap 114 URLs 0 .html 0 non-www, /lander and /lander.html both canonicalize to /lander; B26 filed for dual nav source-of-truth spin-off; B7 Part 2 install LIVE on Ray's Windows box, first production sync pushed to master; B21 filed for 6 orphaned tasks in inaccessible Perplexity thread; B22 filed for sync_runner alert email stub, reframed as production-safety watchdog; B23 filed for -marketing repo cruft audit; J10 filed for the untested-PowerShell-script blind spot)_
+_Last updated: 2026-04-22 PM (B30 filed OPEN for `sync_runner.py` hardcoded `gh-pages` default on line 127 - root cause of today's 2-hour silent-push-failure investigation; workaround is `.env` override, file-level fix pending. B31 filed FIXED for the afternoon cleanup bundle: calendar window 365->730d (PR #4), ASCII scrub across both repos (-marketing PR #5, -site PR #2), and WARN prefix drop (PR #6). B28 PR #3 merged this session. B29 confirmed FIXED with production em-dash delivery. B22 confirmed FIXED end-to-end with 7+ real alert emails delivered via Gmail SMTP. Add/update/remove sync paths all validated against origin/master and the live site. New cardinal rule in memory: no non-ASCII in Python source, ever. gh-pages branch was deleted 2026-04-21; site deploys from master.)_
 
 Current known defects and correctness issues. Fixed bugs move to [postmortems/](postmortems/) or the "Recently completed" section of [project-plan.md](project-plan.md). For planned work that isn't a defect, see [roadmap.md](roadmap.md).
 
@@ -830,7 +830,7 @@ This is the root cause of a pattern we've hit for weeks: each session Jarvis wou
 
 ---
 
-## B22. `sync_runner.py` alert email is stubbed on Windows (Perplexity-only transport doesn't exist there)
+## B22. `sync_runner.py` alert email is stubbed on Windows (Perplexity-only transport doesn't exist there) ~~[OPEN]~~ → **FIXED 2026-04-22 AM**
 
 **Symptom:** On the Windows box, `sync_runner.py` called `asyncio.create_subprocess_exec("external-tool", "call", ...)` to route alert emails to `info@liveradiodfw.com` through the Outlook connector. The `external-tool` binary is a **Perplexity-sandbox-only** helper — it exists inside the agent's sandbox, not on a Windows machine. Every sync that produced any changes would FATAL with `[WinError 2] The system cannot find the file specified` **after** a successful git push, interrupting the final summary print.
 
@@ -861,7 +861,7 @@ Implication for the fix: the email can't just send on success — it must **alwa
 
 **Effort:** ~45-60 minutes hands-on once Ray sets up the Gmail app password. Breakdown: ~20 min for `send_alert_email_smtp` + config wiring; ~20 min to build the richer body (diff summary, warning list, threshold-based subject prefix); ~10 min for a dry-run test that exercises both a clean run and a "suspicious" run (e.g., simulate a >3-show delta) to confirm the 🚩 REVIEW prefix triggers.
 
-**Status:** Open. Filed 2026-04-21 PM same session as the stopgap. **Urgency bumped** per 2026-04-21 PM clarification from Ray — the watchdog framing means this gates full B7 close-out. The sync runs correctly without it, but *we lose the one thing standing between a bad automated push and a user-facing outage*. Schedule **immediately after B21 forensics or in parallel**, because some of those six orphaned tasks may also need the same SMTP helper and we should build it once.
+**Status:** FIXED 2026-04-22 AM. Shipped via [PR #2](https://github.com/TicoRicoRay/liveradiodfw-marketing/pull/2) on `-marketing` (merge commit [`a58be0a`](https://github.com/TicoRicoRay/liveradiodfw-marketing/commit/a58be0a)). Path: Option 1 (direct SMTP via Gmail app password) as recommended. `send_alert_email()` rewritten to send via `smtplib.SMTP('smtp.gmail.com', 587)` with STARTTLS, wrapped in `asyncio.to_thread` so network I/O doesn't block the event loop, 20s timeout. Credentials read from `.env` (`LIVERADIODFW_SMTP_USER`, `LIVERADIODFW_SMTP_PASSWORD`) — if either is blank the function falls back to printing the intended email to stdout (pre-B22 behavior) so the sync never crashes because mail isn't configured. End-to-end verified 2026-04-22 10:46 AM CDT on Ray's box: `sync.log` contains `Alert email delivered via SMTP to info@liveradiodfw.com (from rmyers@futurebright.com)` and the alert mail landed in the `info@` inbox. **Architectural note:** the branch briefly defaulted to `smtp.office365.com` (since `info@` is a Microsoft 365 mailbox) before Ray pointed out from-address doesn't matter — the alert goes to `info@` regardless of the authenticated sender. Gmail SMTP sidesteps the Microsoft 365 tenant SMTP AUTH flag (disabled by default since 2022) and the Exchange PowerShell module needed to flip it. Sending account is `rmyers@futurebright.com` (Google Workspace, app password scoped to this task only). No new vendor, stdlib only.
 
 ---
 
@@ -984,8 +984,114 @@ Implication for the fix: the email can't just send on success — it must **alwa
 
 ---
 
+## B28. `setup_sync_task_scheduler.ps1` reproduces the MS Store Python + no-log-redirect bugs on clean install
+
+**Symptom:** A clean run of the Windows Task Scheduler installer on Ray's box (2026-04-22 AM) registered a task that failed with `LastTaskResult: 2147942402` (0x80070002, "the system cannot find the file specified") on first fire. Separately, when an unrelated runtime crash eventually happened (B29's `UnicodeEncodeError`), it vanished from the Task Scheduler history entirely — only the non-zero return code was visible, no error text, no stack trace.
+
+**Root cause — two independent defects in one script:**
+
+1. **Python resolution via bare `PATH` lookup.** Line 19 set `$PythonExe = "python"`, relying on `%PATH%` at task-run time. On Ray's box, `where.exe python` returned the Microsoft Store stub `C:\Users\myers\AppData\Local\Microsoft\WindowsApps\python.exe` **first**. That stub is a logon-interactive shim that pops up the Microsoft Store UI when invoked without an interactive session — exactly the case for scheduled tasks. Task Scheduler cannot launch it; it reports 0x80070002 because the shim's target binary doesn't actually exist on disk at the stub's path. The real python.org install (`C:\Users\myers\AppData\Local\Python\bin\python.exe`, Python 3.14.3) was *also* on PATH, just later in the search order.
+2. **No stdout/stderr redirect.** `New-ScheduledTaskAction -Execute python -Argument "...sync_runner.py"` with no redirection — Task Scheduler has no built-in way to capture a task's output to a file. Any uncaught exception from the runner vanishes; all we get is `LastTaskResult != 0` with no diagnostic signal. This is what hid B29's UTF-8 crash for a full day.
+
+**Stopgap applied 2026-04-22 AM on Ray's box:** manually edited the registered task via the Task Scheduler GUI, pointing `-Execute` at `cmd.exe` and `-Argument` at `/c "C:\Users\myers\AppData\Local\Python\bin\python.exe" "C:\Tools\LiveRadioDFW\liveradiodfw-marketing\sync_runner.py" >> "C:\Tools\LiveRadioDFW\liveradiodfw-marketing\sync.log" 2>&1`. After the stopgap + the B29 UTF-8 fix, `LastTaskResult` went `2147942402 → 0`. But the installer script itself still produces the broken shape on every invocation — so a clean rebuild of the Windows environment (reinstall, new machine, re-clone) would regress both bugs.
+
+**Proper fix (this bug):** Bake the stopgap into `setup_sync_task_scheduler.ps1`:
+
+1. **Auto-detect a real `python.exe` at install time.** Priority list: explicit `$PythonExe` operator override if set → `%LOCALAPPDATA%\Python\bin\python.exe` (per-user python.org install) → `C:\Python*\python.exe` (system-wide installs) → `where.exe python` output **filtered to skip anything matching `\WindowsApps\`**. Fail loud with a pointer to https://www.python.org/downloads/ if nothing qualifies. Hard-code the resolved full path into the scheduled-task action so it never depends on PATH at run time.
+2. **Wrap the invocation in `cmd.exe /c`** with stdout+stderr redirect to `$ScriptDir\sync.log` (same file the runs already write, append mode). Both streams captured.
+3. Update the post-install "NEXT STEPS" banner: show the resolved Python path and log file, use the resolved path in the manual-test command, add a `Start-ScheduledTask` + `LastTaskResult` check as a smoke test, add the SMTP keys from B22 to the `.env` checklist.
+
+**Why this matters:** The two defects compound. Defect #1 made the first sync fire fail. Defect #2 hid *why* it failed — debugging took a morning of manual log-hunting and GUI archaeology that would have been ten seconds if the runner's stderr had landed in `sync.log`. Any future Windows-side runtime bug (locale, certificate, environment, module import) will be equally opaque until the installer bakes in output redirect. For a cron that pushes directly to production, silent failures are the worst failure mode.
+
+**Effort:** ~30 min. One `.ps1` file, one PR, verified by re-running the installer on Ray's box and confirming the printed Python path doesn't contain `WindowsApps` and a smoke Start-ScheduledTask returns `LastTaskResult: 0`.
+
+**Status:** FIXED 2026-04-22 AM. Shipped via [PR #3](https://github.com/TicoRicoRay/liveradiodfw-marketing/pull/3) on `-marketing` (pending merge at time of filing). Installer rewritten per the three-step proper fix above. Awaiting Ray's merge + re-run of the installer on the Windows box to confirm clean rebuild is now green.
+
+---
+
+## B29. `sync_runner.py` FATALs with `UnicodeEncodeError` when stdout can't encode non-ASCII characters ~~[OPEN]~~ → **FIXED 2026-04-22 AM**
+
+**Symptom:** Scheduled task returned `LastTaskResult: 1` with no useful output in Task Scheduler history. After the B28 stopgap redirected stdout+stderr into `sync.log`, the tail revealed:
+
+```
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2014' in position ...
+```
+
+— triggered by the em-dash (U+2014) in the alert email body the runner was about to hand to the (then still stubbed) `send_alert_email` path. The FATAL aborted the sync after the git push completed but before the summary block printed, matching the exact failure mode of B22 on 2026-04-21 but with a different root cause.
+
+**Root cause:** On Windows, Python's `sys.stdout` and `sys.stderr` default to the console's OEM code page (cp1252 / `charmap` on a US-English box) when not attached to a terminal that claims UTF-8. Task Scheduler's `cmd.exe /c ... >> sync.log` wrapper is exactly that case. Any non-ASCII byte the runner tried to print crashed the encoder. The runner itself generates plenty of U+2014 em-dashes (style guide uses them in prose, alert email bodies embed them in "— Jarvis" sign-offs).
+
+**Fix:** Force both streams to UTF-8 at runner entry, before any `print` happens. Added near the top of `sync_runner.py`:
+
+```python
+import sys
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+```
+
+`errors="replace"` belt-and-suspenders so a future genuinely-unencodable byte prints a `?` rather than FATALing. Python 3.7+ only; guarded with `hasattr` for forward-safety.
+
+**Verification:** Re-fired the task post-fix on 2026-04-22 AM; `LastTaskResult: 0`, `sync.log` contains the em-dash in the alert body correctly (UTF-8 bytes in the file). **Cosmetic caveat not worth another bug:** when Ray views `sync.log` via `Get-Content` in a PowerShell console whose active code page is cp1252, the UTF-8 em-dash renders as the mojibake trigraph `â€”`. The bytes in the file are correct; only the live terminal view is garbled. A future session can `chcp 65001` the console or configure PowerShell's `$OutputEncoding` + `[Console]::OutputEncoding` to UTF-8 if we ever want native em-dash display. Not filing as a bug — the log file and the delivered email are both UTF-8 clean; only the terminal printout is lossy, and only when the operator reads the log locally.
+
+**Shipped:** [PR #1](https://github.com/TicoRicoRay/liveradiodfw-marketing/pull/1) on `-marketing`, merged at [`97bb142`](https://github.com/TicoRicoRay/liveradiodfw-marketing/commit/97bb142) on 2026-04-22 AM.
+
+**Status:** FIXED 2026-04-22 AM.
+
+---
+
+## B30. `sync_runner.py` hardcodes `gh-pages` as the default git push branch
+
+**Symptom:** `sync_runner.py` line 127 reads `GIT_BRANCH = os.environ.get("LIVERADIODFW_GIT_BRANCH", "gh-pages")`. When the env var is unset, the runner tries to push to the `gh-pages` branch, which was deleted on 2026-04-21. The push fails with `error: src refspec gh-pages does not match any` and `FATAL: Command '['git', 'push', 'origin', 'gh-pages']' returned non-zero exit status 1`. The calendar fetch, JSON merge, and site rebuild all complete successfully before the push step, so a local working copy of `shows.json` and generated pages exists; they just never reach origin. The alert email path is also dead by that point, so the failure was silent until Ray noticed "i don't see it on the website" and grepped `sync.log`.
+
+**Where:** `sync_runner.py` line 127 on `master` in [liveradiodfw-marketing](https://github.com/TicoRicoRay/liveradiodfw-marketing/blob/master/sync_runner.py).
+
+**Impact:** On a fresh install (or any box where the operator hasn't manually set `LIVERADIODFW_GIT_BRANCH=master` in `.env`), the daily sync runs to completion locally, prints success-looking log lines for every step up to the push, then FATALs on push with the obsolete branch name and delivers no output to the live site. This cost roughly 2 hours of debugging on 2026-04-22 before root cause was found via memory search ("gh-pages was deleted 2026-04-21"). Ray's box is currently patched via a `.env` override; any future install reproduces the bug.
+
+**Workaround:** Add `LIVERADIODFW_GIT_BRANCH=master` to `.env`. Ray's Windows box has this override set as of 2026-04-22.
+
+**Fix options:**
+1. (Preferred) Change the default from `"gh-pages"` to `"master"` at line 127. One-character edit, matches reality, `.env` override still works for any future branch pivot. Grep the rest of the runner for other hardcoded `gh-pages` references at the same time.
+2. Remove the env-var indirection entirely and hardcode `"master"`. Simpler but loses the escape hatch if the branch ever changes again.
+3. Auto-detect the default branch via `git symbolic-ref refs/remotes/origin/HEAD` and push to whatever that resolves to. Most robust but adds a subprocess call to the hot path and a new failure mode if the ref is missing.
+
+**Status:** Open. File-level fix pending; `.env` workaround in place on the one known install.
+
+---
+
+## B31. Cleanup bundle shipped 2026-04-22 PM: calendar window 365->730d, ASCII scrub, WARN prefix drop ~~[OPEN]~~ -> **FIXED 2026-04-22 PM**
+
+**Symptom:** Three unrelated cleanup items bundled into one entry because each is too small to warrant its own B-number and all three shipped the same afternoon:
+
+1. **Calendar fetch window too narrow.** `sync_calendar.py` fetched events from `now` to `now + 365 days`. Shows booked more than a year out (increasingly common for venue agreements and festival slots) silently dropped off the site until they came inside the 365-day window.
+2. **Non-ASCII characters in Python source.** Both `liveradiodfw-marketing` and `liveradiodfw-site` had em-dashes, arrows, checkmarks, warning signs, smart quotes, and emoji scattered through comments, docstrings, and string literals. Violates the newly-established cardinal rule: no non-ASCII in Python source (not portable, may crash future programs, adds no value). 47 lines touched across 3 files in `-marketing`; 12 files touched in `-site`.
+3. **`WARN` prefix redundant.** Alert email subjects and log lines prefixed with `[WARN]` even when the surrounding context (subject line, email body, log level) already conveyed the severity. Noisy and redundant.
+
+**Where:**
+1. `sync_calendar.py` time-window constant in [liveradiodfw-marketing](https://github.com/TicoRicoRay/liveradiodfw-marketing).
+2. Across both repos - see PR diffs for the full file list.
+3. Alert email subject/body generators in `sync_runner.py` and `sync_calendar.py`.
+
+**Impact:**
+1. Festival and long-lead shows invisible to the public and to Google for up to a year.
+2. Source code portability risk; was a live landmine for future Windows-default-codepage issues like the one B29 fixed.
+3. Minor UX noise in alert emails; operator fatigue.
+
+**Fix shipped:**
+1. [PR #4](https://github.com/TicoRicoRay/liveradiodfw-marketing/pull/4) on `-marketing`, merge [`3028305`](https://github.com/TicoRicoRay/liveradiodfw-marketing/commit/3028305). Window bumped from 365 to 730 days. Calendar API supports the range; no downstream changes needed.
+2. [PR #5](https://github.com/TicoRicoRay/liveradiodfw-marketing/pull/5) on `-marketing`, merge [`9d44484`](https://github.com/TicoRicoRay/liveradiodfw-marketing/commit/9d44484) (47 lines, 3 files). [PR #2](https://github.com/TicoRicoRay/liveradiodfw-site/pull/2) on `-site`, merge [`afe071d`](https://github.com/TicoRicoRay/liveradiodfw-site/commit/afe071d) (12 files). Replacement table: `--` for em-dash, `-` for en-dash, `->` for right-arrow, `OK` for checkmark, `FAIL` for ballot-X, `WARN` for warning sign, smart quotes to ASCII quotes, ellipsis to `...`, non-breaking space to regular space, trash can and memo emoji stripped. Scrubber script saved at `/tmp/scrub_ascii.py` for future re-runs. UTF-8 stdout shim (same block as B29 fix) added to `-site` build scripts as belt-and-suspenders.
+3. [PR #6](https://github.com/TicoRicoRay/liveradiodfw-marketing/pull/6) on `-marketing`, merge [`4fe180e`](https://github.com/TicoRicoRay/liveradiodfw-marketing/commit/4fe180e). `[WARN]` prefix dropped from alert email subjects and log lines; context conveys severity without it.
+
+**Status:** FIXED 2026-04-22 PM. All three merges live on `master` in their respective repos.
+
+---
+
 ## Fixed recently (moved here for context; full history in postmortems)
 
+- **2026-04-22 AM - B22 alert email real SMTP transport via Gmail:** Replaced the stopgap `send_alert_email` stub with a real `smtplib` sender (default `smtp.gmail.com:587` STARTTLS), wrapped in `asyncio.to_thread` with a 20s timeout so network I/O doesn't block the event loop. Credentials from `.env` (`LIVERADIODFW_SMTP_USER` + app password); blank creds fall back to stdout-print so the sync never crashes because mail isn't configured. End-to-end verified on Ray's Windows box at 10:46 AM CDT: `Alert email delivered via SMTP to info@liveradiodfw.com (from rmyers@futurebright.com)` and the mail landed. Path briefly detoured through `smtp.office365.com` (since `info@` is a Microsoft 365 mailbox) before Ray correctly flagged that from-address doesn't matter — the mail goes to `info@` regardless of the authenticated sender. Gmail SMTP sidesteps the Microsoft 365 tenant SMTP AUTH flag (disabled by default since 2022) entirely. Shipped: [PR #2](https://github.com/TicoRicoRay/liveradiodfw-marketing/pull/2), merge [`a58be0a`](https://github.com/TicoRicoRay/liveradiodfw-marketing/commit/a58be0a). No new vendor, stdlib only.
+- **2026-04-22 AM - B28 installer script bakes in Python path + log redirect:** `setup_sync_task_scheduler.ps1` rewritten to auto-detect a real `python.exe` at install time (priority: explicit override → `%LOCALAPPDATA%\Python\bin\python.exe` → `C:\Python*\python.exe` → `where.exe python` minus anything in `\WindowsApps\`) and hard-code the resolved full path into the task action. Invocation wrapped in `cmd.exe /c "<python>" "<script>" >> "<log>" 2>&1` so stdout+stderr are captured in `sync.log` (Task Scheduler can't do this itself). Fixes both the 0x80070002 crash caused by the MS Store Python shim and the silent-crash visibility gap that hid B29 for a day. Shipped: [PR #3](https://github.com/TicoRicoRay/liveradiodfw-marketing/pull/3) on `-marketing` (pending merge).
+- **2026-04-22 AM - B29 UTF-8 reconfigure for stdout/stderr:** `sync_runner.py` was FATALing on em-dash (U+2014) in alert email bodies because Windows cmd.exe defaults stdout to cp1252 (`charmap`) when redirected to a file. Fix: `sys.stdout.reconfigure(encoding="utf-8", errors="replace")` + same for stderr at runner entry, guarded with `hasattr`. `errors="replace"` is belt-and-suspenders for future unencodable bytes. Shipped: [PR #1](https://github.com/TicoRicoRay/liveradiodfw-marketing/pull/1), merge [`97bb142`](https://github.com/TicoRicoRay/liveradiodfw-marketing/commit/97bb142). Cosmetic caveat (not worth filing): viewing `sync.log` via `Get-Content` in a cp1252 PowerShell console renders UTF-8 bytes as mojibake `â€”`; the file itself is correct, only the terminal view is lossy. `chcp 65001` fixes it client-side if ever needed.
 - **2026-04-18 midday - B8 private-event filter broadened to word-boundary match:** Event titles like `LR - Test Event (Private)`, `LR - Johnson Wedding - private`, `LR - Private BBQ`, and `[PRIVATE] Corporate Xmas` used to slip past `is_private_event` (which only matched the three exact substrings `private party`, `private event`, `gathering`). Any of those leaks would have published a residential address, a `MusicEvent` schema.org block, a canonical URL, and a meta description to Google. Fix: swap the three substring checks for two compiled regexes — `\bprivate\b` and `\bgatherings?\b`, both case-insensitive — run against the raw calendar title (still before the `LR -` prefix strip, so parenthesised / bracketed disambiguators are available). Word boundaries prevent false matches on substrings like `privateer`. Shipped with a new `test_is_private_event.py` harness that exercises 18 title variants (pre-fix: 6 failures; post-fix: 18/18 pass) so future regressions on this function will be caught locally before deploy. Live-calendar smoke test produced the same 10 gigs and same 2:8 private:public split as pre-fix, so no current event changed classification. Also added a tiny `.gitignore` (first in the repo) to keep `__pycache__/` out of future commits now that tests are in play.
 - **2026-04-18 midday - B14 Share promoted to primary CTA + button reorder + dark-mode text-colour fix + Get Directions demoted to match the rest of the row:** Show-detail action row reordered from `Get Directions, Add to Calendar, Share, All Shows` to `Share, Get Directions, Add to Calendar, All Shows`. Share button gained `.btn-primary` class alongside `.btn-share` so the existing `show-actions.js` click handler still binds correctly while picking up CTA styling. New `.btn-share.btn-primary` compound selector in `css/style.css` gives it solid-fill red + white text + white SVG stroke, overriding the ghost-outline default of plain `.btn-share`. **Final-polish pass:** on first render Get Directions was still `.btn-primary` (red-fill) from the original template. Ray’s correction: the point of a CTA is to call to ONE action, and the single highest-leverage action for the band is Share (drives show reach). Two reds compete, neither wins. Demoted Get Directions from `.btn-primary` to `.btn-secondary` so Share is the only red element in the row; Directions, Add to Calendar, and All Shows now share the uniform outline treatment. Lesson: a CTA is defined by being visually unique in its neighborhood, not by being red. Give it a singular role in the layout or it isn’t a CTA at all.
 
