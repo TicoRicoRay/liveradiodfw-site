@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-update_sitemap.py — regenerate the /shows/ entries in sitemap.xml to match
+update_sitemap.py -- regenerate the /shows/ entries in sitemap.xml to match
 the actual files in shows/. Leaves the static (non-show) entries alone.
 """
 
@@ -36,7 +36,7 @@ def main():
     xml = xml.replace("</urlset>", new_entries + "</urlset>")
 
     SITEMAP.write_text(xml)
-    print(f"✓ sitemap.xml updated: {len(pages)} show pages")
+    print(f"OK sitemap.xml updated: {len(pages)} show pages")
 
 if __name__ == "__main__":
     main()

@@ -40,7 +40,7 @@ failures = []
 
 def check(label, cond, detail=""):
     status = "OK  " if cond else "FAIL"
-    print(f"{status}  {label}" + (f"  \u2014 {detail}" if detail else ""))
+    print(f"{status}  {label}" + (f"  -- {detail}" if detail else ""))
     if not cond:
         failures.append((label, detail))
 
@@ -63,7 +63,7 @@ check("draft is roughly 300-600 chars", 250 <= len(draft) <= 700,
 draft2 = generate_description_draft(public_show())
 check("draft is deterministic (same input -> same output)", draft == draft2)
 
-# 3. Opener rotation — different (date, venue) picks different openers
+# 3. Opener rotation -- different (date, venue) picks different openers
 drafts = set()
 for d, v in [
     ("2026-08-01", "O G Cellars"),

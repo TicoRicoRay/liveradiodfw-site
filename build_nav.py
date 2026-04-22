@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-build_nav.py — LiveRadioDFW global nav builder
+build_nav.py -- LiveRadioDFW global nav builder
 ===============================================
 Source of truth: nav.html
 Stamps nav HTML into all 16 HTML pages between:
@@ -40,7 +40,7 @@ PAGE_ACTIVE = {
     'thanks.html':                             None,
 }
 
-# Load nav.html (no active classes — we set them per page)
+# Load nav.html (no active classes -- we set them per page)
 nav_template = (BASE / 'nav.html').read_text(encoding='utf-8')
 
 def make_nav_for_page(page):
@@ -54,7 +54,7 @@ def make_nav_for_page(page):
     # But only inside .nav-links (not mobile overlay)
     nav = nav_template
 
-    # Only touch the desktop nav-links ul — split on mobile-overlay to be safe
+    # Only touch the desktop nav-links ul -- split on mobile-overlay to be safe
     parts = nav.split('<div class="mobile-overlay"')
     desktop = parts[0]
     mobile = '<div class="mobile-overlay"' + parts[1] if len(parts) > 1 else ''
@@ -113,6 +113,6 @@ for page, active_href in PAGE_ACTIVE.items():
     else:
         print(f'  no change: {page}')
 
-print(f'\nDone — {updated} pages updated.')
+print(f'\nDone -- {updated} pages updated.')
 print('Nav source: nav.html')
 print('To update nav: edit nav.html, then run python build_nav.py, then git push.')

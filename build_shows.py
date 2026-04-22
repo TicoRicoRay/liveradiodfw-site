@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-build_shows.py — LiveRadioDFW show data builder
+build_shows.py -- LiveRadioDFW show data builder
 ================================================
 Source of truth: shows.json
 Stamps HTML into:  shows.html   (full show-card-full blocks)
@@ -15,9 +15,22 @@ Usage:
 
 import json
 import re
+import sys
 from datetime import date, datetime
 from html import escape as html_escape
 from pathlib import Path
+
+# Force UTF-8 on stdout/stderr so print() never crashes under Windows Task
+# Scheduler, where stdout defaults to the console code page (cp1252 on a
+# US-English box) when redirected to a file. errors='replace' is belt-and-
+# suspenders: any future non-ASCII slips through as '?' rather than a FATAL.
+# Python 3.7+; hasattr guard keeps it forward-safe. See cardinal-rules:
+# no non-ASCII in Python source in this project, but this shim defends
+# against regressions.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 BASE = Path(__file__).parent
 
@@ -42,7 +55,7 @@ def slugify(text):
     return text.strip("-")
 
 
-# ── Load shows ────────────────────────────────────────────────────────────────
+# -- Load shows ----------------------------------------------------------------
 with open(BASE / "shows.json") as f:
     all_shows = json.load(f)
 
@@ -71,7 +84,7 @@ past_shows_rev = sorted(past_shows, key=lambda s: s["date"], reverse=True)
 
 PRIVATE_BADGE = '<p class="show-private-badge" style="display:inline-block;margin-top:0.25rem;padding:2px 10px;font-size:var(--text-xs);font-weight:600;color:#e63946;border:1px solid #e63946;border-radius:999px;text-transform:uppercase;letter-spacing:0.05em;">Private Event</p>'
 
-# ── Build shows.html show-card-full blocks ────────────────────────────────────
+# -- Build shows.html show-card-full blocks ------------------------------------
 def build_full_cards(shows):
     lines = []
     for s in shows:
@@ -126,7 +139,7 @@ def build_full_cards(shows):
         lines.append(f'      </div>')
     return "\n".join(lines)
 
-# ── Build index.html compact show-card blocks (next 3) ───────────────────────
+# -- Build index.html compact show-card blocks (next 3) -----------------------
 def build_compact_cards(shows):
     lines = []
     for s in shows[:3]:
@@ -161,11 +174,11 @@ def build_compact_cards(shows):
         lines.append(f'      </div>')
     return "\n".join(lines)
 
-# ── Build JSON-LD MusicEvent blocks for shows.html ───────────────────────────
+# -- Build JSON-LD MusicEvent blocks for shows.html ---------------------------
 def build_jsonld(shows):
     events = []
     for s in shows:
-        # Skip private events — no SEO benefit
+        # Skip private events -- no SEO benefit
         if s.get("private", False):
             continue
         try:
@@ -204,7 +217,7 @@ def build_jsonld(shows):
         events.append(event)
     return json.dumps(events, indent=2)
 
-# ── Stamp shows.html ──────────────────────────────────────────────────────────
+# -- Stamp shows.html ----------------------------------------------------------
 shows_html_path = BASE / "shows.html"
 shows_html = shows_html_path.read_text(encoding="utf-8")
 
@@ -228,9 +241,9 @@ shows_html = re.sub(
     flags=re.DOTALL
 )
 shows_html_path.write_text(shows_html, encoding="utf-8")
-print("✓ shows.html updated")
+print("OK shows.html updated")
 
-# ── Stamp index.html ──────────────────────────────────────────────────────────
+# -- Stamp index.html ----------------------------------------------------------
 index_html_path = BASE / "index.html"
 index_html = index_html_path.read_text(encoding="utf-8")
 
@@ -242,9 +255,9 @@ index_html = re.sub(
     flags=re.DOTALL
 )
 index_html_path.write_text(index_html, encoding="utf-8")
-print("✓ index.html updated")
+print("OK index.html updated")
 
-# ── Stamp past-shows.html ────────────────────────────────────────────────────────────
+# -- Stamp past-shows.html ------------------------------------------------------------
 # past-shows.html is a separate index page showing every past show in
 # reverse-chronological order. It only exists once there is at least one
 # past show (the template file is written by hand; the shows are stamped
@@ -260,7 +273,7 @@ if past_shows_html_path.exists() and past_shows_rev:
         flags=re.DOTALL
     )
     past_shows_html_path.write_text(past_html, encoding="utf-8")
-    print(f"✓ past-shows.html updated ({len(past_shows_rev)} past shows)")
+    print(f"OK past-shows.html updated ({len(past_shows_rev)} past shows)")
 
 print(f"\nShows in JSON: {len(all_shows)} total, {len(upcoming)} upcoming, {len(past_shows)} past")
 for s in upcoming:

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-import_bandzoogle.py — one-time Bandzoogle historical shows import (R15)
+import_bandzoogle.py -- one-time Bandzoogle historical shows import (R15)
 =========================================================================
 Reads bandzoogle_raw.json (extracted 2026-04-18 from the staging calendar
 at https://liveradiodfw.bandzoogle.com/shows?calendar_page_prev=1 and =2)
@@ -75,7 +75,7 @@ VENUE_CANONICAL = {
 
 # Canonical addresses keyed by canonical venue name. Used to fill in a fuller
 # address when Bandzoogle only provided a partial (e.g. "Fresh" at
-# "Memorial Parkway, Fate, TX" — the correct pin is 5100 I-30).
+# "Memorial Parkway, Fate, TX" -- the correct pin is 5100 I-30).
 VENUE_FULL_ADDRESS = {
     "FRESH by Brookshire's": "5100 I-30, Fate, TX 75189, USA",
     "Frisco Rail Yard": "9040 First St, Frisco, TX 75034, USA",
@@ -178,7 +178,7 @@ def sanitize_prior_band_names(text):
             changed = True
             out = new
     # Collapse accidental "Live Radio DFW Live Radio DFW" if two prior names
-    # were adjacent (belt and suspenders — not expected in the current data).
+    # were adjacent (belt and suspenders -- not expected in the current data).
     out = re.sub(r"(Live Radio DFW)(\s+\1)+", r"\1", out)
     return out, changed
 
@@ -225,17 +225,17 @@ def import_entry(raw):
         # Prefer canonical full address if we know it; otherwise keep whatever
         # Bandzoogle had.
         address = VENUE_FULL_ADDRESS.get(venue) or (raw.get("address_full") or "").strip()
-        # Clean a trailing " TX" with no ZIP to " TX, USA"? Leave as-is — the
+        # Clean a trailing " TX" with no ZIP to " TX, USA"? Leave as-is -- the
         # existing shows.json has mixed forms and the map URL works regardless.
         address_short = build_address_short(raw.get("city_state"), address)
         maps_url = build_maps_url(venue, address)
-        # No ticket prices were displayed on any Bandzoogle past show — default
+        # No ticket prices were displayed on any Bandzoogle past show -- default
         # to "Free" to match the overwhelmingly dominant pattern in shows.json.
         # Ray can flip on review if any were actually paid.
         ticket_price = "Free"
 
     # Description strategy. First pass: sanitize out any prior-band-name
-    # references (Jackson Crossing, Risky Business) — those were the same
+    # references (Jackson Crossing, Risky Business) -- those were the same
     # members under earlier names; we present the archive under today's brand.
     raw_desc = raw.get("description_full") or ""
     raw_desc, _ = sanitize_prior_band_names(raw_desc)
@@ -250,7 +250,7 @@ def import_entry(raw):
             "day_name": day_name,
             "date": date_str,
         })
-        description = draft  # May be "" for private events — that's fine.
+        description = draft  # May be "" for private events -- that's fine.
     else:
         description = raw_desc.strip()
 
@@ -325,7 +325,7 @@ def main():
     bak = SHOWS.with_suffix(".json.bak")
     shutil.copy2(SHOWS, bak)
     SHOWS.write_text(json.dumps(merged, indent=2) + "\n")
-    print(f"\n✓ shows.json updated ({bak.name} saved as backup)")
+    print(f"\nOK shows.json updated ({bak.name} saved as backup)")
 
 
 if __name__ == "__main__":
