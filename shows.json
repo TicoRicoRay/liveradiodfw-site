@@ -1766,6 +1766,20 @@
     "description": "Live Radio DFW heads to Uptown Rail Brewery in historic Downtown Sanger. This craft brewery has 30+ beers on tap, artisanal pizza, and a stage that puts you right in the action. About 45 minutes north of the Metroplex on I-35, it's worth the drive for the beer alone - add live music and you've got a full Saturday night. No cover charge. Weather permitting, the show moves to the outdoor stage. A fun night out for folks in Sanger, Denton, Lake Dallas, Corinth, and the I-35 corridor."
   },
   {
+    "date": "2026-10-03",
+    "day_name": "Sat",
+    "day_num": "3",
+    "month": "Oct",
+    "title": "Fresh by Brookshires",
+    "venue": "FRESH by Brookshire's",
+    "address": "5100 I-30, Fate, TX 75189, USA",
+    "address_short": "Fate, TX",
+    "time": "7:00 PM",
+    "maps_url": "https://maps.google.com/?q=FRESH+by+Brookshire's%2C+5100+I-30%2C+Fate%2C+TX+75189%2C+USA",
+    "private": false,
+    "ticket_price": ""
+  },
+  {
     "date": "2026-10-31",
     "day_name": "Sat",
     "day_num": "31",
@@ -1778,5 +1792,19 @@
     "maps_url": "",
     "private": true,
     "ticket_price": ""
+  },
+  {
+    "date": "2027-03-25",
+    "day_name": "Thu",
+    "day_num": "25",
+    "month": "Mar",
+    "title": "TEST Sync Check Editied (delete me)",
+    "venue": "Test Venue",
+    "address": "123 Fake St, Dallas, TX 75201",
+    "address_short": "Dallas, TX",
+    "time": "8:00 PM",
+    "maps_url": "https://maps.google.com/?q=Test+Venue%2C+123+Fake+St%2C+Dallas%2C+TX+75201",
+    "private": false,
+    "ticket_price": "Free"
   }
 ]
