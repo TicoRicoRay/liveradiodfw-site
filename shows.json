@@ -1722,6 +1722,20 @@
     "description": "Live Radio DFW heads back to O G Cellars in Sunset, TX for a Saturday night 80s Dance Party. This boutique winery sits in the rolling hills of Northwest Wise County and pours 100% Texas wines, with an on-site pizzeria that'll be open through the show. Outdoor and indoor seating, OG wine, frozen drinks, and beer on site (no outside alcohol). Tickets are $25, and it's about an hour northwest of Fort Worth on Hwy 287 - a scenic drive out through the Hill-Country-feeling part of North Texas for fans in the DFW Metroplex, Decatur, Bowie, and Wichita Falls."
   },
   {
+    "date": "2026-09-05",
+    "day_name": "Sat",
+    "day_num": "5",
+    "month": "Sep",
+    "title": "3 Nations Brewing",
+    "venue": "3 Nations Brewing",
+    "address": "3 Nations Brewing, 1033 Vandergriff Dr, Carrollton, TX 75006, USA",
+    "address_short": "Carrollton, TX",
+    "time": "7:00 PM",
+    "maps_url": "https://maps.google.com/?q=3+Nations+Brewing%2C+1033+Vandergriff+Dr%2C+Carrollton%2C+TX+75006%2C+USA",
+    "private": false,
+    "ticket_price": "Free"
+  },
+  {
     "date": "2026-09-12",
     "day_name": "Sat",
     "day_num": "12",
