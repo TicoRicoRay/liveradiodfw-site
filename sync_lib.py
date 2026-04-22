@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-sync_lib.py — Pure library functions for the LiveRadioDFW calendar sync.
+sync_lib.py -- Pure library functions for the LiveRadioDFW calendar sync.
 ========================================================================
 
 This module is the SAFE-TO-PUBLISH half of the calendar-sync code.  It
-contains only pure functions and public constants — **no webhook URL,
+contains only pure functions and public constants -- **no webhook URL,
 no passphrase, no network calls, no git operations, no email sending**.
 
 It lives on the `gh-pages` branch so the live site's test files and
@@ -12,9 +12,9 @@ historic-import scripts can keep importing it:
 
     from sync_lib import is_private_event, is_gig_event, ...
 
-The orchestration layer that *does* hold secrets — fetching the
+The orchestration layer that *does* hold secrets -- fetching the
 calendar over HTTPS, writing shows.json, invoking build scripts,
-committing to git, sending alert emails — lives in `sync_runner.py`
+committing to git, sending alert emails -- lives in `sync_runner.py`
 on Ray's Windows box, outside the repo.
 
 History: extracted from the former `sync_calendar.py` during B7 Part 2
@@ -27,7 +27,7 @@ import hashlib
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-# ── Shared constants (safe to publish) ───────────────────────────────────────
+# -- Shared constants (safe to publish) ---------------------------------------
 
 CENTRAL_TZ = ZoneInfo("America/Chicago")
 
@@ -66,7 +66,7 @@ SKIP_PATTERNS = [
     r"\bmeeting\b",
     r"\bquote expires\b",
     r"\blead!\b",
-    r"\bplaying in\b",      # "Don playing in FW" — other band gig
+    r"\bplaying in\b",      # "Don playing in FW" -- other band gig
     r"\bin\s+(atlanta|detroit|london|lv|boston|costa rica)\b",  # travel
     r"\bchasing\b",         # "Ray Chasing Tornadoes"
     r"\bcamp\b",            # "Dude Rock Camp"
@@ -96,7 +96,7 @@ KNOWN_VENUES = [
 TICKET_PRICE_MISSING = ""
 
 
-# ── Gig detection ────────────────────────────────────────────────────────────
+# -- Gig detection ------------------------------------------------------------
 
 def is_gig_event(event):
     """Determine if a calendar event is a confirmed LiveRadioDFW gig."""
@@ -146,8 +146,8 @@ def is_gig_event(event):
 # Gatherings(r) venue family, which is always private.
 # The function is deliberately called with the RAW calendar title
 # (before the 'LR -' prefix strip) so any disambiguating context in the
-# raw title — including parenthesized (Private) and bracketed [PRIVATE]
-# — is available at privacy-decision time.
+# raw title -- including parenthesized (Private) and bracketed [PRIVATE]
+# -- is available at privacy-decision time.
 _PRIVATE_WORD_RE = re.compile(r"\bprivate\b", re.IGNORECASE)
 _GATHERING_WORD_RE = re.compile(r"\bgatherings?\b", re.IGNORECASE)
 
@@ -169,7 +169,7 @@ def is_private_event(title):
     return bool(_PRIVATE_WORD_RE.search(title) or _GATHERING_WORD_RE.search(title))
 
 
-# ── Ticket-price parsing ─────────────────────────────────────────────────────
+# -- Ticket-price parsing -----------------------------------------------------
 
 def parse_ticket_price(description):
     """Extract ticket price from event description.
@@ -198,7 +198,7 @@ def parse_ticket_price(description):
     return TICKET_PRICE_MISSING
 
 
-# ── Description draft generation (B16 Stage 1) ───────────────────────────────
+# -- Description draft generation (B16 Stage 1) -------------------------------
 
 def generate_description_draft(show):
     """Compose a 3-5 sentence machine-generated description draft from the
@@ -288,7 +288,7 @@ def generate_description_draft(show):
     return f"{flag} {body}"
 
 
-# ── Event → show conversion ──────────────────────────────────────────────────
+# -- Event -> show conversion --------------------------------------------------
 
 def calendar_event_to_show(event):
     """Convert a calendar event to a shows.json entry."""
@@ -324,7 +324,7 @@ def calendar_event_to_show(event):
         address = location
 
         # B10 fix: Google's "location" field from Places is often populated as
-        # "Venue Name, 123 Street, City, ST 12345, USA" — the venue name is already
+        # "Venue Name, 123 Street, City, ST 12345, USA" -- the venue name is already
         # the first segment. If we keep it duplicated in `address`, every downstream
         # consumer (/shows render, show-detail page, JSON-LD schema, Add-to-Calendar
         # button, generated .ics) ends up showing the venue name twice. Strip the
@@ -341,12 +341,12 @@ def calendar_event_to_show(event):
             address = ", ".join(parts[1:]).strip()
 
         # Build short address (city, state)
-        # Look for TX — could be its own comma-separated part ("Allen, TX")
+        # Look for TX -- could be its own comma-separated part ("Allen, TX")
         # or embedded ("Sanger TX 76266")
         address_short = ""
         for i, p in enumerate(parts):
             p_stripped = p.strip()
-            # Case 1: Part is just "TX" or "TX 7xxxx" — city is the previous part.
+            # Case 1: Part is just "TX" or "TX 7xxxx" -- city is the previous part.
             # Require TX to be followed by whitespace, end-of-string, or a digit (ZIP).
             # Do NOT match "TX-276" (a state highway designator); \b alone would match
             # at the X-hyphen boundary and misfire (B10 follow-up: Sweetwater Grill's
@@ -360,7 +360,7 @@ def calendar_event_to_show(event):
                 else:
                     address_short = p_stripped
                 break
-            # Case 2: "Sanger TX 76266" — TX embedded in the part with a city name.
+            # Case 2: "Sanger TX 76266" -- TX embedded in the part with a city name.
             # Same lookahead guard as Case 1 so we don't capture "4884" out of
             # "4884 TX-276".
             tx_match = re.search(r'(\S+)\s+TX(?=\s|$|\d)', p_stripped, re.IGNORECASE)
@@ -412,7 +412,7 @@ def calendar_event_to_show(event):
     }
 
 
-# ── Missing-info detection ───────────────────────────────────────────────────
+# -- Missing-info detection ---------------------------------------------------
 
 def check_missing_info(show, event):
     """Check if a show entry is missing required information for the website."""
@@ -441,13 +441,13 @@ def check_missing_info(show, event):
     return missing
 
 
-# ── Merge helpers ────────────────────────────────────────────────────────────
+# -- Merge helpers ------------------------------------------------------------
 
 def detail_diffs(old_show, new_show):
     """Compare two show dicts across calendar-owned fields only.
     Returns list of (field, old_val, new_val) tuples.
     Hand-curated fields (anything outside CALENDAR_OWNED_FIELDS) are
-    intentionally ignored — they can't drift out of sync because the
+    intentionally ignored -- they can't drift out of sync because the
     sync never touches them.
     """
     diffs = []
@@ -471,7 +471,7 @@ def merge_calendar_fields(existing, fresh):
     return merged
 
 
-# ── Back-compat shims ────────────────────────────────────────────────────────
+# -- Back-compat shims --------------------------------------------------------
 # The original sync_calendar.py exposed these as underscore-prefixed helpers;
 # keep aliases so nothing existing breaks if it was reaching for them.
 _detail_diffs = detail_diffs

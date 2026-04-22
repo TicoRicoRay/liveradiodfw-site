@@ -1,7 +1,7 @@
 """Test harness for B15: cancelled/rescheduled show filtering.
 
 Convention: Ray keeps the original GCal event as an audit record by renaming
-it with a parenthetical suffix — "(Rescheduled ...)" or "(Cancelled)" —
+it with a parenthetical suffix -- "(Rescheduled ...)" or "(Cancelled)" --
 instead of deleting it. The sync must filter those out of shows.json.
 
 Run from repo root:
@@ -49,7 +49,7 @@ CASES = [
     # --- no false positives on substring-like words ---
     (ev("LR - Grand Canceltown Fest",
         start="2026-05-10T00:30:00.000Z", end="2026-05-10T03:00:00.000Z"),
-        True,  "'Canceltown' is not 'cancelled' — no paren, not end-anchored"),
+        True,  "'Canceltown' is not 'cancelled' -- no paren, not end-anchored"),
     (ev("LR - The Rescheduling Ceremony",
         start="2026-05-10T00:30:00.000Z", end="2026-05-10T03:00:00.000Z"),
         True,  "'Rescheduling' without parens is not a filter match"),

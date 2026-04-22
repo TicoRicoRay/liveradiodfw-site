@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-import_historic.py — one-time historic Google Calendar import (R16)
+import_historic.py -- one-time historic Google Calendar import (R16)
 ===================================================================
 Reads approved_historic.json (produced by build_approved_historic.py from
 Ray's Tier 1/Tier 2 approvals) and merges those 63 past shows into
@@ -108,7 +108,7 @@ def build_address_short(address):
     if not address:
         return ""
     parts = [p.strip() for p in address.split(",")]
-    # Standard form: "street, city, TX ZIP, USA" — take parts[-3] and TX from [-2]
+    # Standard form: "street, city, TX ZIP, USA" -- take parts[-3] and TX from [-2]
     if len(parts) >= 3:
         city = parts[-3]
         state_zip = parts[-2]
@@ -190,7 +190,7 @@ def import_entry(ev):
     # (booking fees, contact names, gate codes, load-in instructions, etc).
     # Unlike Bandzoogle "past show" copy which was written for the public,
     # these cannot ship verbatim. Always regenerate via the [DRAFT - ...]
-    # template — build_show_pages.py gates drafts so they never reach the
+    # template -- build_show_pages.py gates drafts so they never reach the
     # public site. Ray can enrich them later post-import.
     description = generate_description_draft({
         "private": private,
@@ -277,13 +277,13 @@ def main():
             print(f"{s['date']} {s['time']:9s} | priv={s['private']!s:5s} | {s['venue'][:40]:40s} | {s['address_short']}")
 
     if args.dry_run:
-        print("\n(dry run — shows.json not written)")
+        print("\n(dry run -- shows.json not written)")
         return
 
     bak = SHOWS.with_suffix(".json.bak2")
     shutil.copy2(SHOWS, bak)
     SHOWS.write_text(json.dumps(merged, indent=2) + "\n")
-    print(f"\n✓ shows.json updated ({bak.name} saved as backup)")
+    print(f"\nOK shows.json updated ({bak.name} saved as backup)")
 
 
 if __name__ == "__main__":

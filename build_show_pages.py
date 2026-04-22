@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-build_show_pages.py — LiveRadioDFW individual show page builder
+build_show_pages.py -- LiveRadioDFW individual show page builder
 ================================================================
 Generates individual HTML pages for each public show in shows.json.
 These pages target local SEO queries like "live music at [venue] [city]".
@@ -34,6 +34,16 @@ from datetime import datetime, timezone
 from html import escape as html_escape
 from pathlib import Path
 
+# Force UTF-8 on stdout/stderr so print() never crashes under Windows Task
+# Scheduler, where stdout defaults to cp1252 when redirected to a file.
+# errors='replace' is belt-and-suspenders for future non-ASCII that slips
+# past the ASCII-only cardinal rule. Python 3.7+; hasattr guard keeps it
+# forward-safe.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 BASE = Path(__file__).parent
 SHOWS_DIR = BASE / "shows"
 SHOWS_DIR.mkdir(exist_ok=True)
@@ -45,7 +55,7 @@ def slugify(text):
     """Convert text to URL-friendly slug."""
     text = text.lower().strip()
     text = re.sub(r"[''`]", "", text)           # remove apostrophes
-    text = re.sub(r"[^a-z0-9]+", "-", text)     # non-alphanum → dash
+    text = re.sub(r"[^a-z0-9]+", "-", text)     # non-alphanum -> dash
     text = re.sub(r"-+", "-", text)             # collapse multiple dashes
     return text.strip("-")
 
@@ -106,7 +116,7 @@ def build_show_page(show):
     iso_datetime = parse_time_to_iso(date_str, time_str)
 
     # SEO fields
-    page_title = f"Live Radio DFW at {venue} · {long_date} | Live Music {address_short}"
+    page_title = f"Live Radio DFW at {venue} - {long_date} | Live Music {address_short}"
     meta_desc = (
         f"Catch Live Radio DFW live at {venue} in {address_short} on {long_date}. "
         f"{'Free admission. ' if ticket_price == 'Free' else f'{ticket_price} admission. '}"
@@ -127,10 +137,10 @@ def build_show_page(show):
         price_html = f'<span class="show-ticket-price show-price-paid">{ticket_price}</span>'
 
     # Description section. Three states:
-    #   1. Approved description present — render the About This Show block.
-    #   2. Draft placeholder (string starts with "[DRAFT") — never publish
+    #   1. Approved description present -- render the About This Show block.
+    #   2. Draft placeholder (string starts with "[DRAFT") -- never publish
     #      draft text to the public site; fall through to the placeholder.
-    #   3. No description at all — render a short "Show details coming soon"
+    #   3. No description at all -- render a short "Show details coming soon"
     #      placeholder (B16 Stage 1) so the page has a visible signal that
     #      more content is on the way instead of silently-thin content.
     desc_section = ""
@@ -310,7 +320,7 @@ def main():
         filepath.write_text(html, encoding="utf-8")
         built.append(filename)
         if VERBOSE:
-            print(f"  ✓ shows/{filename}")
+            print(f"  OK shows/{filename}")
 
     # Clean up pages for shows that no longer exist in shows.json
     # (only remove auto-generated pages, identified by matching the naming pattern)
@@ -319,9 +329,9 @@ def main():
         if existing.name not in expected_files:
             existing.unlink()
             if VERBOSE:
-                print(f"  ✗ removed shows/{existing.name} (no longer in shows.json)")
+                print(f"  FAIL removed shows/{existing.name} (no longer in shows.json)")
 
-    print(f"✓ show pages: {len(built)} built, {len(skipped)} private (skipped)")
+    print(f"OK show pages: {len(built)} built, {len(skipped)} private (skipped)")
 
 
 if __name__ == "__main__":

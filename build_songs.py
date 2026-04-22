@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-build_songs.py — BandHelper Song Cache Builder
+build_songs.py -- BandHelper Song Cache Builder
 LiveRadioDFW site build helper
 
 At build time:
@@ -87,11 +87,11 @@ def js_to_html(js_text: str) -> str:
         document.write("<span class=\"bandhelper_name\">Roam</span><br />\\n");
 
     The function handles:
-      - Escaped double quotes  \"  → "
-      - Escaped forward slashes \\/  → /
-      - Escaped newlines \\n → actual newlines
-      - Escaped tabs \\t → actual tabs
-      - Double backslashes \\\\ → single backslash
+      - Escaped double quotes  \"  -> "
+      - Escaped forward slashes \\/  -> /
+      - Escaped newlines \\n -> actual newlines
+      - Escaped tabs \\t -> actual tabs
+      - Double backslashes \\\\ -> single backslash
     """
     pattern = r'document\.write\("((?:[^"\\]|\\.)*)"\);'
     parts = re.findall(pattern, js_text)
@@ -144,7 +144,7 @@ def main():
     cache_hits   = []
     errors       = []
 
-    print(f"[build_songs] BandHelper cache check — {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}")
+    print(f"[build_songs] BandHelper cache check -- {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}")
     if force:
         print("[build_songs] --force flag set: ignoring stored hashes\n")
 
@@ -169,7 +169,7 @@ def main():
                     f.write(html)
                 new_hashes[key] = current_md5
                 songs = count_songs(html)
-                print(f"  [{key}] UPDATED ({reason}) — {songs} songs saved → {FILE_MAP[key]}")
+                print(f"  [{key}] UPDATED ({reason}) -- {songs} songs saved -> {FILE_MAP[key]}")
                 changed.append(key)
 
         except requests.RequestException as exc:
@@ -193,10 +193,10 @@ def main():
         cache_file = os.path.join(CACHE_DIR, FILE_MAP[key])
         page_path  = os.path.join(SCRIPT_DIR, page_file)
         if not os.path.exists(cache_file):
-            print(f"  [{key}] SKIP — cache file missing: {cache_file}")
+            print(f"  [{key}] SKIP -- cache file missing: {cache_file}")
             continue
         if not os.path.exists(page_path):
-            print(f"  [{key}] SKIP — page not found: {page_file}")
+            print(f"  [{key}] SKIP -- page not found: {page_file}")
             continue
 
         cached_html = open(cache_file, encoding="utf-8").read()
@@ -207,7 +207,7 @@ def main():
 
         page_content = open(page_path, encoding="utf-8").read()
         if '<!-- BEGIN_SONGS -->' not in page_content:
-            print(f"  [{key}] SKIP — no BEGIN_SONGS marker in {page_file}")
+            print(f"  [{key}] SKIP -- no BEGIN_SONGS marker in {page_file}")
             continue
 
         new_content = re.sub(
@@ -218,7 +218,7 @@ def main():
         )
         if new_content != page_content:
             open(page_path, 'w', encoding="utf-8").write(new_content)
-            print(f"  [{key}] stamped → {page_file}")
+            print(f"  [{key}] stamped -> {page_file}")
         else:
             print(f"  [{key}] no change in {page_file}")
 

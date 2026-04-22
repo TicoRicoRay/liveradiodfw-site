@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-build_approved_historic.py — consolidate Ray's Tier 1 + Tier 2 approvals
+build_approved_historic.py -- consolidate Ray's Tier 1 + Tier 2 approvals
 into one approved_historic.json for import_historic.py to consume.
 
 Tier 1 source: calendar_historic_candidates.json (50 entries, by eventId)
@@ -26,7 +26,7 @@ TIER1_DECISIONS[29] = "private"   # 2023-04-01 Wedding @ Legacy Hall
 TIER1_DECISIONS[39] = "private"   # 2023-09-24 Royalton Dr Dallas
 TIER1_DECISIONS[42] = "private"   # 2023-12-03 Homebank Texas @ Rusted Rail
 
-# Tier 2 decisions (date-keyed — unique in the ambiguous file for our purposes)
+# Tier 2 decisions (date-keyed -- unique in the ambiguous file for our purposes)
 # Each value: ("public"/"private"/"excluded", title_fragment_to_match)
 TIER2_DECISIONS = [
     ("2021-07-24", "Plano Sports Tavern",    "public"),
@@ -63,7 +63,7 @@ def main():
             "privacy": decision,
         })
 
-    # Tier 2 — find by date + title fragment
+    # Tier 2 -- find by date + title fragment
     for date_str, title_frag, decision in TIER2_DECISIONS:
         if decision == "excluded":
             continue
@@ -73,7 +73,7 @@ def main():
                 match = e
                 break
         if not match:
-            print(f"⚠ Tier 2 not found: {date_str} | {title_frag}")
+            print(f"WARN Tier 2 not found: {date_str} | {title_frag}")
             continue
         approved.append({
             **match,
