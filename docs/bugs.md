@@ -1087,6 +1087,26 @@ if hasattr(sys.stderr, "reconfigure"):
 
 ---
 
+## B32. No low-friction path to approve proposed show descriptions
+
+**Symptom:** The daily calendar sync flags new public shows that are missing their About-this-show description and inlines a machine-generated draft in the alert email under "Proposed description draft." The draft goes to `info@liveradiodfw.com` where Ray can read it in Outlook (iPhone or desktop browser), but nothing in the workflow lets Ray move that draft into `shows.json[show].description`. The only path today is to open a new Jarvis session, paste the draft in, and have Jarvis commit it. That ceremony is overkill for the common case where the draft is already good enough.
+
+**Where:** Gap between `sync_runner.py` (alert-email producer on Ray's Windows box) and `shows.json` (committed on master of [liveradiodfw-site](https://github.com/TicoRicoRay/liveradiodfw-site)). Affects every new public show added to the Google Calendar that lands without a pre-authored description, which is the default for every new booking. Current rate: roughly one-per-week as bookings close.
+
+**Impact:** Each new show without a description triggers a "Show details coming soon" placeholder on the public individual-show page until a Jarvis session is convened to author the real copy. The placeholder is a cardinal-rule-compliant safety net, but it is SEO-dead weight and visitor-facing filler. The delay from "sync flagged it" to "real description live" is currently measured in whenever-Ray-gets-around-to-a-session, not hours. Compounding: B16.2 Stage 2 (auto-generate descriptions end-to-end) is blocked by not having any data on how often Ray approves vs. edits machine drafts, and we have no way to collect that data without a lightweight approval surface.
+
+**Workaround:** Convene a Jarvis session, paste the proposed draft into the session, have Jarvis review/enrich/apply it to `shows.json`, commit. Works but expensive per new show.
+
+**Fix options:**
+1. (Chosen) Reply-to-approve via email. Alert email gets APPROVE / EDIT mailto buttons with a token in the subject. Windows-box IMAP poller matches reply subjects against a pending-approvals queue and commits. See [R25](roadmap.md#r25-reply-to-approve-workflow-for-show-descriptions) for the three-part plan. Part A (upgraded alert email) shipped 2026-04-23 AM; Part B (IMAP processor) queued. No new surface for Ray to learn. Works identically on iPhone Outlook and desktop browser. Survives any Perplexity thread ending.
+2. Lightweight web approval page at a noindexed URL. Richer UX (live preview, inline diff) but requires a new surface and auth story for Ray to manage. Overkill given option 1 gives 80% of value for 20% of the work.
+3. PR-based approval (sync opens a PR on liveradiodfw-site with the draft committed; Ray approves/merges in GitHub mobile). Clean audit trail but Ray has previously rejected PR ceremony for this project; adding it only for descriptions is inconsistent with the rest of the workflow.
+4. Silent auto-publish after N hours without objection. Rejected: violates the "Ray approves before publish" cardinal rule and is the exact silent-fail mode B22 was built to prevent.
+
+**Status:** Part A shipped 2026-04-23 AM. Part B queued for next session. Tracked for the full workflow under [R25](roadmap.md#r25-reply-to-approve-workflow-for-show-descriptions).
+
+---
+
 ## Fixed recently (moved here for context; full history in postmortems)
 
 - **2026-04-22 AM - B22 alert email real SMTP transport via Gmail:** Replaced the stopgap `send_alert_email` stub with a real `smtplib` sender (default `smtp.gmail.com:587` STARTTLS), wrapped in `asyncio.to_thread` with a 20s timeout so network I/O doesn't block the event loop. Credentials from `.env` (`LIVERADIODFW_SMTP_USER` + app password); blank creds fall back to stdout-print so the sync never crashes because mail isn't configured. End-to-end verified on Ray's Windows box at 10:46 AM CDT: `Alert email delivered via SMTP to info@liveradiodfw.com (from rmyers@futurebright.com)` and the mail landed. Path briefly detoured through `smtp.office365.com` (since `info@` is a Microsoft 365 mailbox) before Ray correctly flagged that from-address doesn't matter — the mail goes to `info@` regardless of the authenticated sender. Gmail SMTP sidesteps the Microsoft 365 tenant SMTP AUTH flag (disabled by default since 2022) entirely. Shipped: [PR #2](https://github.com/TicoRicoRay/liveradiodfw-marketing/pull/2), merge [`a58be0a`](https://github.com/TicoRicoRay/liveradiodfw-marketing/commit/a58be0a). No new vendor, stdlib only.

@@ -446,6 +446,39 @@ The authoritative brand voice lives in `liveradiodfw-marketing/MARKETING_STYLE_G
 
 ---
 
+### R25. Reply-to-approve workflow for show descriptions
+
+**Context:** The daily calendar sync flags new public shows that are missing their About-this-show description and emails Ray a machine-generated draft under "Proposed description draft" (sync_runner.py, via sync_lib.generate_description_draft). Until today the only way to move a draft into `shows.json[show].description` was for Ray to open a Jarvis session, paste the draft in, re-run it through tone calibration, and ship the final hand-curated copy. Most of the time the machine draft is already close enough that the ceremony of a full session is overkill; for the copy that does need enrichment, the friction of round-tripping through a session is also the bottleneck. The approval step is valuable (cardinal rule: Ray approves before publish), but the approval step is ceremony, not engineering.
+
+**Why now:** 3 Nations Brewing 2026-09-05 is the concrete instance that surfaced the gap on 2026-04-23 AM session. New public shows land via the 8 AM sync at roughly one-per-week cadence as bookings close. Every one of those triggers a "proposed draft in email that nothing can act on" event. Compounding: the previously-assumed Stage 2 rollout for auto-generated descriptions (B16.2, P3) needs approval data points before it can progress, and we currently have zero because there is no low-friction way to record an approval decision.
+
+**Constraints:**
+- Ray is the only person with access to `info@liveradiodfw.com` today; trust boundary is low-risk.
+- Approval must remain a human-in-the-loop step. No auto-publish under any circumstance.
+- Must work identically from iPhone (Outlook mobile) and desktop (Outlook browser), which is where Ray reads `info@`.
+- Cannot depend on Perplexity thread scheduling (J1 / B21 orphan-cron pain).
+- Must enforce cardinal rules (ASCII only, no em-dashes, no smart quotes) before anything lands in `shows.json`.
+- Does not require a new mailbox or DNS change.
+
+**Plan (3 parts):**
+
+- **Part A - Upgraded alert email (SHIPPED 2026-04-23 AM).** `sync_lib.build_approval_email_section()` renders the MISSING-INFO block for a description-missing show with APPROVE and EDIT mailto links that include a stable 12-char sha256 token in the subject line. `sync_runner.py` calls the new helper when a draft is available. Tests for token stability, cross-show invariance, ASCII gate, and em-dash gate added to `test_description_handling.py`. Scaffold `approvals/pending.json` committed with the schema Part B will write. Shipped as first commit of 2026-04-23 AM session on master in liveradiodfw-site and master in liveradiodfw-marketing.
+- **Part B - `process_approvals.py` on the Windows box (next session, est. 2 hours).** New script on Ray's box at `C:\Tools\LiveRadioDFW\` alongside sync_runner.py. Runs every 15 minutes via a second Windows Task Scheduler task. Polls `info@liveradiodfw.com` over IMAP, matches reply subjects against `pending.json` tokens, and on match: writes `shows.json[show].description`, commits as "Ray" to master, pushes, removes token from pending, appends to `approvals/log.json`. APPROVE writes the draft verbatim. EDIT parses everything after `TOKEN: <token>` in the reply body as the final description. Sender allowlist: `info@liveradiodfw.com` and `rmyers@futurebright.com` initially; extensible to delegates (Donna) later. Cardinal-rule gates (ASCII, em-dash, smart quote) enforced pre-commit; any violation rejects the reply and sends a short failure email back so Ray can resubmit.
+- **Part C - Stage 2 auto-publish data collection (deferred, B16.2 territory).** Once Part B is exercised 5+ times and trust is established, collect quality data on how often Ray approves vs. edits. If approval rate is high enough, a `--auto-approve` mode for routine venue refreshes (repeat bookings at already-described venues) becomes the natural next step. Pairs with B16.2.
+
+**Token design:** `sha256(date|venue|draft)[:12]`, placed in the mailto subject as `APPROVE <token>` or `EDIT <token>`. Subject-based matching (not plus-subaddressing) so the flow does not depend on mail-host configuration and works identically for any future delegate.
+
+**Depends on:**
+- Part A: none (shipped).
+- Part B: B22 Gmail SMTP pattern (shipped) provides the email credential template; Part B reads over IMAP using the same app password pattern. Windows Task Scheduler second-task install follows the B7 Part 2 pattern documented in `runbooks/windows-sync-task.md`.
+- Part C: 5+ real approval data points through Part B; B16.2 coupling.
+
+**Priority:** High for Part B (removes manual friction from every new-show flow; 3 Nations Brewing is the first instance). Medium-Low for Part C (nice-to-have, not on a deadline).
+
+**Status:** Part A shipped 2026-04-23 AM. Part B queued for next session. Part C deferred.
+
+---
+
 ### R14. Enrich press-kit and booking pages with marketing-repo content ~~[OPEN]~~ → **PRESS-KIT OPENING SHIPPED 2026-04-19 (remainder open)**
 
 **Partial ship 2026-04-19 (commits [`42965d4`](https://github.com/TicoRicoRay/liveradiodfw-site/commit/42965d4), [`e850c1a`](https://github.com/TicoRicoRay/liveradiodfw-site/commit/e850c1a)):** Press-kit opening paragraph rewritten to match `/lander` positioning (ready-to-book themed shows named inline, tributes-to-eras-not-artists framing, drops the "Station shows tailored to any event" internal-memo phrasing from the prior draft). New "For venues and planners" proof block added below the bio with seven facts-only bullets: **together since 2021** (leading; Ray flagged this as a deliberate differentiator given how flaky many bands are), five-piece/five-vocalists, 100+ songs/six decades, ready-to-book themed shows, in-ear monitors, fully insured, DFW-based. "Start here" pin added to the Band Overview video. First draft of the opening paragraph said "formed from the merger" without a year, which was accurate-but-weak; Ray corrected mid-session with the important nuance that the musicians have been together since 2021, even though the Live Radio DFW name itself is post-merger. Final bio leads with "Same musicians playing together since 2021, now under one name after merging Risky Business DFW and Jackson Crossing" — honest about the rename, credits the five-year history. Lesson logged: when the band has a rename-but-continuity story, lead with the continuity; the rename is the footnote. What is explicitly NOT done in this pass and still open: recent-venues strip (depends on R5 or hand-curation), set-length options grid (needs Ray's input on which lengths are real), starts-at price figure (needs Ray), standalone "Why book us" page or `book.html` section addition, R13 style-guide alignment pass. Remainder of R14 stays open for those items.

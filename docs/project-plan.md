@@ -1,6 +1,6 @@
 # Live Radio DFW — Project Plan
 
-_Last updated: 2026-04-21 · 2:28 PM Central (B7 install LIVE on Ray's Windows box; first production sync pushed 06bc1cb; 3-day parallel run with old Perplexity cron in flight)_
+_Last updated: 2026-04-23 AM Central (R25 Part A shipped: reply-to-approve workflow for show descriptions -- alert email now carries APPROVE / EDIT mailto buttons with stable tokens; sync_lib + sync_runner + tests + scaffold + docs all landed; 3 Nations Brewing 2026-09-05 is the surfacing instance and gets its real description this session. B7 3-day parallel run continues; B32 filed for the approval-workflow gap. Prior update: 2026-04-21 PM -- B7 install LIVE on Windows box.)_
 
 **This file is the session-to-session handoff.** For active defects see [bugs.md](bugs.md). For planned work see [roadmap.md](roadmap.md).
 
@@ -35,6 +35,10 @@ Perplexity threads are disposable. This repo is the durable memory. To get a new
 ## 🔖 Pick up here next session
 
 _Put this at the top so next-session-me reads it first._
+
+**Context (2026-04-23 AM session, approval-workflow track):** **R25 Part A shipped: reply-to-approve workflow for show descriptions.** Surfaced when Ray asked whether the 2026-09-05 3 Nations Brewing show had a description (it did not) and identified the automation gap: every new public show lands in `shows.json` with no description, the sync emails a proposed draft to `info@liveradiodfw.com`, but nothing can act on that draft without a full Jarvis session. Fix: APPROVE / EDIT mailto buttons in the alert email with a stable 12-char sha256 token in the subject line. Reply from Outlook on iPhone or desktop -> Part B (next session) IMAP poller on the Windows box consumes the token -> writes `shows.json[show].description` -> commits as "Ray" -> pushes to master. Part A landed sync_lib helpers (`approval_token`, `build_approval_email_section`), sync_runner wiring, six new test cases (all pass), `approvals/pending.json` scaffold with schema, and this architecture doc. B32 filed as the defect, R25 as the three-part plan. Next session picks up with Part B (`process_approvals.py` on Windows box + second Task Scheduler entry every 15 min + sender allowlist + cardinal-rule gate + expiry). Until Part B ships, approvals still round-trip through a session, but the email now tells Ray exactly what to reply and carries the token so we can process retroactively.
+
+**Context (2026-04-23 AM session, 3 Nations Brewing description):** Concrete instance of the workflow gap. Draft for the 2026-09-05 Carrollton show produced by `generate_description_draft` ([DRAFT] prefix, 395 chars, ASCII-clean). Actual v2 warm-invitation description to be authored this session after Part A lands; applied to `shows.json` as a same-session manual commit since Part B is not yet live. This also becomes the first pending-approval record and the first data point for the Part C decision.
 
 **Context (2026-04-21 PM session, SEO track):** **B25 shipped: `build_includes.py` now manages canonical + og:url + sitemap as a third single-point-of-maintenance block alongside nav and footer.** Every page (root + 95 `shows/*`) stamped with `<link rel="canonical" href="https://www.liveradiodfw.com/<slug>">` (extensionless, www-normalized to match live serving host). Sitemap regenerated from the same page list: 112 → 114 extensionless URLs. `home.html` deleted as a true orphan (Cloudflare `/home*` 301 remains as insurance). Only exclusion is `nav.html` (legacy fragment, kept for `build_nav.py`). PR #1 on `master` open for merge. **B26 filed** for the dual nav source-of-truth (`nav.html` + `includes/nav.html`) that B25 surfaced. Also **R4 partially mitigated**, and **roadmap/runbook docs scrubbed** of prescriptive `.html` URLs where they remained.
 
@@ -199,6 +203,12 @@ Linear list of open items has moved out of this file. See:
 - **Planned work:** [roadmap.md](roadmap.md)
 
 ## Recently completed
+
+### 2026-04-23 AM
+- R25 Part A shipped: reply-to-approve workflow for show descriptions. `sync_lib.approval_token()` and `sync_lib.build_approval_email_section()` added; `sync_runner.py` now delegates to the helper when a description-missing show has a usable draft. APPROVE and EDIT mailto links with token in subject, plain text, Outlook-iOS-and-desktop friendly. `approvals/pending.json` + `approvals/README.md` scaffolded. Six new test cases in `test_description_handling.py` (token stability, cross-show invariance, cross-draft invariance, APPROVE mailto presence, EDIT mailto presence, ASCII-only, no em-dash / smart quote). All existing sync_lib tests still green. New `architecture/approval-workflow.md` documents Parts A/B/C and cardinal-rule gates.
+- B32 filed: "No low-friction path to approve proposed show descriptions."
+- R25 filed: three-part plan (Part A shipped, Part B queued, Part C deferred).
+- 3 Nations Brewing 2026-09-05 v2 warm-invitation description authored and shipped to `shows.json` as same-session manual commit (Part B not yet live).
 
 ### 2026-04-17 (morning)
 - ✅ Site back online via Cloudflare → GitHub Pages
