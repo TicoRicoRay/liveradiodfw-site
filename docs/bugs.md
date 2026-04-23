@@ -1107,6 +1107,24 @@ if hasattr(sys.stderr, "reconfigure"):
 
 ---
 
+## B33. `purge_cache.py` verify_miss got 403 from Cloudflare edge on default-urllib HEAD requests ~~[OPEN]~~ -> **FIXED 2026-04-23 AM**
+
+**Symptom:** First live run of `purge_cache.py --shows` on Ray's Windows box at 13:32Z. Cloudflare accepted the purge (request id `01a523795bb5c06eb21db44c7e6a9912`) but the post-purge verification phase reported `HTTP Error 403: Forbidden` on all three URLs, making the script exit code 3 (verification failed) even though the actual purge succeeded.
+
+**Where:** `purge_cache.py` function `verify_miss()`. Issues HEAD requests using `urllib.request.Request(url, method='HEAD')` with no headers set.
+
+**Root cause:** `urllib.request` sends no `User-Agent` header by default. The Cloudflare edge for `liveradiodfw.com` rejects HEAD requests that look like non-browser crawlers with a 403 before ever looking at the cached object. Confirmed by running the same HEAD from a `curl`-default context (which does set a User-Agent) against the same URLs immediately after the failed verify: all three returned `200 / age: 0 / cf-cache-status: DYNAMIC`, proving the purge itself worked.
+
+**Impact:** Cosmetic in normal operation (exit code 3 with everything actually purged fine) but real: the script now false-alarms every run, and exit code 3 is supposed to be "purge succeeded but edge still caching" which is a distinct failure mode we do want to catch. Without the fix, operators can't tell the two apart.
+
+**Fix shipped:** `verify_miss()` now sends a conventional `Mozilla/5.0` User-Agent plus `Cache-Control: no-cache`, and falls back to `GET` when HEAD returns any 4xx (some edges block HEAD even with a UA). Error messages distinguish `HEAD 4xx` from `GET fallback` from generic network errors. Existing 25-case test suite unchanged and still passes. Verified from a sandbox network by calling `verify_miss()` directly against all three live URLs: all return `cf-cache-status=DYNAMIC` and exit status OK.
+
+**Side observation:** `cf-cache-status=DYNAMIC` on `shows.json`, `/`, and `/shows` is itself interesting. It means Cloudflare is not caching those URLs at the edge for this zone's current config, so the purge API is effectively a no-op for those particular URLs. Not a bug in the tool; the tool will do its job the moment we add a Cache Rule or Page Rule that caches any of them (e.g. a future `shows.json` caching rule to reduce origin load). Worth noting so nobody wonders why the "fresh copy after purge" assertion is always `DYNAMIC` and never `MISS` today.
+
+Shipped: commit TBD on liveradiodfw-marketing master.
+
+---
+
 ## Fixed recently (moved here for context; full history in postmortems)
 
 - **2026-04-22 AM - B22 alert email real SMTP transport via Gmail:** Replaced the stopgap `send_alert_email` stub with a real `smtplib` sender (default `smtp.gmail.com:587` STARTTLS), wrapped in `asyncio.to_thread` with a 20s timeout so network I/O doesn't block the event loop. Credentials from `.env` (`LIVERADIODFW_SMTP_USER` + app password); blank creds fall back to stdout-print so the sync never crashes because mail isn't configured. End-to-end verified on Ray's Windows box at 10:46 AM CDT: `Alert email delivered via SMTP to info@liveradiodfw.com (from rmyers@futurebright.com)` and the mail landed. Path briefly detoured through `smtp.office365.com` (since `info@` is a Microsoft 365 mailbox) before Ray correctly flagged that from-address doesn't matter — the mail goes to `info@` regardless of the authenticated sender. Gmail SMTP sidesteps the Microsoft 365 tenant SMTP AUTH flag (disabled by default since 2022) entirely. Shipped: [PR #2](https://github.com/TicoRicoRay/liveradiodfw-marketing/pull/2), merge [`a58be0a`](https://github.com/TicoRicoRay/liveradiodfw-marketing/commit/a58be0a). No new vendor, stdlib only.
