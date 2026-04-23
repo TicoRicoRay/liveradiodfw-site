@@ -1,6 +1,6 @@
 # Live Radio DFW - Roadmap
 
-_Last updated: 2026-04-23 AM (R26 filed and shipped: Cloudflare cache purge tool; R25 Part A shipped earlier same session; R23 filed to preserve the Monthly Profile Audit venue-discovery cron; R22 filed 2026-04-19 from /lander smell-test; R19 shipped, R14 enriched, R4/R19/R20/R21 filed earlier from GSC audit)_
+_Last updated: 2026-04-23 AM (R26 filed, shipped to marketing repo, and site-repo mislanding reverted; R25 Part A shipped earlier same session; R23 filed to preserve the Monthly Profile Audit venue-discovery cron; R22 filed 2026-04-19 from /lander smell-test; R19 shipped, R14 enriched, R4/R19/R20/R21 filed earlier from GSC audit)_
 
 Future plans, grouped by theme. Things we've decided or want to do but haven't scheduled.
 
@@ -489,7 +489,9 @@ The authoritative brand voice lives in `liveradiodfw-marketing/MARKETING_STYLE_G
 
 Ray created a minimum-scope Cloudflare API token on 2026-04-21 with `Zone > Cache Purge + DNS` permissions on the `liveradiodfw.com` zone. The token existed but there was no tool in the repo that used it; a prior Perplexity thread did ad-hoc `purge-files-by-url` API calls but nothing was ever committed. Gap identified and closed on 2026-04-23 AM session.
 
-**Shipped 2026-04-23 AM:** `purge_cache.py` in `liveradiodfw-site` repo root. Stdlib-only, ASCII-only, ~240 lines.
+**Shipped 2026-04-23 AM:** `purge_cache.py` in `liveradiodfw-marketing` repo root, alongside `sync_runner.py`. Stdlib-only, ASCII-only, ~240 lines.
+
+**Repo-placement correction (same session):** The tool was first landed in `liveradiodfw-site` (commits `0e061a9` + `e14371c`) because the URLs being purged are site URLs. Ray pushed back correctly: `purge_cache.py` is a Windows-box automation tool that calls the Cloudflare API, never deployed to the web, so it belongs with `sync_runner.py` in the marketing repo, not in the site repo. Both site commits were reverted (`1133d12` + `52696d4`) and the files re-landed in `liveradiodfw-marketing` as commit `437e671`. Going forward the rule for new files is: `liveradiodfw-site` = things deployed to www.liveradiodfw.com; `liveradiodfw-marketing` = ops scripts that run on Ray's Windows box.
 
 Modes:
 - `python purge_cache.py https://www.liveradiodfw.com/shows.json` - specific URLs (up to 30, Cloudflare Free plan limit)
@@ -498,17 +500,17 @@ Modes:
 - `--dry-run` prints what would be purged without calling the API (safe to run without a token)
 - `--no-verify` skips the post-purge `cf-cache-status` HEAD check
 
-Reads `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ZONE_ID` from `.env` at the repo root (same loader pattern as `GIT_BRANCH` today) with env-variable override. Exit codes: 0 success, 1 config error, 2 API call failed, 3 post-purge verification failed.
+Reads `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ZONE_ID` from `.env` at the repo root (same loader pattern as `LIVERADIODFW_WEBHOOK_PASSPHRASE` and `LIVERADIODFW_SMTP_PASSWORD` today) with env-variable override. Since the tool lives in the marketing repo now, all Windows-box secrets are in a single `.env` at `C:\Tools\LiveRadioDFW\liveradiodfw-marketing\.env`. Exit codes: 0 success, 1 config error, 2 API call failed, 3 post-purge verification failed.
 
 Post-purge verification is built in: the script HEADs each purged URL with a cache-buster and reports `cf-cache-status`; `MISS`, `DYNAMIC`, `EXPIRED`, or `BYPASS` all mean the edge just pulled from origin, which is what we want. A `HIT` immediately after a purge would mean the purge silently failed, and exit code 3 makes that loud.
 
 Tests: `test_purge_cache.py`, 25 cases, all passing. Covers ASCII gate, argument parsing (no args, >30 URLs, dry-run shapes), env-file loader (plain KEY=VALUE, quote stripping, no-override, missing file, bad lines), and monkey-patched `api_purge` for both success and failure paths. No network calls in the test suite.
 
-**Wiring pending (next session, ~15 min):** Add `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ZONE_ID` to Ray's `.env` on the Windows box at `C:\Tools\LiveRadioDFW\liveradiodfw-site\.env`. Smoke-test `python purge_cache.py --dry-run --shows` first to confirm the zone id loads, then `python purge_cache.py --shows` against live to confirm the API call works end-to-end.
+**Wiring shipped 2026-04-23 AM:** `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ZONE_ID` added to Ray's Windows-box `.env` at `C:\Tools\LiveRadioDFW\liveradiodfw-marketing\.env`. Values backed up in 1Password as "LiveRadioDFW Cloudflare API token". Token scope: Zone > Cache Purge on `liveradiodfw.com` only. Smoke test pending once the marketing-repo clone is pulled to the Windows box.
 
 **Future enhancement (not urgent):** Hook `purge_cache.py --shows` into `sync_runner.py` so the 8 AM daily calendar sync auto-purges the shows bundle after a successful push, but only when `shows.json` actually changed. Making this automatic removes the 10-minute visibility lag on every new booking. Defer until the tool has been used manually enough to trust it.
 
-**Status:** Tool + tests shipped 2026-04-23 AM. Pending `.env` config on Windows box before first live use.
+**Status:** Tool + tests shipped to marketing repo 2026-04-23 AM (`437e671`). `.env` configured on Ray's Windows box same session. Smoke-test pending once the marketing clone is pulled. Site-repo mislanding reverted same session; see Repo-placement correction above.
 
 ---
 
