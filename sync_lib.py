@@ -288,6 +288,107 @@ def generate_description_draft(show):
     return f"{flag} {body}"
 
 
+# -- Approval workflow (B32 / R25 Part A) -------------------------------------
+
+def approval_token(show, draft):
+    """Return a stable 12-char token identifying a specific (show, draft)
+    pair for the reply-to-approve workflow.
+
+    Token is sha256(show_date | venue | draft)[:12], lowercased hex. Same
+    inputs -> same token across processes, machines, and runs, so the daily
+    sync can re-generate the same token tomorrow if the same draft still
+    applies. If the draft text changes (because we tweaked the generator),
+    the token changes too, which correctly invalidates any stale pending
+    approval for the old text.
+
+    Inputs:
+      show  -- a shows.json-shaped dict; uses show['date'] and show['venue']
+      draft -- the exact draft string that will appear in the email body
+
+    Returns 12-char hex string. Never empty (empty inputs still hash).
+    """
+    date_str = show.get("date", "") if show else ""
+    venue = show.get("venue", "") if show else ""
+    payload = f"{date_str}|{venue}|{draft}"
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:12]
+
+
+def build_approval_email_section(show, draft, alert_email):
+    """Render the MISSING-INFO email block for a single show that is missing
+    its About-this-show description. Includes the proposed draft plus two
+    mailto links so Ray can reply-to-approve or reply-to-edit without
+    leaving his mail client (B32 / R25 Part A).
+
+    The output is plain text. EmailMessage.set_content() sends text/plain,
+    and every mainstream mail client (Gmail, Apple Mail, Outlook on iOS and
+    desktop) auto-linkifies bare mailto: URLs, so no HTML is required.
+
+    Token is in the SUBJECT line, not the address, so we do not depend on
+    the mail host supporting plus-subaddressing. Part B's
+    process_approvals.py parses the subject.
+
+    Inputs:
+      show        -- shows.json-shaped dict
+      draft       -- non-empty draft string (caller must pre-check)
+      alert_email -- the ALERT_EMAIL value from sync_runner (where replies go)
+
+    Returns a plain-text block ready to concatenate into the email body.
+    """
+    token = approval_token(show, draft)
+    title = show.get("title", show.get("venue", "Unknown show"))
+    show_date = show.get("date", "")
+
+    # URL-encode the subject lines manually to keep the stdlib import
+    # footprint of sync_lib small and dependency-free. We only need to
+    # escape space -> %20 because the rest of the subject is ASCII
+    # alphanumerics, hyphens, and the token.
+    subj_approve = f"APPROVE%20{token}"
+    subj_edit = f"EDIT%20{token}"
+
+    # Body pre-fill for the EDIT reply: quoted draft so Ray can edit in
+    # place and send. body= space encoding: %20 for spaces, %0A for newlines.
+    edit_body_lines = [
+        f"Editing description for {title} on {show_date}.",
+        "Replace the text below with the final copy, keep the token line,",
+        "then send. Everything after the token line is the new description.",
+        "",
+        f"TOKEN: {token}",
+        "",
+        draft,
+    ]
+    edit_body = "%0A".join(
+        line.replace(" ", "%20").replace("\"", "%22")
+        for line in edit_body_lines
+    )
+
+    mailto_approve = (
+        f"mailto:{alert_email}?subject={subj_approve}"
+    )
+    mailto_edit = (
+        f"mailto:{alert_email}?subject={subj_edit}&body={edit_body}"
+    )
+
+    block = (
+        f"MISSING INFO:\n"
+        f"  {title} on {show_date}\n"
+        f"    Missing: About-this-show description\n"
+        f"\n"
+        f"  Proposed description draft (review before approving):\n"
+        f"    {draft}\n"
+        f"\n"
+        f"  To approve this draft as-is, reply from this mailbox using:\n"
+        f"    {mailto_approve}\n"
+        f"\n"
+        f"  To edit first, reply using (pre-fills draft in the body):\n"
+        f"    {mailto_edit}\n"
+        f"\n"
+        f"  Approval token: {token}\n"
+        f"  (Part B automation will consume this token; until then,\n"
+        f"   Jarvis processes approvals manually in-session.)"
+    )
+    return block
+
+
 # -- Event -> show conversion --------------------------------------------------
 
 def calendar_event_to_show(event):

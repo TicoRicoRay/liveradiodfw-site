@@ -8,7 +8,12 @@ Run from repo root:
     python3 test_description_handling.py
 """
 import sys
-from sync_lib import generate_description_draft, check_missing_info
+from sync_lib import (
+    generate_description_draft,
+    check_missing_info,
+    approval_token,
+    build_approval_email_section,
+)
 
 
 def public_show(**overrides):
@@ -129,6 +134,60 @@ check("empty-string description -> flagged as missing",
 miss5 = check_missing_info(public_show(description="   \n  "), ev())
 check("whitespace-only description -> flagged as missing",
       any("About-this-show description" in m for m in miss5))
+
+
+print("\n=== approval_token / build_approval_email_section (B32 / R25 Part A) ===")
+
+# 13. Token is stable across calls for same (show, draft)
+show_a = public_show()
+draft_a = generate_description_draft(show_a)
+t1 = approval_token(show_a, draft_a)
+t2 = approval_token(show_a, draft_a)
+check("approval_token is stable across calls for same inputs",
+      t1 == t2 and len(t1) == 12,
+      f"t1={t1} t2={t2} len={len(t1)}")
+
+# 14. Token differs when draft changes (invalidates stale approvals)
+t_different = approval_token(show_a, draft_a + " extra sentence.")
+check("approval_token changes when draft text changes",
+      t_different != t1,
+      f"t1={t1} t_different={t_different}")
+
+# 15. Token differs when show changes (can't cross-apply approvals)
+show_b = public_show(date="2026-09-05", venue="3 Nations Brewing")
+draft_b = generate_description_draft(show_b)
+t_show_b = approval_token(show_b, draft_b)
+check("approval_token changes when show changes",
+      t_show_b != t1,
+      f"t1={t1} t_show_b={t_show_b}")
+
+# 16. Email section contains APPROVE + EDIT mailto links with token in subject
+section = build_approval_email_section(show_a, draft_a, "info@liveradiodfw.com")
+check("approval email section contains APPROVE mailto with token in subject",
+      f"mailto:info@liveradiodfw.com?subject=APPROVE%20{t1}" in section,
+      f"section: {section[:200]}...")
+check("approval email section contains EDIT mailto with token in subject",
+      f"subject=EDIT%20{t1}" in section,
+      "EDIT mailto not found or missing token")
+check("approval email section contains the draft text",
+      draft_a in section)
+check("approval email section contains bare token for Part B reference",
+      f"Approval token: {t1}" in section)
+
+# 17. Section is pure ASCII (cardinal rule)
+try:
+    section.encode("ascii")
+    ascii_clean = True
+except UnicodeEncodeError:
+    ascii_clean = False
+check("approval email section is pure ASCII (no em-dashes, no unicode)",
+      ascii_clean)
+
+# 18. Section contains no em-dash and no smart quotes (cardinal rule)
+forbidden = ["\u2014", "\u2013", "\u2018", "\u2019", "\u201c", "\u201d"]
+no_forbidden = not any(ch in section for ch in forbidden)
+check("approval email section contains no em/en-dash or smart quotes",
+      no_forbidden)
 
 
 print()

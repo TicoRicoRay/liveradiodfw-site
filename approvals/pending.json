@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "description": "Pending approvals staged by the daily sync alert email (B32 / R25). Populated by Part B process_approvals.py; read/consumed when Ray replies APPROVE <token> or EDIT <token> from info@liveradiodfw.com. Part A leaves this as an empty scaffold so the schema is committed before Part B writes to it.",
+  "schema": {
+    "token": "12-char sha256 prefix of date|venue|draft",
+    "show_date": "ISO date YYYY-MM-DD",
+    "venue": "canonical venue name from shows.json",
+    "title": "show title from shows.json",
+    "draft": "exact draft text as it appeared in the alert email",
+    "emailed_at": "ISO timestamp when the alert was sent",
+    "status": "pending | approved | edited | expired"
+  },
+  "pending": []
+}
