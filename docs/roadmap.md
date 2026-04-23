@@ -1,6 +1,6 @@
 # Live Radio DFW - Roadmap
 
-_Last updated: 2026-04-23 AM (R26 filed, shipped to marketing repo, and site-repo mislanding reverted; R25 Part A shipped earlier same session; R23 filed to preserve the Monthly Profile Audit venue-discovery cron; R22 filed 2026-04-19 from /lander smell-test; R19 shipped, R14 enriched, R4/R19/R20/R21 filed earlier from GSC audit)_
+_Last updated: 2026-04-23 AM (R27 filed to guard against shows.json hand-edits that skip the builder chain, after 3 Nations description shipped in two commits; R26 filed, shipped to marketing repo, and site-repo mislanding reverted; R25 Part A shipped earlier same session; R23 filed to preserve the Monthly Profile Audit venue-discovery cron; R22 filed 2026-04-19 from /lander smell-test; R19 shipped, R14 enriched, R4/R19/R20/R21 filed earlier from GSC audit)_
 
 Future plans, grouped by theme. Things we've decided or want to do but haven't scheduled.
 
@@ -476,6 +476,25 @@ The authoritative brand voice lives in `liveradiodfw-marketing/MARKETING_STYLE_G
 **Priority:** High for Part B (removes manual friction from every new-show flow; 3 Nations Brewing is the first instance). Medium-Low for Part C (nice-to-have, not on a deadline).
 
 **Status:** Part A shipped 2026-04-23 AM. Part B queued for next session. Part C deferred.
+
+---
+
+### R27. Guard against hand-edits to shows.json that skip the builder chain
+
+**Context:** On 2026-04-23 AM the 3 Nations 2026-09-05 "About This Show" description was written directly into `shows.json` and committed (`5f768ed`) without running the post-write builder chain. `shows.json` got the new description but `shows/3-nations-brewing-2026-09-05.html` did not, so the live show page kept showing the "Show details coming soon" placeholder. The user correctly flagged that the live page was still stale; diagnosis revealed it was a build problem, not a Cloudflare cache problem. Running the canonical chain locally (`build_shows.py` -> `build_show_pages.py` -> `build_includes.py`) regenerated the HTML and commit `ee5a8e2` shipped the fix.
+
+**Lesson:** `shows.json` is an intermediate artifact. The site's user-visible files are the per-show HTML pages that `build_show_pages.py` emits from it, plus the includes that `build_includes.py` stamps in. Editing `shows.json` without running the chain is the same kind of latent bug as editing a source file and forgetting to recompile. The canonical order is codified in `sync_runner.py` lines 360-362 and should be the only way writes to `shows.json` reach master.
+
+**Plan (pick one, not all):**
+- **Option A - pre-commit hook in `liveradiodfw-site`:** If `shows.json` is staged and any of `shows/*.html` are not also staged (or mtimes are older than `shows.json`), abort with a message pointing to `sync_runner.py` or the three builders. Low friction, catches the exact failure mode that happened today.
+- **Option B - helper script `rebuild_after_json_edit.py` in `liveradiodfw-marketing`:** Runs the three builders in order against a local `liveradiodfw-site` clone and stages everything. Makes the correct path a one-liner.
+- **Option C - convention-only fix:** Add a CONTRIBUTING note saying "never hand-edit `shows.json`; always go through `sync_runner.py`." Relies on memory, which is exactly what failed on 2026-04-23.
+
+**Recommended:** A + B. A is cheap insurance; B makes the happy path trivial so A rarely fires.
+
+**Depends on:** None.
+
+**Priority:** Medium. One occurrence so far, caught within the same session, but the failure mode is silent (commit looks fine, site is stale, no error anywhere) and will recur any time a show description or venue field needs a hand-edit.
 
 ---
 
