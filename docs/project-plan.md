@@ -1,6 +1,6 @@
 # Live Radio DFW — Project Plan
 
-_Last updated: 2026-04-23 AM Central (R25 Part A shipped: reply-to-approve workflow for show descriptions -- alert email now carries APPROVE / EDIT mailto buttons with stable tokens; sync_lib + sync_runner + tests + scaffold + docs all landed; 3 Nations Brewing 2026-09-05 is the surfacing instance and gets its real description this session. B7 3-day parallel run continues; B32 filed for the approval-workflow gap. Prior update: 2026-04-21 PM -- B7 install LIVE on Windows box.)_
+_Last updated: 2026-04-23 AM Central (session closed with Ray's directive: "assume this buggy mousetrap we've built is NOT working -- test before proceeding" next session. R25 Part A, R26 cache-purge tool, and 3 Nations description all shipped, but the 3 Nations ship surfaced a silent build-chain skip (see B33 / R27) that is the reason for the directive. B7 3-day parallel run continues. Prior update: 2026-04-21 PM -- B7 install LIVE on Windows box.)_
 
 **This file is the session-to-session handoff.** For active defects see [bugs.md](bugs.md). For planned work see [roadmap.md](roadmap.md).
 
@@ -35,6 +35,27 @@ Perplexity threads are disposable. This repo is the durable memory. To get a new
 ## 🔖 Pick up here next session
 
 _Put this at the top so next-session-me reads it first._
+
+## READ FIRST NEXT SESSION - Ray's directive (2026-04-23 end of session, verbatim)
+
+> "Next session - top priority - assume this buggy mousetrap we've built is NOT working. Test before proceeding."
+
+**What "the mousetrap" is:** Everything that ran this session, and especially the pieces that shipped with confidence but had hidden gaps.
+
+**Before touching any of it, verify it actually works end-to-end.** Pre-flight tests to run in this order:
+
+1. **3 Nations live description.** `curl -s https://www.liveradiodfw.com/shows/3-nations-brewing-2026-09-05.html | grep -c "rolls into 3 Nations Brewing"` must return `1`, AND `grep -c "show-page-description-placeholder"` must return `0`. If either fails, the commit `ee5a8e2` didn't land or GH Pages didn't rebuild.
+2. **Builder chain idempotency.** Clone `liveradiodfw-site/master` fresh, run `build_shows.py` -> `build_show_pages.py` -> `build_includes.py` with no JSON edits. `git status` should be clean (or only timestamp-field deltas on unchanged shows). If real content diffs appear, a builder is non-deterministic; investigate before any new shows.json write.
+3. **B7 Windows sync.** Check `gh-pages` commit log: did the 8:00 AM Central run on 2026-04-23 fire from the Windows box? Did it fire on 2026-04-24 by the time the session opens? If commits are missing, B7 is not actually live. (Parallel-run verification for B7 was scheduled 4/22-4/24; this is the last day of that window.)
+4. **R25 Part A email shape.** Read back the most recent alert email for a new show; verify the APPROVE / EDIT mailto buttons render in Outlook iPhone and that the token in the subject matches `approvals/pending.json`. If the email is stubbed per B22 (just stdout on Windows), note it; Part B is blocked anyway.
+5. **R26 purge_cache.py.** On the Windows box, `python purge_cache.py --shows --dry-run` should print 3 URLs without hitting the API. Then a real `--shows` run should print "Cache purged" AND `Verified: <URL> cf-cache-status=<status>` lines that are all MISS/DYNAMIC/EXPIRED/BYPASS. If any verify line is HIT, the purge silently failed (that's exit code 3, built in).
+6. **Pre-commit hook for shows.json (R27).** Does not exist yet. Until it does, any write to `shows.json` MUST be followed by running the three builders and staging the resulting `shows/*.html` changes. If you catch yourself editing `shows.json` without the builders, STOP; you just reproduced the bug that triggered this directive.
+
+**Why Ray said this:** The 3 Nations description was committed to `shows.json` as commit `5f768ed` without running the builder chain. The live site kept showing the placeholder. Ray had to catch it. The failure had zero error signal: commit succeeded, push succeeded, working tree clean, Cloudflare cache status irrelevant. This class of silent failure is what "buggy mousetrap" refers to: components that look wired up but aren't, or are wired up but skip steps. Every new thing we shipped this session (R25 Part A approval workflow, R26 cache-purge, R27 builder-chain guard) is a candidate for the same kind of hidden gap. **Test each before building on it.**
+
+**Test-before-proceed applies recursively:** if a test fails, fix the test harness, don't work around it. If a test passes in dry-run but not on the Windows box, that is a finding, not a nuisance.
+
+---
 
 **Context (2026-04-23 AM session, approval-workflow track):** **R25 Part A shipped: reply-to-approve workflow for show descriptions.** Surfaced when Ray asked whether the 2026-09-05 3 Nations Brewing show had a description (it did not) and identified the automation gap: every new public show lands in `shows.json` with no description, the sync emails a proposed draft to `info@liveradiodfw.com`, but nothing can act on that draft without a full Jarvis session. Fix: APPROVE / EDIT mailto buttons in the alert email with a stable 12-char sha256 token in the subject line. Reply from Outlook on iPhone or desktop -> Part B (next session) IMAP poller on the Windows box consumes the token -> writes `shows.json[show].description` -> commits as "Ray" -> pushes to master. Part A landed sync_lib helpers (`approval_token`, `build_approval_email_section`), sync_runner wiring, six new test cases (all pass), `approvals/pending.json` scaffold with schema, and this architecture doc. B32 filed as the defect, R25 as the three-part plan. Next session picks up with Part B (`process_approvals.py` on Windows box + second Task Scheduler entry every 15 min + sender allowlist + cardinal-rule gate + expiry). Until Part B ships, approvals still round-trip through a session, but the email now tells Ray exactly what to reply and carries the token so we can process retroactively.
 
@@ -77,6 +98,9 @@ _2026-04-19:_ pure infrastructure cleanup. Opened a Bark.com bid for Ree's 6/7/2
 **Heads-up for the NEXT thread specifically:** B7 install is shipped; B22 watchdog email is the next clean bite (~45-60 min, bounded). B21 forensics is blocked on Perplexity support. Top-of-funnel foundation work (R11, R22, B6) is still untouched. R4 reassesses 2026-05-03 after Google re-crawls.
 
 **Top priorities right now:**
+
+**0. (NEW, takes precedence) Run the pre-flight test battery at the top of this file.** Ray's 2026-04-23 directive: assume the mousetrap is broken, test before proceeding. Steps 1-6 above. Do not touch priorities 1-13 until the test battery passes or the failures are documented as new B-entries. If step 6 (pre-commit hook) is still missing, file it as the first action item, not a later one.
+
 
 1. **B7 3-day parallel-run verification.** Windows task fires daily 8:00 AM Central; Perplexity cron in the inaccessible thread fires independently on its own schedule (can't stop it, see B21). For 3 consecutive days (2026-04-22, 23, 24) check `gh-pages` commit log: any sync-author commits should be from the Windows box only, OR the two systems should land on the same shows.json state by end-of-day. If they diverge, investigate. Day 1 baseline: Windows pushed [`06bc1cb`](https://github.com/TicoRicoRay/liveradiodfw-site/commit/06bc1cb) at ~2:00 PM Central on 2026-04-21 (manual smoke test, the 8:00 AM scheduled run is 2026-04-22). Verify no divergence then formally close B7 + B1 and move the old Perplexity row to "Deleted / defunct tasks" in `architecture/scheduled-tasks.md`.
 
