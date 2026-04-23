@@ -1,6 +1,6 @@
 # Live Radio DFW - Roadmap
 
-_Last updated: 2026-04-21 (R23 filed to preserve the Monthly Profile Audit venue-discovery cron; R22 filed 2026-04-19 from /lander smell-test; R19 shipped, R14 enriched, R4/R19/R20/R21 filed earlier from GSC audit)_
+_Last updated: 2026-04-23 AM (R26 filed and shipped: Cloudflare cache purge tool; R25 Part A shipped earlier same session; R23 filed to preserve the Monthly Profile Audit venue-discovery cron; R22 filed 2026-04-19 from /lander smell-test; R19 shipped, R14 enriched, R4/R19/R20/R21 filed earlier from GSC audit)_
 
 Future plans, grouped by theme. Things we've decided or want to do but haven't scheduled.
 
@@ -476,6 +476,39 @@ The authoritative brand voice lives in `liveradiodfw-marketing/MARKETING_STYLE_G
 **Priority:** High for Part B (removes manual friction from every new-show flow; 3 Nations Brewing is the first instance). Medium-Low for Part C (nice-to-have, not on a deadline).
 
 **Status:** Part A shipped 2026-04-23 AM. Part B queued for next session. Part C deferred.
+
+---
+
+### R26. Cloudflare cache purge tool
+
+**Context:** The site is served through Cloudflare (Free plan) with an edge TTL of ~10 minutes. After a git push to master the live site can lag behind origin by up to that long. For Ray's own verification `audit_shows.py` appends `?v=<timestamp>` which forces a fresh fetch but does NOT invalidate the edge cache that everyone else sees. Three concrete cases where that matters:
+
+- A venue contact is about to click a link we just sent and we need the edge to reflect origin *now*, not in 10 minutes.
+- Social preview fetchers (Facebook debugger, Mailchimp preview, iMessage unfurl) don't respect query strings; they see the stale copy.
+- A content bug is live and we want it off the edge within seconds, not on the TTL clock.
+
+Ray created a minimum-scope Cloudflare API token on 2026-04-21 with `Zone > Cache Purge + DNS` permissions on the `liveradiodfw.com` zone. The token existed but there was no tool in the repo that used it; a prior Perplexity thread did ad-hoc `purge-files-by-url` API calls but nothing was ever committed. Gap identified and closed on 2026-04-23 AM session.
+
+**Shipped 2026-04-23 AM:** `purge_cache.py` in `liveradiodfw-site` repo root. Stdlib-only, ASCII-only, ~240 lines.
+
+Modes:
+- `python purge_cache.py https://www.liveradiodfw.com/shows.json` - specific URLs (up to 30, Cloudflare Free plan limit)
+- `python purge_cache.py --shows` - the common bundle: `/shows.json`, `/`, `/shows` (after a calendar-driven content change)
+- `python purge_cache.py --everything` - whole-zone purge (slower edge rebuild, use sparingly)
+- `--dry-run` prints what would be purged without calling the API (safe to run without a token)
+- `--no-verify` skips the post-purge `cf-cache-status` HEAD check
+
+Reads `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ZONE_ID` from `.env` at the repo root (same loader pattern as `GIT_BRANCH` today) with env-variable override. Exit codes: 0 success, 1 config error, 2 API call failed, 3 post-purge verification failed.
+
+Post-purge verification is built in: the script HEADs each purged URL with a cache-buster and reports `cf-cache-status`; `MISS`, `DYNAMIC`, `EXPIRED`, or `BYPASS` all mean the edge just pulled from origin, which is what we want. A `HIT` immediately after a purge would mean the purge silently failed, and exit code 3 makes that loud.
+
+Tests: `test_purge_cache.py`, 25 cases, all passing. Covers ASCII gate, argument parsing (no args, >30 URLs, dry-run shapes), env-file loader (plain KEY=VALUE, quote stripping, no-override, missing file, bad lines), and monkey-patched `api_purge` for both success and failure paths. No network calls in the test suite.
+
+**Wiring pending (next session, ~15 min):** Add `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ZONE_ID` to Ray's `.env` on the Windows box at `C:\Tools\LiveRadioDFW\liveradiodfw-site\.env`. Smoke-test `python purge_cache.py --dry-run --shows` first to confirm the zone id loads, then `python purge_cache.py --shows` against live to confirm the API call works end-to-end.
+
+**Future enhancement (not urgent):** Hook `purge_cache.py --shows` into `sync_runner.py` so the 8 AM daily calendar sync auto-purges the shows bundle after a successful push, but only when `shows.json` actually changed. Making this automatic removes the 10-minute visibility lag on every new booking. Defer until the tool has been used manually enough to trust it.
+
+**Status:** Tool + tests shipped 2026-04-23 AM. Pending `.env` config on Windows box before first live use.
 
 ---
 
