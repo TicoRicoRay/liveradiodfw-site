@@ -1,6 +1,6 @@
 # Live Radio DFW - Bug List
 
-_Last updated: 2026-04-22 PM (B30 filed OPEN for `sync_runner.py` hardcoded `gh-pages` default on line 127 - root cause of today's 2-hour silent-push-failure investigation; workaround is `.env` override, file-level fix pending. B31 filed FIXED for the afternoon cleanup bundle: calendar window 365->730d (PR #4), ASCII scrub across both repos (-marketing PR #5, -site PR #2), and WARN prefix drop (PR #6). B28 PR #3 merged this session. B29 confirmed FIXED with production em-dash delivery. B22 confirmed FIXED end-to-end with 7+ real alert emails delivered via Gmail SMTP. Add/update/remove sync paths all validated against origin/master and the live site. New cardinal rule in memory: no non-ASCII in Python source, ever. gh-pages branch was deleted 2026-04-21; site deploys from master.)_
+_Last updated: 2026-04-23 AM (B34 filed and shipped for `sync_runner.py` silent-no-change-runs problem; always-on classified heartbeat email OK/CHANGED/FAIL via [PR #7](https://github.com/TicoRicoRay/liveradiodfw-marketing/pull/7) on `-marketing`. B33 `verify_miss` 403 fix confirmed landed earlier same session. R28 filed in roadmap to wire `purge_cache.py` into sync_runner on CHANGED runs. Earlier note: B30 filed OPEN for `sync_runner.py` hardcoded `gh-pages` default on line 127 - root cause of today's 2-hour silent-push-failure investigation; workaround is `.env` override, file-level fix pending. B31 filed FIXED for the afternoon cleanup bundle: calendar window 365->730d (PR #4), ASCII scrub across both repos (-marketing PR #5, -site PR #2), and WARN prefix drop (PR #6). B28 PR #3 merged this session. B29 confirmed FIXED with production em-dash delivery. B22 confirmed FIXED end-to-end with 7+ real alert emails delivered via Gmail SMTP. Add/update/remove sync paths all validated against origin/master and the live site. New cardinal rule in memory: no non-ASCII in Python source, ever. gh-pages branch was deleted 2026-04-21; site deploys from master.)_
 
 Current known defects and correctness issues. Fixed bugs move to [postmortems/](postmortems/) or the "Recently completed" section of [project-plan.md](project-plan.md). For planned work that isn't a defect, see [roadmap.md](roadmap.md).
 
@@ -1122,6 +1122,34 @@ if hasattr(sys.stderr, "reconfigure"):
 **Side observation:** `cf-cache-status=DYNAMIC` on `shows.json`, `/`, and `/shows` is itself interesting. It means Cloudflare is not caching those URLs at the edge for this zone's current config, so the purge API is effectively a no-op for those particular URLs. Not a bug in the tool; the tool will do its job the moment we add a Cache Rule or Page Rule that caches any of them (e.g. a future `shows.json` caching rule to reduce origin load). Worth noting so nobody wonders why the "fresh copy after purge" assertion is always `DYNAMIC` and never `MISS` today.
 
 Shipped: commit TBD on liveradiodfw-marketing master.
+
+---
+
+## B34. `sync_runner.py` no-change runs exit silently with no email, breaking the feedback loop
+
+**Symptom:** A scheduled or manual run of `sync_runner.py` that finds no calendar changes completes cleanly (exit 0), touches nothing, and sends no email. From the operator's point of view this is indistinguishable from: the task never firing, the webhook silently failing before the fetch, the script crashing before reaching the email step, or the SMTP credentials having rotted. On 2026-04-23 at 9:47 AM CDT Ray re-ran the task manually to verify the morning pipeline, received nothing, and had to walk a six-step diagnostic (`Get-ScheduledTaskInfo`, inspect `LastTaskResult`, check `git log` on the site repo, look for `shows.json` mtimes, read the task's action command, open `sync.log`) before concluding "silent = correct behavior today." That diagnostic should not be necessary to confirm a healthy run.
+
+**Where:** `sync_runner.py` main() `Step 7. Send alert emails` block. The `if email_parts:` gate skips email entirely when there are no adds, removals, updates, or missing-info alerts. No-change is the common case once the calendar is stable, so this is the daily path.
+
+**Impact:** Zero observability for healthy runs. The system has had credibility issues recently ([B28](#b28-setup_sync_task_schedulerps1-reproduces-the-ms-store-python--no-log-redirect-bugs-on-clean-install) silent-crash task action, [B29](#b29-utf-8-reconfigure-for-stdoutstderr) UTF-8 FATAL swallowed by Task Scheduler, [B30](#b30-sync_runnerpy-hardcoded-gh-pages-default) hardcoded `gh-pages` push target, [B33](#b33-purge_cachepy-verify_miss-got-403-from-cloudflare-edge-on-default-urllib-head-requests) `verify_miss` 403 masking a succeeded purge) so the operator's trust budget is low. Silent success reads as silent failure. Specifically:
+
+1. If the scheduled task stopped firing (disabled, account rotated, etc.), there is no alerting signal for days or weeks.
+2. If the SMTP credentials fail, the next run that produces an alert will also silently drop -- the only log is a stderr line visible only on the Windows box.
+3. Operators cannot sanity-check the pipeline without running PowerShell commands on the Windows box, which is friction that erodes the habit of sanity-checking.
+
+**Workaround:** None. Today the only way to verify a clean run is to log into the Windows box, inspect `sync.log`, and correlate with `git log` on the site repo. That is not workable for iPhone-only checks.
+
+**Fix options:**
+
+1. **(Chosen) Always-on classified email.** Every run emits exactly one email tagged `[LiveRadioDFW] OK` / `CHANGED` / `FAIL` so trust is built by presence of the email, not its contents. Class-based subject prefixes let Outlook rules auto-file OK runs to a heartbeat folder once trust is earned, at which point the operator can demote them if noise becomes a problem -- but the user has explicitly decided that today, an email is signal, not noise, because the system's reliability is still being established. Implementation: refactor main() to return a result dict; move the existing CHANGED email body into a `_build_email()` helper; add OK and FAIL bodies; route all three through `send_alert_email()` in `__main__`; add a `HEARTBEAT_FAILED` marker file so email-send failures surface on the next successful run. No new dependencies, stdlib only. ASCII source per cardinal rule. Preserves [B22](#b22-sync_runnerpy-alert-email-is-stubbed-on-windows-perplexity-only-transport-doesnt-exist-there) SMTP transport, [B29](#b29-utf-8-reconfigure-for-stdoutstderr) UTF-8 shim, [B32](#b32-no-low-friction-path-to-approve-proposed-show-descriptions)/[R25](roadmap.md#r25-reply-to-approve-workflow-for-show-descriptions) approval blocks, and the existing CHANGED email body verbatim (subject tag and a metadata footer are the only additions to the CHANGED path).
+
+2. Status webpage at a noindexed URL on `liveradiodfw.com` (e.g. `/status`) that reports `last_successful_run`, counts, and class. Requires a new surface and a way to write to it from the Windows box; email is already a solved surface and works on iPhone without any new plumbing.
+
+3. Weekly-only heartbeat instead of per-run. Cheaper in inbox volume but has the same silent-failure blind spot for 6 out of 7 days, defeating the purpose.
+
+4. Do nothing; rely on the `sync.log` file. Rejected -- the whole point is that the operator should not have to open PowerShell to trust the pipeline.
+
+**Status:** Shipped 2026-04-23 AM via [PR #7](https://github.com/TicoRicoRay/liveradiodfw-marketing/pull/7) on `liveradiodfw-marketing`. Paired with new roadmap item [R28](roadmap.md#r28-wire-purge_cachepy-into-sync_runner-on-changed-runs) so the Cloudflare purge step is eventually reflected in the CHANGED email metadata footer rather than being a separate manual invocation.
 
 ---
 

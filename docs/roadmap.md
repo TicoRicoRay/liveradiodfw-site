@@ -1,6 +1,6 @@
 # Live Radio DFW - Roadmap
 
-_Last updated: 2026-04-23 AM (R27 filed to guard against shows.json hand-edits that skip the builder chain, after 3 Nations description shipped in two commits; R26 filed, shipped to marketing repo, and site-repo mislanding reverted; R25 Part A shipped earlier same session; R23 filed to preserve the Monthly Profile Audit venue-discovery cron; R22 filed 2026-04-19 from /lander smell-test; R19 shipped, R14 enriched, R4/R19/R20/R21 filed earlier from GSC audit)_
+_Last updated: 2026-04-23 AM (R28 filed to wire `purge_cache.py` into sync_runner on CHANGED runs, depends on B34 which shipped same session via [PR #7](https://github.com/TicoRicoRay/liveradiodfw-marketing/pull/7). Earlier note: R27 filed to guard against shows.json hand-edits that skip the builder chain, after 3 Nations description shipped in two commits; R26 filed, shipped to marketing repo, and site-repo mislanding reverted; R25 Part A shipped earlier same session; R23 filed to preserve the Monthly Profile Audit venue-discovery cron; R22 filed 2026-04-19 from /lander smell-test; R19 shipped, R14 enriched, R4/R19/R20/R21 filed earlier from GSC audit)_
 
 Future plans, grouped by theme. Things we've decided or want to do but haven't scheduled.
 
@@ -560,6 +560,26 @@ When press-kit work starts, this copy (not the first-draft internal-memo version
 **Depends on:** R13 (style guide audit) ideally ships first so the new copy lands already aligned to the guide instead of needing a rewrite pass.
 
 **Priority:** Medium-high. Directly addresses the top of the booking funnel (a venue scout's first visit), which is more leverage than any single optimization to the existing pages.
+
+---
+
+### R28. Wire `purge_cache.py` into `sync_runner.py` on CHANGED runs
+
+**Context:** `purge_cache.py` (shipped in `liveradiodfw-marketing`, hardened via [B33](bugs.md#b33-purge_cachepy-verify_miss-got-403-from-cloudflare-edge-on-default-urllib-head-requests)) purges the Cloudflare edge cache for the three shows-bundle URLs (`/shows.html`, `/shows.json`, `/`) after a content change. Today it is invoked manually. Every auto-sync that changes `shows.json` and pushes to master should also purge the edge cache so visitors see the updated schedule on the next request instead of waiting for the CDN TTL to expire.
+
+Scope: trivial -- call `subprocess.run([sys.executable, "purge_cache.py", "--shows"])` after `git_commit_and_push()` returns True inside `sync_runner.main()`, capture the result (URLs purged, CF request id, verify status), and include it in the CHANGED email's metadata footer (see [B34](bugs.md#b34-sync_runnerpy-no-change-runs-exit-silently-with-no-email-breaking-the-feedback-loop)). On OK runs the footer reports `Purge: skipped (no changes)`. On FAIL runs the footer reports `Purge: not reached`.
+
+**Plan:**
+1. In `sync_runner.py`, after `pushed = git_commit_and_push(commit_msg)` returns True, invoke `purge_cache.py --shows --json` (add a `--json` flag to `purge_cache.py` that prints a single-line JSON summary to stdout; B33 already structured the output for easy parsing). Capture the returncode, Cloudflare request id, and verify status. On non-zero exit, log to stderr and proceed -- a failed purge should not abort the sync, only surface in the email.
+2. Thread the purge summary into the metadata footer built by `_build_email()` in the B34 patch.
+3. Update `docs/runbooks/windows-sync-task.md` to note that manual `purge_cache.py` invocation is no longer needed after a sync.
+4. Document the behavior in `docs/architecture/scheduled-tasks.md` alongside the existing sync-runner description.
+
+**Depends on:** [B34](bugs.md#b34-sync_runnerpy-no-change-runs-exit-silently-with-no-email-breaking-the-feedback-loop) (heartbeat email) must ship first so the purge summary has a footer to live in. B33 already landed the hardened `verify_miss` that makes purge status meaningful.
+
+**Priority:** Medium. Every CHANGED run today leaves up to Cloudflare's TTL (currently `DYNAMIC` per B33's side observation -- i.e. no caching -- but this will change the moment a Cache Rule is added for `shows.json` to reduce origin load). When that caching rule lands, missing the purge step becomes a correctness bug; wiring it now is cheap insurance.
+
+**Non-goals:** Caching rules for `shows.json` and `/shows.html` themselves. That is a separate decision (origin load is currently trivial; adding caching before it is needed is premature optimization) and belongs in its own R-entry if and when it comes up.
 
 ---
 
