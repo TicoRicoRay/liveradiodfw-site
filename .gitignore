@@ -1,2 +1,9 @@
 __pycache__/
 *.pyc
+
+# Secrets -- NEVER commit. Matches the liveradiodfw-marketing repo pattern.
+# purge_cache.py and any future script reads its token from .env here.
+.env
+.env.local
+.env.*.local
+*.env
