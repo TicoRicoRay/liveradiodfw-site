@@ -1127,7 +1127,7 @@ if hasattr(sys.stderr, "reconfigure"):
 
 **Side observation:** `cf-cache-status=DYNAMIC` on `shows.json`, `/`, and `/shows` is itself interesting. It means Cloudflare is not caching those URLs at the edge for this zone's current config, so the purge API is effectively a no-op for those particular URLs. Not a bug in the tool; the tool will do its job the moment we add a Cache Rule or Page Rule that caches any of them (e.g. a future `shows.json` caching rule to reduce origin load). Worth noting so nobody wonders why the "fresh copy after purge" assertion is always `DYNAMIC` and never `MISS` today.
 
-Shipped: commit TBD on liveradiodfw-marketing master.
+Shipped: commit [`4db1143`](https://github.com/TicoRicoRay/liveradiodfw-marketing/commit/4db1143) on `liveradiodfw-marketing` master, 2026-04-23 PM.
 
 ---
 
