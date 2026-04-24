@@ -6,6 +6,29 @@ Current known defects and correctness issues. Fixed bugs move to [postmortems/](
 
 ---
 
+## Currently open (quick index)
+
+Quick index of open B-entries. Full details below in numeric order. Fixed entries are left in-place with `[OPEN] -> FIXED` markers for history. Jarvis blind spots are tracked separately in the [J-series](#j1-scheduled-tasks-are-invisible-across-threads) below.
+
+- [B9. Availability script cannot be run or smoke-tested from Jarvis's sandbox](#b9-availability-script-cannot-be-run-or-smoke-tested-from-jarviss-sandbox)
+- [B10. Venue name duplicated on `/shows` and show-detail pages](#b10-venue-name-duplicated-on-shows-and-show-detail-pages)
+- [B11. Breadcrumb on show-detail pages is not unique per-show](#b11-breadcrumb-on-show-detail-pages-is-not-unique-per-show)
+- [B13. Red date badge on show-detail pages is not square](#b13-red-date-badge-on-show-detail-pages-is-not-square)
+- [B14. Show-detail action buttons need reorder + Share promoted to primary CTA](#b14-show-detail-action-buttons-need-reorder--share-promoted-to-primary-cta)
+- [B16.2. Stage 2 rollout for auto-generated show descriptions](#b162-stage-2-rollout-for-auto-generated-show-descriptions)
+- [B20. Legacy Bandzoogle-era past-show descriptions miss v2 warm-invitation voice](#b20-legacy-bandzoogle-era-past-show-descriptions-miss-v2-warm-invitation-voice)
+- [B21. Six scheduled tasks orphaned in a hung old Perplexity thread](#b21-six-scheduled-tasks-orphaned-in-a-hung-old-perplexity-thread)
+- [B23. `-marketing` repo cruft audit: unclear file provenance and a broken README reference](#b23--marketing-repo-cruft-audit-unclear-file-provenance-and-a-broken-readme-reference)
+- [B24. Home page upcoming-show card has weak contrast in dark theme](#b24-home-page-upcoming-show-card-has-weak-contrast-in-dark-theme)
+- [B26. Dual source-of-truth for nav: root `nav.html` and `includes/nav.html`](#b26-dual-source-of-truth-for-nav-root-navhtml-and-includesnavhtml)
+- [B27. Docs reference `gh-pages` branch but the site has always served from `master`](#b27-docs-reference-gh-pages-branch-but-the-site-has-always-served-from-master)
+- [B28. `setup_sync_task_scheduler.ps1` reproduces the MS Store Python + no-log-redirect bugs on clean install](#b28-setup_sync_task_schedulerps1-reproduces-the-ms-store-python--no-log-redirect-bugs-on-clean-install)
+- [B30. `sync_runner.py` hardcodes `gh-pages` as the default git push branch](#b30-sync_runnerpy-hardcodes-gh-pages-as-the-default-git-push-branch)
+- [B32. No low-friction path to approve proposed show descriptions](#b32-no-low-friction-path-to-approve-proposed-show-descriptions)
+- [J1-J10. Jarvis blind spots (scheduled tasks, memory, Spaces, context decay, etc.)](#j1-scheduled-tasks-are-invisible-across-threads)
+
+---
+
 ## How to add a bug (READ BEFORE ADDING)
 
 All new bug entries must follow these rules. No exceptions - consistency is the whole point of this file.
@@ -561,7 +584,7 @@ Secondary observation worth capturing: this means the band calendar is read by *
 
 ---
 
-## B8. `is_private_event` filter is too narrow; private shows can leak as public pages
+## B8. `is_private_event` filter is too narrow; private shows can leak as public pages ~~[OPEN]~~ -> **FIXED 2026-04-18 (option (a), gh-pages c355e35)**
 
 **Symptom:** A calendar event titled `LR - Test Event (Private)` was correctly flagged as a gig (matches the `LR -` rule in `is_gig_event`) but was NOT flagged as private by `is_private_event`. Result: `shows.json` entry had `private: false`, and `build_show_pages.py` generated a full public show page at `shows/5608-chalice-dr-2026-06-20.html` with the residential venue address, a `MusicEvent` schema.org block, a canonical URL, and an announcement-style meta description.
 
