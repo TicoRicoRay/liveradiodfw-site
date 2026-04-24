@@ -479,6 +479,35 @@ The authoritative brand voice lives in `liveradiodfw-marketing/MARKETING_STYLE_G
 
 ---
 
+### R28. Auto-generated open-bugs index + header/status consistency validator
+
+**Context:** `bugs.md` currently has two sources of truth for each bug's open/closed state: the header marker (`## B<n>. Title ~~[OPEN]~~ -> FIXED ...`) and the `**Status:**` line in the body. When they disagree, nothing catches it. 2026-04-24 session audit found six drift instances (B8, B10, B11, B13, B14, B28) where the Status line said "Fixed" but the header had no marker, causing those bugs to appear in the hand-written open index at the top of the file. The hand-written index is itself a third source of truth and drifts the moment any entry is edited without a corresponding index update. The 2026-04-24 drift closes were one-off cleanup; this item automates prevention.
+
+**Plan:**
+- **Declare header marker canonical.** Status line is descriptive prose only; header marker is what tooling reads.
+- **`tools/bugs_index.py`** parses `bugs.md`, walks every `## B<n>` / `## B<n>.<sub>` / `## J<n>` header (skipping fenced code blocks so the template doesn't match), classifies each as OPEN / FIXED / WONT-FIX by regex on the header line only, and rewrites the markdown block between sentinel comments `<!-- BEGIN_OPEN_INDEX -->` / `<!-- END_OPEN_INDEX -->` with a fresh bulleted list of OPEN entries and anchor links. Idempotent: running twice with no changes produces no diff.
+- **Validator mode (`--check`)**: for each entry, if the Status line contains `fixed` / `won't-fix` / `wont-fix` / `resolved` (case-insensitive) but the header has no `FIXED` / `WON'T-FIX` / `WONT-FIX` token, print the line number and exit non-zero.
+- **Pre-commit hook integration:** extend `.githooks/pre-commit` so that if `docs/bugs.md` is in the staged diff, the hook runs `python tools/bugs_index.py --rewrite --check`; if `--rewrite` changed the file, re-stage it; if `--check` fails, abort the commit with a message pointing at the mismatched entry. Escape hatch: `SKIP_BUGS_INDEX_CHECK=1 git commit ...` for the rare case a human deliberately wants the Status and header to disagree (there is no such case - the flag is just a break-glass, like R27's).
+- **Replace the current hand-written `## Currently open (quick index)` block with the sentinel comments + an initial auto-generated pass** in the same commit.
+
+**Pure-Python, no new deps.** Target: ~100-150 lines for the script + 10-15 lines in the hook.
+
+**Depends on:** R27 pre-commit hook (shipped 2026-04-24). This extends the same hook file.
+
+**Priority:** High. Bug tracking drift is a multi-session correctness problem - the user has noticed it repeatedly ("bug tracking has been awful for a while now") and it undermines trust in every other claim the tracker makes. Ship as the very next piece of work after the pre-flight test battery.
+
+**Effort:** One session, bounded. ~45-60 min of work.
+
+**Ship criteria:**
+1. `python tools/bugs_index.py --rewrite` on current `bugs.md` produces an index matching what is currently hand-written (minus any drift the validator catches on first run - those become a separate cleanup commit before the tool commit lands).
+2. `python tools/bugs_index.py --check` exits 0 on a clean file, non-zero on a synthetic drift case in a test fixture.
+3. Pre-commit hook catches a staged `bugs.md` edit that introduces drift; also auto-rewrites the index block when an entry is closed.
+4. Test fixture file committed under `.githooks/tests/` or equivalent.
+
+**Status:** Filed 2026-04-24. Not started. Top priority for next working session after the pre-flight test battery runs clean.
+
+---
+
 ### R27. Guard against hand-edits to shows.json that skip the builder chain ~~[OPEN]~~ -> **SHIPPED 2026-04-24 (Option A only; Option B deferred)**
 
 **Context:** On 2026-04-23 AM the 3 Nations 2026-09-05 "About This Show" description was written directly into `shows.json` and committed (`5f768ed`) without running the post-write builder chain. `shows.json` got the new description but `shows/3-nations-brewing-2026-09-05.html` did not, so the live show page kept showing the "Show details coming soon" placeholder. The user correctly flagged that the live page was still stale; diagnosis revealed it was a build problem, not a Cloudflare cache problem. Running the canonical chain locally (`build_shows.py` -> `build_show_pages.py` -> `build_includes.py`) regenerated the HTML and commit `ee5a8e2` shipped the fix.
