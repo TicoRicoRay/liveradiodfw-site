@@ -11,8 +11,6 @@ Current known defects and correctness issues. Fixed bugs move to [postmortems/](
 Quick index of open B-entries. Full details below in numeric order. Fixed entries are left in-place with `[OPEN] -> FIXED` markers for history. Jarvis blind spots are tracked separately in the [J-series](#j1-scheduled-tasks-are-invisible-across-threads) below.
 
 - [B9. Availability script cannot be run or smoke-tested from Jarvis's sandbox](#b9-availability-script-cannot-be-run-or-smoke-tested-from-jarviss-sandbox)
-- [B10. Venue name duplicated on `/shows` and show-detail pages](#b10-venue-name-duplicated-on-shows-and-show-detail-pages)
-- [B14. Show-detail action buttons need reorder + Share promoted to primary CTA](#b14-show-detail-action-buttons-need-reorder--share-promoted-to-primary-cta)
 - [B16.2. Stage 2 rollout for auto-generated show descriptions](#b162-stage-2-rollout-for-auto-generated-show-descriptions)
 - [B20. Legacy Bandzoogle-era past-show descriptions miss v2 warm-invitation voice](#b20-legacy-bandzoogle-era-past-show-descriptions-miss-v2-warm-invitation-voice)
 - [B21. Six scheduled tasks orphaned in a hung old Perplexity thread](#b21-six-scheduled-tasks-orphaned-in-a-hung-old-perplexity-thread)
@@ -20,7 +18,6 @@ Quick index of open B-entries. Full details below in numeric order. Fixed entrie
 - [B24. Home page upcoming-show card has weak contrast in dark theme](#b24-home-page-upcoming-show-card-has-weak-contrast-in-dark-theme)
 - [B26. Dual source-of-truth for nav: root `nav.html` and `includes/nav.html`](#b26-dual-source-of-truth-for-nav-root-navhtml-and-includesnavhtml)
 - [B27. Docs reference `gh-pages` branch but the site has always served from `master`](#b27-docs-reference-gh-pages-branch-but-the-site-has-always-served-from-master)
-- [B28. `setup_sync_task_scheduler.ps1` reproduces the MS Store Python + no-log-redirect bugs on clean install](#b28-setup_sync_task_schedulerps1-reproduces-the-ms-store-python--no-log-redirect-bugs-on-clean-install)
 - [B30. `sync_runner.py` hardcodes `gh-pages` as the default git push branch](#b30-sync_runnerpy-hardcodes-gh-pages-as-the-default-git-push-branch)
 - [B32. No low-friction path to approve proposed show descriptions](#b32-no-low-friction-path-to-approve-proposed-show-descriptions)
 - [J1-J10. Jarvis blind spots (scheduled tasks, memory, Spaces, context decay, etc.)](#j1-scheduled-tasks-are-invisible-across-threads)
@@ -201,7 +198,7 @@ A half-complete bug entry is worse than no entry. If symptom or impact aren't cl
 
 ---
 
-## B14. Show-detail action buttons need reorder + Share promoted to primary CTA
+## B14. Show-detail action buttons need reorder + Share promoted to primary CTA ~~[OPEN]~~ -> **FIXED 2026-04-18 midday (gh-pages `1f66996` + `5509b30`; red+white Share CTA in both themes)**
 
 **Symptom:** On each show-detail page the action-button row renders as `Get Directions` (red primary) &rarr; `Add to Calendar` (outline) &rarr; `Share` (outline) &rarr; `All Shows` (outline). Share is the action the band most wants fans to take (it drives new reach to upcoming shows), but visually it sits third in the row with the same ghost outline as every other button, so it reads as a low-priority tertiary.
 
@@ -524,7 +521,7 @@ sits inside `<nav class="breadcrumb" aria-label="Breadcrumb">` at lines 191–19
 
 ---
 
-## B10. Venue name duplicated on `/shows` and show-detail pages
+## B10. Venue name duplicated on `/shows` and show-detail pages ~~[OPEN]~~ -> **FIXED 2026-04-18 AM (two passes)**
 
 **Symptom:** On `/shows.html`, each upcoming-show card renders the venue name two or three times in a row, e.g.:
 
@@ -1011,7 +1008,7 @@ Implication for the fix: the email can't just send on success — it must **alwa
 
 ---
 
-## B28. `setup_sync_task_scheduler.ps1` reproduces the MS Store Python + no-log-redirect bugs on clean install
+## B28. `setup_sync_task_scheduler.ps1` reproduces the MS Store Python + no-log-redirect bugs on clean install ~~[OPEN]~~ -> **FIXED 2026-04-22 AM (-marketing PR #3 merged)**
 
 **Symptom:** A clean run of the Windows Task Scheduler installer on Ray's box (2026-04-22 AM) registered a task that failed with `LastTaskResult: 2147942402` (0x80070002, "the system cannot find the file specified") on first fire. Separately, when an unrelated runtime crash eventually happened (B29's `UnicodeEncodeError`), it vanished from the Task Scheduler history entirely — only the non-zero return code was visible, no error text, no stack trace.
 
