@@ -7,8 +7,8 @@ Built April 2026. Deployed on GitHub Pages.
 
 ## Quick Links
 - **Production URL:** https://liveradiodfw.com
-- **GitHub repo (website):** https://github.com/TicoRicoRay/liveradiodfw-site (gh-pages branch)
-- **GitHub repo (marketing assets):** https://github.com/TicoRicoRay/liveradiodfw-marketing (master only — gh-pages deleted Apr 16)
+- **GitHub repo (website):** https://github.com/TicoRicoRay/liveradiodfw-site (`master` branch; the old `gh-pages` branch was deleted 2026-04-21)
+- **GitHub repo (marketing assets):** https://github.com/TicoRicoRay/liveradiodfw-marketing (`master` only)
 
 ---
 
@@ -24,7 +24,7 @@ This turns on the `pre-commit` guard that blocks `shows.json` edits which skip t
 
 ## How It Was Built
 
-Pure static HTML/CSS/JavaScript — no framework, no build tool, no server required. Deployed to GitHub Pages from the `gh-pages` branch.
+Pure static HTML/CSS/JavaScript — no framework, no build tool, no server required. Deployed to GitHub Pages from the `master` branch.
 
 **Design system:**
 - Font: Barlow Condensed (headings), Inter (body) — loaded from Google Fonts
@@ -107,7 +107,7 @@ liveradiodfw-site/
    - **Adds** new shows found on the calendar
    - **Removes** shows deleted from the calendar
    - **Updates** shows whose details changed (time, venue, address)
-4. If any changes are detected, it runs `build_shows.py`, commits, and pushes to gh-pages
+4. If any changes are detected, it runs `build_shows.py`, commits, and pushes to `master`
 5. An email is sent to info@liveradiodfw.com summarizing all changes
 6. Deletions trigger a separate alert email (deletions are unusual and may be accidental)
 
@@ -182,13 +182,13 @@ python build_songs.py --force
 
 ### Pushing Changes
 
-Push to `liveradiodfw-site` only (the `-marketing` repo no longer has a gh-pages branch):
+Push to `liveradiodfw-site` only (the `-marketing` repo hosts automation scripts and docs, not site content):
 
 ```bash
 cd /path/to/liveradiodfw-site
 git add -A
 git commit -m "Description of change"
-git push origin gh-pages
+git push origin master
 ```
 
 ---
@@ -227,7 +227,7 @@ These run automatically via Perplexity Computer:
 
 | Cron | Schedule | What it does |
 |------|----------|-------------|
-| **Daily Calendar Sync** | **Every day 8 AM Central** | **Runs `sync_calendar.py` — syncs Google Calendar → shows.json → website. Auto-adds, auto-deletes, auto-updates. Emails info@ on changes. Pushes to gh-pages.** |
+| **Daily Calendar Sync** | **Every day 8 AM Central** | **Runs `sync_runner.py` on Ray's Windows Task Scheduler — syncs Google Calendar → shows.json → website. Auto-adds, auto-deletes, auto-updates. Emails info@ on changes. Pushes to `master`.** |
 | HTTPS Cert Check (temp) | Hourly (until resolved) | Checks `https://www.liveradiodfw.com` cert. Emails info@ on success or after 5 failures, then self-deletes. |
 
 **Calendar sync details:**
