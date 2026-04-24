@@ -479,7 +479,7 @@ The authoritative brand voice lives in `liveradiodfw-marketing/MARKETING_STYLE_G
 
 ---
 
-### R27. Guard against hand-edits to shows.json that skip the builder chain
+### R27. Guard against hand-edits to shows.json that skip the builder chain ~~[OPEN]~~ -> **SHIPPED 2026-04-24 (Option A only; Option B deferred)**
 
 **Context:** On 2026-04-23 AM the 3 Nations 2026-09-05 "About This Show" description was written directly into `shows.json` and committed (`5f768ed`) without running the post-write builder chain. `shows.json` got the new description but `shows/3-nations-brewing-2026-09-05.html` did not, so the live show page kept showing the "Show details coming soon" placeholder. The user correctly flagged that the live page was still stale; diagnosis revealed it was a build problem, not a Cloudflare cache problem. Running the canonical chain locally (`build_shows.py` -> `build_show_pages.py` -> `build_includes.py`) regenerated the HTML and commit `ee5a8e2` shipped the fix.
 
@@ -495,6 +495,10 @@ The authoritative brand voice lives in `liveradiodfw-marketing/MARKETING_STYLE_G
 **Depends on:** None.
 
 **Priority:** Medium. One occurrence so far, caught within the same session, but the failure mode is silent (commit looks fine, site is stale, no error anywhere) and will recur any time a show description or venue field needs a hand-edit.
+
+**Ship note 2026-04-24:** Option A (pre-commit hook) shipped in [`da829f3`](https://github.com/TicoRicoRay/liveradiodfw-site/commit/da829f3) on `liveradiodfw-site/master`. New files: `.githooks/pre-commit` (Python, ASCII-clean, 95 lines) and `.githooks/README.md`. Top-level README updated with the one-time install step (`git config core.hooksPath .githooks`). Rule: if `shows.json` is in the staged diff, at least one `shows/*.html` file must also be staged; otherwise block with a message pointing at the three builders. Escape hatch: `SKIP_SHOWS_JSON_CHECK=1 git commit ...`. Test suite covers 6 scenarios (shows.json alone, shows.json + show HTML, no shows.json, bypass env var, shows.json + unrelated HTML, empty diff); all pass. Option B (rebuild_after_json_edit.py helper script) deferred - not needed while the sync pipeline is the only writer to shows.json. Revisit if hand-edits become common enough that a helper would pay for itself.
+
+**Ray-side action:** on any clone where you want the guard active, run `git config core.hooksPath .githooks` once. Future Jarvis sessions inherit the hook automatically because sandbox clones of the repo pick up the tracked `.githooks/` dir and this session already ran the config command on the sandbox clone.
 
 ---
 
