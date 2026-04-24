@@ -12,6 +12,16 @@ Built April 2026. Deployed on GitHub Pages.
 
 ---
 
+## First-time clone setup
+
+One-time per clone, enable the tracked git hooks:
+
+    git config core.hooksPath .githooks
+
+This turns on the `pre-commit` guard that blocks `shows.json` edits which skip the builder chain (R27, see [`.githooks/README.md`](.githooks/README.md)).
+
+---
+
 ## How It Was Built
 
 Pure static HTML/CSS/JavaScript — no framework, no build tool, no server required. Deployed to GitHub Pages from the `gh-pages` branch.

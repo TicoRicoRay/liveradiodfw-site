@@ -1,0 +1,94 @@
+#!/usr/bin/env python3
+# -*- coding: ascii -*-
+"""
+Pre-commit hook: block shows.json edits that skip the builder chain.
+
+Context (filed as R27 on the roadmap, 2026-04-23):
+
+shows.json is an intermediate artifact. The site's user-visible files are
+the per-show HTML pages that build_show_pages.py emits and the includes
+that build_includes.py stamps in. Editing shows.json without running the
+builder chain is a silent-failure class bug: the commit succeeds, the push
+succeeds, the working tree is clean, and the live site shows stale
+placeholders. This happened on 2026-04-23 with the 3 Nations Brewing
+2026-09-05 description (commit 5f768ed) and is the reason this hook exists.
+
+Rule: if shows.json is in the staged diff, at least one shows/*.html file
+must also be in the staged diff. Otherwise, block the commit and point at
+the builder chain.
+
+Escape hatch: SKIP_SHOWS_JSON_CHECK=1 git commit ...
+(Use only for shows.json schema edits that no builder renders.)
+"""
+
+import os
+import subprocess
+import sys
+
+
+def staged_files():
+    """Return the list of files in the staged diff as strings."""
+    result = subprocess.run(
+        ["git", "diff", "--cached", "--name-only", "--diff-filter=ACMR"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        # If git itself is broken, don't block; let the commit proceed.
+        return []
+    return [line for line in result.stdout.splitlines() if line]
+
+
+def main():
+    # Force UTF-8 on stdout per project cardinal rule.
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
+    if os.environ.get("SKIP_SHOWS_JSON_CHECK") == "1":
+        print("pre-commit: SKIP_SHOWS_JSON_CHECK=1 set, skipping shows.json guard.")
+        return 0
+
+    staged = staged_files()
+    shows_json_staged = "shows.json" in staged
+    if not shows_json_staged:
+        return 0
+
+    show_html_staged = [
+        p for p in staged if p.startswith("shows/") and p.endswith(".html")
+    ]
+    if show_html_staged:
+        # Looks fine - shows.json edit is paired with at least one show page.
+        return 0
+
+    # Block.
+    msg = (
+        "\n"
+        "pre-commit: shows.json is staged but no shows/*.html files are staged.\n"
+        "\n"
+        "shows.json is an intermediate artifact. The per-show HTML pages are\n"
+        "what visitors actually see. Committing shows.json without the\n"
+        "regenerated show pages will leave the live site stale with no error\n"
+        "signal (see R27 on the roadmap, and commit 5f768ed for the failure\n"
+        "mode that triggered this guard).\n"
+        "\n"
+        "Run the builder chain in order, stage the results, and commit again:\n"
+        "\n"
+        "    python build_shows.py\n"
+        "    python build_show_pages.py\n"
+        "    python build_includes.py\n"
+        "    git add shows/ shows.html index.html past-shows.html\n"
+        "\n"
+        "Or, for a shows.json schema edit that no builder renders, bypass:\n"
+        "\n"
+        "    SKIP_SHOWS_JSON_CHECK=1 git commit ...\n"
+        "\n"
+    )
+    sys.stderr.write(msg)
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
