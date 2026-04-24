@@ -32,17 +32,6 @@ Perplexity `schedule_cron` tasks are **thread-scoped**. A task created in thread
 | **Logon mode** | "Run only when user is logged on", see status block above + [roadmap.md R24](../roadmap.md#r24-windows-task-scheduler-run-whether-logged-on-mode-switch). Switch to "run whether logged on or not" deferred because it requires the local account password (Ray uses Windows Hello only). |
 | **Closes** | [bugs.md B7](../bugs.md#b7-webhook-passphrase-and-url-are-publicly-readable-on-the-live-site) (exposure) and [bugs.md B1](../bugs.md#b1-calendar-sync-cron-drifts-across-dst) (DST drift) as a pair. |
 
-### Legacy host (being decommissioned, keep for history + parallel-run window)
-
-| Field | Value |
-|---|---|
-| **What** | Same as above, but ran the pre-split monolithic `sync_calendar.py` until 2026-04-21. `sync_calendar.py` has since been removed from `gh-pages` (rename → `sync_lib.py`). |
-| **Where it runs** | Perplexity `schedule_cron` task named "LiveRadioDFW Daily Calendar Sync" |
-| **Owned by** | Perplexity thread "More Band Marketing" (confirmed 2026-04-21 via the Tasks UI). `schedule_cron(list)` returns empty from any other thread — see [bugs.md J1](../bugs.md#j1-scheduled-tasks-are-invisible-across-threads). |
-| **When it fires** | 13:11 UTC daily (fixed UTC) — the DST drift bug. |
-| **Retire after** | Windows Task Scheduler runs cleanly for 3 consecutive days with identical commit shape. |
-| **How to retire** | Open the "More Band Marketing" Perplexity thread → Tasks view → delete the `LiveRadioDFW Daily Calendar Sync` task. Then move this row into "Deleted / defunct tasks" below with a date. |
-
 ---
 
 ## 2. Monthly venue-availability email
@@ -102,6 +91,16 @@ Query Mailchimp Venues audience activity for the last 45 days (API: `/3.0/lists/
 ### Hourly SSL cert watcher (DELETED 2026-04-17)
 
 Ran hourly between Apr 16 evening and Apr 17 morning during the HTTPS outage, polling GitHub Pages for cert provisioning status and emailing on change. Deleted after the Cloudflare migration stabilized the cert situation. Action item #13 on [postmortems/2026-04-17-sync-wipe.md](../postmortems/2026-04-17-sync-wipe.md) marks this **Done**.
+
+### LiveRadioDFW Daily Calendar Sync, Perplexity cron (DEFUNCT 2026-04-24, still firing)
+
+Ran daily at 13:11 UTC from Perplexity `schedule_cron` in the thread "More Band Marketing." Triggered the pre-split monolithic `sync_calendar.py` on `gh-pages` until 2026-04-21, when B7 Part 2 shipped and replaced the host with Windows Task Scheduler on Ray's box. Parallel-run window (2026-04-22, 23, 24) completed clean on 2026-04-24; retired in the same motion as [B1](../bugs.md#b1-calendar-sync-cron-drifts-across-dst--open--fixed-2026-04-24-structural-fix-via-b7-part-2-parallel-run-window-clean) / [B7](../bugs.md#b7-webhook-passphrase-and-url-are-publicly-readable-on-the-live-site--open--fixed-2026-04-21-part-2-shipped-exposure-closed).
+
+**Why "defunct" and not "deleted":** Ray cannot reach the "More Band Marketing" thread to delete the `schedule_cron` task. As of 2026-04-24, new Perplexity Computer threads silently drop Computer and connector access on submit (reproduced across 2 browsers + Windows client; support's only response was to stop submitting tickets), so the Tasks UI for the old thread is not accessible either. The cron is therefore still firing daily at 13:11 UTC.
+
+**Why it is harmless:** `sync_calendar.py` was removed from `gh-pages` on 2026-04-21 and renamed to `sync_lib.py`, which is a pure library with no `__main__` block and no side effects. If the old Perplexity thread's cron ever tries to invoke the old path, it hits a 404 / import error and produces nothing.
+
+**How to fully delete:** Once new Computer threads work again, or Perplexity auto-expires the old thread, open "More Band Marketing" -> Tasks -> delete `LiveRadioDFW Daily Calendar Sync`, then update this row to DELETED with the date.
 
 ---
 

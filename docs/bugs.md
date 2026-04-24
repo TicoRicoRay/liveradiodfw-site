@@ -64,7 +64,7 @@ A half-complete bug entry is worse than no entry. If symptom or impact aren't cl
 
 ---
 
-## B1. Calendar sync cron drifts across DST
+## B1. Calendar sync cron drifts across DST ~~[OPEN]~~ -> **FIXED 2026-04-24 (structural fix via B7 Part 2; parallel-run window clean)**
 
 **Symptom:** Daily `sync_calendar.py` run fires at a fixed UTC minute (13:11 UTC), which lands at 8:11 AM Central in summer but 7:11 AM Central in winter. One-hour drift twice a year.
 
@@ -76,7 +76,11 @@ A half-complete bug entry is worse than no entry. If symptom or impact aren't cl
 
 **Why not just recreate it here:** because each run costs Perplexity credits and we don't want two overlapping crons. Must update in place from the owning thread.
 
-**Status:** Open. Top priority.
+**Status:** ~~Open. Top priority.~~ **Closed 2026-04-24.**
+
+**Close-out 2026-04-24:** The fix ended up being structural, not a cron edit. [B7](#b7-webhook-passphrase-and-url-are-publicly-readable-on-the-live-site--open--fixed-2026-04-21-part-2-shipped-exposure-closed) Part 2 (shipped 2026-04-21) moved the daily sync off Perplexity cron entirely and onto **Windows Task Scheduler** on Ray's box, which uses local Central time with automatic DST handling - fixing B1 by construction. The 3-day parallel-run verification window (2026-04-22, 23, 24) completed clean: every auto-sync commit on `liveradiodfw-site/master` during the window is from the Windows box with a local-Central timestamp, including today's `ce7fd4c` at 2026-04-24 08:00:14 -0500 (dead on 8:00 AM Central). No competing commits from the old Perplexity cron appeared.
+
+**Residual:** The old Perplexity `schedule_cron` task in the "More Band Marketing" thread continues to fire at 13:11 UTC daily because Ray cannot reach that thread to delete it (new Perplexity Computer threads are broken as of 2026-04-24 - support's only response was to stop submitting tickets). It is harmless: `sync_lib.py` is a library, so if the old script ever executes it produces no side effects against the site. The legacy-host row has been moved to `architecture/scheduled-tasks.md` "Deleted / defunct tasks" with a note that it is defunct-but-firing. Revisit if and when Perplexity either restores new-thread Computer access or auto-expires the old thread's crons.
 
 ---
 
@@ -168,7 +172,9 @@ A half-complete bug entry is worse than no entry. If symptom or impact aren't cl
   - `https://raw.githubusercontent.com/TicoRicoRay/liveradiodfw-site/gh-pages/sync_calendar.py` → **HTTP 404.**
   - New `https://raw.githubusercontent.com/TicoRicoRay/liveradiodfw-site/gh-pages/sync_lib.py` → HTTP 200, and `grep` for the passphrase value returns zero hits.
 - **Handoff to Ray (no-zip pattern):** Ray `git clone`s [`liveradiodfw-marketing`](https://github.com/TicoRicoRay/liveradiodfw-marketing) once into `C:\Tools\LiveRadioDFW\liveradiodfw-marketing\`, creates a local `.env` from `.env.example` (the only hand-managed file), and runs `.\setup_sync_task_scheduler.ps1` as Administrator. All future updates are `git pull`. No zip handoffs, no stale file copies — Ray's standing architectural preference ("everything else is just a pull from github as needed"). Install is ~15 minutes hands-on plus the 3-day parallel-run verification window.
-- **B1 unblocked.** Once the Windows task is green and the Perplexity cron is retired, B1 closes in the same motion — Windows Task Scheduler's local-time trigger is DST-safe by construction.
+- **B1 unblocked.** Once the Windows task is green and the Perplexity cron is retired, B1 closes in the same motion - Windows Task Scheduler's local-time trigger is DST-safe by construction.
+
+**Parallel-run verification closed 2026-04-24:** The 3-day window (2026-04-22, 23, 24) ran clean. Every auto-sync commit on `master` during the window originated from the Windows box (local-Central timestamps, `Ray` as committer, including today's `ce7fd4c` at 08:00:14 -0500). B1 closed in the same motion. The old Perplexity cron in the "More Band Marketing" thread continues to fire at 13:11 UTC but is harmless - `sync_lib.py` is a pure library with no side effects if the old script ever tries to execute. Legacy-host row moved to `architecture/scheduled-tasks.md` "Deleted / defunct tasks".
 
 **Clarification 2026-04-20 PM:** Ray asked whether `sync_calendar.py` is even still used post-Outlook-decommission (2026-04-17) now that Google Calendar is sole SoT. Answer: **yes, still daily.** The script has always been a one-way GCal-→-website sync, not an Outlook↔GCal bridge — Google Calendar is the source, `shows.json` + static show pages are the destination. With Outlook gone, this script is the *only* path from the single SoT calendar to the public site: without it, new shows never appear, cancellations never remove cards, venue/time edits never propagate. It's scheduled daily via a Perplexity `schedule_cron` in a prior thread (see J1 blind spot and B1 for DST drift). The script also exports library helpers (`is_private_event`, `generate_description_draft`, `is_gig_event`, `WEBHOOK_URL`, `PASSPHRASE`) imported by `test_is_private_event.py`, `test_description_handling.py`, `test_cancellation_reschedule.py`, `import_historic.py`, `import_bandzoogle.py`, and `fetch_historic.py` — so even if we ever stopped scheduling the cron, we couldn't delete the file without refactoring six callers. Part 2 fix (relocate the file + load passphrase from env) stays the correct remediation path.
 
