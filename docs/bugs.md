@@ -12,8 +12,6 @@ Quick index of open B-entries. Full details below in numeric order. Fixed entrie
 
 - [B9. Availability script cannot be run or smoke-tested from Jarvis's sandbox](#b9-availability-script-cannot-be-run-or-smoke-tested-from-jarviss-sandbox)
 - [B10. Venue name duplicated on `/shows` and show-detail pages](#b10-venue-name-duplicated-on-shows-and-show-detail-pages)
-- [B11. Breadcrumb on show-detail pages is not unique per-show](#b11-breadcrumb-on-show-detail-pages-is-not-unique-per-show)
-- [B13. Red date badge on show-detail pages is not square](#b13-red-date-badge-on-show-detail-pages-is-not-square)
 - [B14. Show-detail action buttons need reorder + Share promoted to primary CTA](#b14-show-detail-action-buttons-need-reorder--share-promoted-to-primary-cta)
 - [B16.2. Stage 2 rollout for auto-generated show descriptions](#b162-stage-2-rollout-for-auto-generated-show-descriptions)
 - [B20. Legacy Bandzoogle-era past-show descriptions miss v2 warm-invitation voice](#b20-legacy-bandzoogle-era-past-show-descriptions-miss-v2-warm-invitation-voice)
@@ -396,7 +394,7 @@ Recommend option 1 + option 3 together. Pair them with R9's new end-of-session g
 
 ---
 
-## B13. Red date badge on show-detail pages is not square
+## B13. Red date badge on show-detail pages is not square ~~[OPEN]~~ -> **FIXED 2026-04-18 AM (Pass 2, 80x80 lock, matches `.show-date-badge` on shows.html; re-verified live 2026-04-24)**
 
 **Symptom:** On individual show pages (`/shows/*.html`), the red date block in the hero renders as a tall rectangle instead of a square. The same kind of date badge on the shows-list page (`/shows.html`) renders visually closer to square. Ray wants them squared up and positioned upper-left within the show-page hero.
 
@@ -493,7 +491,7 @@ try { localStorage.setItem('theme', currentTheme); } catch (err) {}
 
 ---
 
-## B11. Breadcrumb on show-detail pages is not unique per-show
+## B11. Breadcrumb on show-detail pages is not unique per-show ~~[OPEN]~~ -> **FIXED 2026-04-18 AM (option (a), breadcrumb now reads `<Venue> - <Long Date>`; re-verified live 2026-04-24)**
 
 **Symptom:** Every individual show page renders the breadcrumb as:
 
