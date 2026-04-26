@@ -871,16 +871,20 @@ a.show-date-badge:hover {
 }
 
 .show-links {
-  display: flex;
+  display:flex;
+  flex-wrap:wrap;
   gap: var(--space-4);
   margin-top: var(--space-2);
 }
 
-.show-links a {
+.show-links a, .show-links button {
   font-size: var(--text-xs);
   color: var(--text-secondary);
-  text-decoration: underline;
+  text-decoration: none;
   transition: color var(--transition);
+  border:solid 1px var(--text-secondary);
+  border-radius:50px;
+  padding:10px;
 }
 .show-links a:hover {
   color: var(--text-primary);
