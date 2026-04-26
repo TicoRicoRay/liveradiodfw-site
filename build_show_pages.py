@@ -272,7 +272,7 @@ def build_show_page(show):
   </nav>
 
   <section class="show-page-hero">
-    <div class="show-page-date">
+    <div class="show-date-badge">
       <span class="day-name">{show["day_name"]}</span>
       <span class="day-num">{show["day_num"]}</span>
       <span class="month">{show["month"]}</span>

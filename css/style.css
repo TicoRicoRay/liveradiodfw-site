@@ -1726,35 +1726,16 @@ textarea.form-input {
    text rows (SAT + 18 + APR) totalled ~83px of content, overflowing the
    square and making the badge read as taller than wide. Match the
    /shows listing badge at 80x80 so content fits inside the square. */
-.show-page-date {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+/* Show-page hero uses the shared .show-date-badge component (single source
+   of truth) and just sizes it up to 80x80 for the hero treatment. All
+   layout (flex-direction: column, fonts, colors) inherits from .show-date-badge
+   so list view and hero view stay in sync at every viewport size. */
+.show-page-hero .show-date-badge {
   width: 80px;
   height: 80px;
-  flex-shrink: 0;
+  min-width: 80px;
+  aspect-ratio: 1 / 1;
   padding: var(--space-2);
-  background: var(--red);
-  color: #ffffff;
-  border-radius: var(--radius-md);
-  text-transform: uppercase;
-  font-family: var(--font-display);
-}
-.show-page-date .day-name {
-  font-size: var(--text-xs);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-}
-.show-page-date .day-num {
-  font-size: var(--text-xl);
-  font-weight: 800;
-  line-height: 1.1;
-}
-.show-page-date .month {
-  font-size: var(--text-xs);
-  font-weight: 700;
-  letter-spacing: 0.08em;
 }
 
 .show-page-info h1 {
@@ -2025,12 +2006,10 @@ textarea.form-input {
     align-items: stretch;
     padding: var(--space-6);
   }
-  .show-page-date {
-    flex-direction: row;
-    gap: var(--space-2);
-    min-width: auto;
-    justify-content: center;
-  }
+  /* No .show-date-badge override here on purpose: the badge keeps its
+     stacked SAT / 9 / MAY layout at every viewport size, matching the
+     list view at /shows. (Was previously flipped to flex-direction: row
+     here, which produced an inconsistent horizontal badge on phones.) */
   .share-dropdown {
     left: 0;
     transform: none;
