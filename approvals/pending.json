@@ -10,5 +10,15 @@
     "emailed_at": "ISO timestamp when the alert was sent",
     "status": "pending | approved | edited | expired"
   },
-  "pending": []
+  "pending": [
+    {
+      "token": "236b0bef50a6",
+      "show_date": "2026-06-20",
+      "venue": "FRESH by Brookshire's",
+      "title": "Test Event",
+      "draft": "[DRAFT - machine-generated from calendar fields; review and enrich with venue-specific details before publish.] Live Radio DFW heads to FRESH by Brookshire's in Tyler, TX for a Saturday evening of live music. We'll be playing our mix of 70s, 80s, classic rock, and oldies covers across the set. A solid night out for the Tyler, TX crowd and the surrounding DFW Metroplex communities.",
+      "emailed_at": "2026-04-26T18:16:52.453273",
+      "status": "pending"
+    }
+  ]
 }
