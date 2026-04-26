@@ -7,7 +7,7 @@ This module is the SAFE-TO-PUBLISH half of the calendar-sync code.  It
 contains only pure functions and public constants -- **no webhook URL,
 no passphrase, no network calls, no git operations, no email sending**.
 
-It lives on the `gh-pages` branch so the live site's test files and
+It lives on the `master` branch so the live site's test files and
 historic-import scripts can keep importing it:
 
     from sync_lib import is_private_event, is_gig_event, ...
