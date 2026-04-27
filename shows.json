@@ -1707,21 +1707,6 @@
     "description": "Catch Live Radio DFW on the outdoor stage at Sweetwater Grill, nestled between Royse City and Union Valley on Hwy 276. This locally owned grill and bar has one of the best back patios in the I-30 corridor - full bar, yard games, and plenty of space to enjoy a summer night of live music. The kitchen serves solid American comfort food, and the drinks are strong and affordable. No cover charge. A great night out for folks in Royse City, Rockwall, Heath, Fate, and the surrounding communities - about 30 minutes east of Dallas."
   },
   {
-    "date": "2026-06-20",
-    "day_name": "Sat",
-    "day_num": "20",
-    "month": "Jun",
-    "title": "Test Event",
-    "venue": "The Maverick",
-    "address": "1616 W Hebron Pkwy #108, Carrollton, TX 75010, USA",
-    "address_short": "Carrollton, TX",
-    "time": "7:00 PM",
-    "maps_url": "https://maps.google.com/?q=The+Maverick%2C+1616+W+Hebron+Pkwy+#108%2C+Carrollton%2C+TX+75010%2C+USA",
-    "private": false,
-    "ticket_price": "Free",
-    "description": "Live Radio DFW takes the stage at The Maverick in Carrollton, TX for a Saturday evening of live music. We'll be playing our mix of 70s, 80s, classic rock, and oldies covers across the set. A solid night out for the Carrollton, TX crowd and the surrounding DFW Metroplex communities."
-  },
-  {
     "date": "2026-08-01",
     "day_name": "Sat",
     "day_num": "1",
