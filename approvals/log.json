@@ -31,5 +31,16 @@
     "applied_at": "2026-04-27T00:27:51Z",
     "applied_by": "info@liveradiodfw.com",
     "source": "consume_approval.py"
+  },
+  {
+    "token": "f3df33ff75a1",
+    "action": "APPROVE",
+    "show_date": "2026-06-20",
+    "venue": "The Maverick",
+    "title": "Test Event",
+    "description": "Live Radio DFW takes the stage at The Maverick in Carrollton, TX for a Saturday evening of live music. We'll be playing our mix of 70s, 80s, classic rock, and oldies covers across the set. A solid night out for the Carrollton, TX crowd and the surrounding DFW Metroplex communities.",
+    "applied_at": "2026-04-27T00:38:41Z",
+    "applied_by": "info@liveradiodfw.com",
+    "source": "consume_approval.py"
   }
 ]
