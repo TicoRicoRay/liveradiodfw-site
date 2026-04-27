@@ -20,5 +20,16 @@
     "applied_at": "2026-04-27T00:10:05Z",
     "applied_by": "info@liveradiodfw.com",
     "source": "consume_approval.py"
+  },
+  {
+    "token": "c63952352fd5",
+    "action": "APPROVE",
+    "show_date": "2026-06-20",
+    "venue": "FRESH by Brookshire's",
+    "title": "Test Event",
+    "description": "Live Radio DFW heads to FRESH by Brookshire's in Fate, TX for a Saturday evening of live music. We'll be playing our mix of 70s, 80s, classic rock, and oldies covers across the set. A solid night out for the Fate, TX crowd and the surrounding DFW Metroplex communities.",
+    "applied_at": "2026-04-27T00:27:51Z",
+    "applied_by": "info@liveradiodfw.com",
+    "source": "consume_approval.py"
   }
 ]
