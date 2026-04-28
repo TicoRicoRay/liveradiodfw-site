@@ -1722,6 +1722,20 @@
     "description": "Live Radio DFW heads back to O G Cellars in Sunset, TX for a Saturday night 80s Dance Party. This boutique winery sits in the rolling hills of Northwest Wise County and pours 100% Texas wines, with an on-site pizzeria that'll be open through the show. Outdoor and indoor seating, OG wine, frozen drinks, and beer on site (no outside alcohol). Tickets are $25, and it's about an hour northwest of Fort Worth on Hwy 287 - a scenic drive out through the Hill-Country-feeling part of North Texas for fans in the DFW Metroplex, Decatur, Bowie, and Wichita Falls."
   },
   {
+    "date": "2026-08-14",
+    "day_name": "Fri",
+    "day_num": "14",
+    "month": "Aug",
+    "title": "Frisco Rail Yard",
+    "venue": "Frisco Rail Yard",
+    "address": "9040 First St, Frisco, TX 75034, USA",
+    "address_short": "Frisco, TX",
+    "time": "7:30 PM",
+    "maps_url": "https://maps.google.com/?q=Frisco+Rail+Yard%2C+9040+First+St%2C+Frisco%2C+TX+75034%2C+USA",
+    "private": false,
+    "ticket_price": "Free"
+  },
+  {
     "date": "2026-09-05",
     "day_name": "Sat",
     "day_num": "5",

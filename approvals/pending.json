@@ -19,6 +19,15 @@
       "draft": "[DRAFT - machine-generated from calendar fields; review and enrich with venue-specific details before publish.] Live Radio DFW heads to FRESH by Brookshire's in Tyler, TX for a Saturday evening of live music. We'll be playing our mix of 70s, 80s, classic rock, and oldies covers across the set. A solid night out for the Tyler, TX crowd and the surrounding DFW Metroplex communities.",
       "emailed_at": "2026-04-26T18:16:52.453273",
       "status": "pending"
+    },
+    {
+      "token": "9ab76c4ce733",
+      "show_date": "2026-08-14",
+      "venue": "Frisco Rail Yard",
+      "title": "Frisco Rail Yard",
+      "draft": "[DRAFT - machine-generated from calendar fields; review and enrich with venue-specific details before publish.] Live Radio DFW takes the stage at Frisco Rail Yard in Frisco, TX for a Friday evening of live music. We'll be playing our mix of 70s, 80s, classic rock, and oldies covers across the set. No cover charge, no tickets needed. A solid night out for the Frisco, TX crowd and the surrounding DFW Metroplex communities.",
+      "emailed_at": "2026-04-28T12:36:42.424135",
+      "status": "pending"
     }
   ]
 }
