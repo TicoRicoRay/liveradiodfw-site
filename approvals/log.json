@@ -42,5 +42,16 @@
     "applied_at": "2026-04-27T00:38:41Z",
     "applied_by": "info@liveradiodfw.com",
     "source": "consume_approval.py"
+  },
+  {
+    "token": "9ab76c4ce733",
+    "action": "APPROVE",
+    "show_date": "2026-08-14",
+    "venue": "Frisco Rail Yard",
+    "title": "Frisco Rail Yard",
+    "description": "Live Radio DFW takes the stage at Frisco Rail Yard in Frisco, TX for a Friday evening of live music. We'll be playing our mix of 70s, 80s, classic rock, and oldies covers across the set. No cover charge, no tickets needed. A solid night out for the Frisco, TX crowd and the surrounding DFW Metroplex communities.",
+    "applied_at": "2026-04-28T17:37:39Z",
+    "applied_by": "info@liveradiodfw.com",
+    "source": "consume_approval.py"
   }
 ]
