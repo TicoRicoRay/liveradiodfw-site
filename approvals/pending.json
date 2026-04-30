@@ -28,6 +28,15 @@
       "draft": "[DRAFT - machine-generated from calendar fields; review and enrich with venue-specific details before publish.] Live Radio DFW heads to FRESH by Brookshire's in Fate, TX for a Saturday evening of live music. We'll be playing our mix of 70s, 80s, classic rock, and oldies covers across the set. A solid night out for the Fate, TX crowd and the surrounding DFW Metroplex communities.",
       "emailed_at": "2026-04-29T11:58:53.461835",
       "status": "pending"
+    },
+    {
+      "token": "9cf2ca68d693",
+      "show_date": "2026-09-11",
+      "venue": "Harvest Hall",
+      "title": "Third Rail in Harvest Hall",
+      "draft": "[DRAFT - machine-generated from calendar fields; review and enrich with venue-specific details before publish.] Live Radio DFW returns to Harvest Hall in Grapevine, TX for a Friday evening of live music. We'll be playing our mix of 70s, 80s, classic rock, and oldies covers across the set. A solid night out for the Grapevine, TX crowd and the surrounding DFW Metroplex communities.",
+      "emailed_at": "2026-04-30T14:30:00.709842",
+      "status": "pending"
     }
   ]
 }
