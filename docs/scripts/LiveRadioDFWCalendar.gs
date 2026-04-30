@@ -39,7 +39,7 @@ function doPost(e) {
       return _json({ error: 'Unauthorized' }, 401);
     }
 
-    const action = data.action; // "create", "update", "delete", "list"
+    const action = data.action; // "create", "update", "delete", "list", "availability"
 
     if (action === 'create') {
       return _createEvent(data);
@@ -49,6 +49,8 @@ function doPost(e) {
       return _deleteEvent(data);
     } else if (action === 'list') {
       return _listEvents(data);
+    } else if (action === 'availability') {
+      return _getAvailability(data);
     } else {
       return _json({ error: 'Unknown action: ' + action }, 400);
     }
@@ -153,6 +155,123 @@ function _listEvents(data) {
   return _json({ status: 'ok', count: results.length, events: results });
 }
 
+/**
+ * _getAvailability — return open Friday/Saturday dates over a forward window.
+ *
+ * Mirrors the logic of liveradiodfw_availability.py on Dopamine, server-side
+ * under the calendar owner's auth, so Jarvis can call this from any sandbox
+ * without OAuth-desktop creds. Closes B41.
+ *
+ * Request shape:
+ *   { passphrase, action: "availability",
+ *     monthsAhead?: number,    // default 6, max 12
+ *     daysAhead?: number,      // alternative to monthsAhead; takes precedence if set
+ *     weekdays?: number[]      // 0=Sun..6=Sat. Default [5,6] (Fri, Sat).
+ *                              //   NOTE: this is JS getDay(); Python's weekday() differs.
+ *   }
+ *
+ * Response shape:
+ *   { status: "ok",
+ *     generatedAt: ISO string,
+ *     window: { start: "YYYY-MM-DD", end: "YYYY-MM-DD", days: number },
+ *     openDates: ["YYYY-MM-DD", ...],
+ *     blocked: [ { date: "YYYY-MM-DD", reasons: [titles...] } ]
+ *   }
+ *
+ * Rules (kept identical to liveradiodfw_availability.py):
+ *   - Any timed event on a date blocks that date.
+ *   - Any all-day event blocks every date in its inclusive range.
+ *   - Event titles containing "rehearsal" (case-insensitive) are ignored.
+ *
+ * Time zone:
+ *   The script runs under the project's configured time zone (set in
+ *   Apps Script project settings to America/Chicago when the project was
+ *   created). Date keys in the response are Central-local YYYY-MM-DD.
+ */
+function _getAvailability(data) {
+  const cal = CalendarApp.getCalendarById(CALENDAR_ID);
+  if (!cal) return _json({ error: 'Calendar not found' }, 404);
+
+  const tz = Session.getScriptTimeZone(); // expected: America/Chicago
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let days;
+  if (typeof data.daysAhead === 'number' && data.daysAhead > 0) {
+    days = Math.min(data.daysAhead, 400);
+  } else {
+    const months = Math.min(Math.max(data.monthsAhead || 6, 1), 12);
+    // Approximate months as 31-day blocks for window-end safety; events outside
+    // the calendar month boundary are still captured because we walk per-day.
+    days = months * 31;
+  }
+  const end = new Date(today.getTime() + days * 86400000);
+
+  const weekdays = (Array.isArray(data.weekdays) && data.weekdays.length)
+    ? data.weekdays
+    : [5, 6]; // Fri, Sat in JS getDay() (0=Sun..6=Sat)
+
+  // Pull all events in the window once. CalendarApp.getEvents expands recurrences
+  // into instances, matching Python's singleEvents=True.
+  const events = cal.getEvents(today, end);
+
+  // Build blocked-date map. Key: YYYY-MM-DD in Central. Value: array of titles.
+  const blockedMap = {};
+  function addBlock(dateStr, reason) {
+    if (!blockedMap[dateStr]) blockedMap[dateStr] = [];
+    blockedMap[dateStr].push(reason);
+  }
+
+  events.forEach(function(ev) {
+    const title = ev.getTitle() || '';
+    if (/rehearsal/i.test(title)) return;
+
+    if (ev.isAllDayEvent()) {
+      // All-day: block every date from start (inclusive) to end (exclusive).
+      // CalendarApp returns end as exclusive midnight; iterate up to but not including.
+      let d = new Date(ev.getAllDayStartDate());
+      const allDayEnd = new Date(ev.getAllDayEndDate());
+      while (d < allDayEnd) {
+        addBlock(Utilities.formatDate(d, tz, 'yyyy-MM-dd'), title);
+        d = new Date(d.getTime() + 86400000);
+      }
+    } else {
+      // Timed event: blocks the Central-local calendar date of its start.
+      addBlock(Utilities.formatDate(ev.getStartTime(), tz, 'yyyy-MM-dd'), title);
+    }
+  });
+
+  // Walk weekdays in window, separate into open vs blocked.
+  const openDates = [];
+  const blocked = [];
+  let cursor = new Date(today);
+  while (cursor < end) {
+    if (weekdays.indexOf(cursor.getDay()) !== -1) {
+      const key = Utilities.formatDate(cursor, tz, 'yyyy-MM-dd');
+      if (blockedMap[key]) {
+        blocked.push({ date: key, reasons: blockedMap[key] });
+      } else {
+        openDates.push(key);
+      }
+    }
+    cursor = new Date(cursor.getTime() + 86400000);
+  }
+
+  return _json({
+    status: 'ok',
+    generatedAt: new Date().toISOString(),
+    timezone: tz,
+    window: {
+      start: Utilities.formatDate(today, tz, 'yyyy-MM-dd'),
+      end: Utilities.formatDate(end, tz, 'yyyy-MM-dd'),
+      days: days
+    },
+    weekdays: weekdays,
+    openDates: openDates,
+    blocked: blocked
+  });
+}
+
 function _json(obj, code) {
   return ContentService
     .createTextOutput(JSON.stringify(obj))
@@ -178,3 +297,4 @@ function testAccess() {
 
 // Deployed: 2026-04-17 — initial master-copy commit (functionally identical to then-deployed version, passphrase redacted) — by Ray (captured by Jarvis)
 // Deployed: 2026-04-17 ~20:52 Central — Version 2 — rotated passphrase (B7 Part 1) + extended _updateEvent and _createEvent to honor attendees/guests and return guests[] (R10, fixes B2) — by Ray, code authored by Jarvis. Smoke test passed via requests.post: list OK (98 events), old passphrase rejected 401, create+update with attendees returned guests[] correctly, delete OK.
+// Deployed: PENDING — Version 3 — added _getAvailability action (B41) so Jarvis can read open Fri/Sat dates from any sandbox via the existing webhook + passphrase. No new scopes; CalendarApp grants read access already used by _listEvents. — code authored by Jarvis, deploy by Ray per docs/runbooks/publish-calendar-webhook.md.

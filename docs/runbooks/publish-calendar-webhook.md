@@ -88,7 +88,17 @@ curl -sSL -X POST "$WEBHOOK_URL" \
 
 Expected: `{"status":"ok","events":[...]}`.
 
-If you get `{"status":"error","message":"bad passphrase"}`, you pasted the redacted master without restoring the passphrase. Go back to step 3.
+If the deploy added or modified the `availability` action, also smoke-test it:
+
+```bash
+curl -sSL -X POST "$WEBHOOK_URL" \
+  -H "Content-Type: application/json" \
+  -d "{\"passphrase\":\"$PASSPHRASE\",\"action\":\"availability\",\"monthsAhead\":2}" | head -c 800
+```
+
+Expected: `{"status":"ok","openDates":["2026-...",...],"blocked":[...]}`. Eyeball the open dates against the calendar; if they look wrong, check the project time zone (Apps Script project settings \u2192 General \u2192 Time zone should be `(GMT-06:00) America/Chicago`).
+
+If you get `{"error":"Unauthorized"}`, you pasted the redacted master without restoring the passphrase. Go back to step 3.
 
 If you get HTML instead of JSON, the deployment failed or the URL is wrong. Check step 4.
 
