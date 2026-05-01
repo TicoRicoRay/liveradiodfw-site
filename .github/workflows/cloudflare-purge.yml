@@ -1,0 +1,58 @@
+name: Cloudflare cache purge
+
+# Purges the Cloudflare cache for liveradiodfw.com after every push to master.
+# This makes site changes go live immediately instead of waiting for Cloudflare's
+# default cache TTL.
+#
+# Triggers on ANY push to master, regardless of pusher (Ray, agent, BandMix
+# auto-sync, etc.). Skipped if the commit message contains "[skip purge]" so
+# we can opt out for trivial changes.
+#
+# Setup (one-time):
+#   1. Create a Cloudflare API token scoped to "Edit zone (Cache Purge)" for
+#      liveradiodfw.com only. My Profile > API Tokens > Create Token.
+#   2. Add it as a GitHub Actions secret named CLOUDFLARE_API_TOKEN
+#      Repo > Settings > Secrets and variables > Actions > New repository secret.
+#   3. The zone ID is hardcoded below (it's a public locator, not a secret).
+#
+# Runbook: liveradiodfw-marketing/docs/runbooks/cloudflare-cache-purge.md
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  purge:
+    if: "!contains(github.event.head_commit.message, '[skip purge]')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Purge Cloudflare cache
+        env:
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ZONE_ID: 01a523795bb5c06eb21db44c7e6a9912
+        run: |
+          set -euo pipefail
+          if [ -z "${CF_API_TOKEN:-}" ]; then
+            echo "CLOUDFLARE_API_TOKEN secret not set. Skipping purge."
+            echo "See runbook: liveradiodfw-marketing/docs/runbooks/cloudflare-cache-purge.md"
+            exit 1
+          fi
+          response=$(curl -sS -w "\n%{http_code}" -X POST \
+            "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/purge_cache" \
+            -H "Authorization: Bearer ${CF_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data '{"purge_everything":true}')
+          body=$(echo "$response" | sed '$d')
+          status=$(echo "$response" | tail -n 1)
+          echo "HTTP $status"
+          echo "$body"
+          if [ "$status" != "200" ]; then
+            echo "Purge failed."
+            exit 1
+          fi
+          if ! echo "$body" | grep -q '"success":[[:space:]]*true'; then
+            echo "Purge response did not report success."
+            exit 1
+          fi
+          echo "Cloudflare cache purged for liveradiodfw.com"
