@@ -86,8 +86,24 @@ def format_long_date(date_str):
     return dt.strftime("%A %B %d, %Y").replace(" 0", " ")
 
 
-def build_show_page(show):
-    """Generate full HTML for a single show page."""
+def short_date(date_str):
+    """Format date as 'May 16' for prev/next nav labels. Year is omitted
+    because the chain is chronological and the current page already shows
+    the full long-form date prominently in the hero."""
+    try:
+        d = datetime.strptime(date_str, "%Y-%m-%d").date()
+    except ValueError:
+        return date_str
+    return d.strftime("%b %-d") if hasattr(d, "strftime") else date_str
+
+
+def build_show_page(show, prev_show=None, next_show=None):
+    """Generate full HTML for a single show page.
+
+    prev_show / next_show are dicts with the same shape as `show` (or None at
+    the chain ends). When provided, a chronological prev/next nav block is
+    rendered below the description.
+    """
     venue = show["venue"]
     title = show["title"]
     date_str = show["date"]
@@ -228,6 +244,49 @@ def build_show_page(show):
             f'        <a href="../shows.html" class="btn btn-secondary">All Shows</a>'
         )
 
+    # --- Prev/Next chronological nav ---
+    # Single chain across past + upcoming. Hide either side at chain ends
+    # (no greyed-out disabled buttons). Labels show venue and short date.
+    # SEO benefit: real anchor text rather than "Previous" / "Next".
+    def _prevnext_filename(s):
+        return f"{slugify(s['venue'])}-{s['date']}.html"
+
+    prev_link_html = ""
+    if prev_show is not None:
+        prev_venue_attr = html_escape(prev_show["venue"], quote=True)
+        prev_link_html = (
+            f'<a class="show-prevnext-link show-prevnext-prev" '
+            f'href="{_prevnext_filename(prev_show)}" rel="prev" '
+            f'aria-label="Previous show: {prev_venue_attr} on {format_long_date(prev_show["date"])}">'
+            f'<span class="show-prevnext-arrow" aria-hidden="true">&larr;</span>'
+            f'<span class="show-prevnext-text">'
+            f'<span class="show-prevnext-label">Previous show</span>'
+            f'<span class="show-prevnext-detail">{prev_show["venue"]} &middot; {short_date(prev_show["date"])}</span>'
+            f'</span></a>'
+        )
+    next_link_html = ""
+    if next_show is not None:
+        next_venue_attr = html_escape(next_show["venue"], quote=True)
+        next_link_html = (
+            f'<a class="show-prevnext-link show-prevnext-next" '
+            f'href="{_prevnext_filename(next_show)}" rel="next" '
+            f'aria-label="Next show: {next_venue_attr} on {format_long_date(next_show["date"])}">'
+            f'<span class="show-prevnext-text">'
+            f'<span class="show-prevnext-label">Next show</span>'
+            f'<span class="show-prevnext-detail">{next_show["venue"]} &middot; {short_date(next_show["date"])}</span>'
+            f'</span>'
+            f'<span class="show-prevnext-arrow" aria-hidden="true">&rarr;</span></a>'
+        )
+    if prev_link_html or next_link_html:
+        prevnext_section = (
+            '\n  <nav class="show-prevnext" aria-label="Show navigation">\n'
+            f'    {prev_link_html}\n'
+            f'    {next_link_html}\n'
+            '  </nav>'
+        )
+    else:
+        prevnext_section = ""
+
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -257,7 +316,7 @@ def build_show_page(show):
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
   <!-- Styles -->
-  <link rel="stylesheet" href="../css/style.css?v=40">
+  <link rel="stylesheet" href="../css/style.css?v=42">
   <script type="application/ld+json">{jsonld}</script>
 </head>
 <body>
@@ -288,6 +347,7 @@ def build_show_page(show):
     </div>
   </section>{past_banner_html}
 {desc_section}
+{prevnext_section}
 </main>
 
 <!-- BEGIN_FOOTER -->
@@ -309,13 +369,25 @@ def main():
     built = []
     skipped = []
 
+    # Build the chronological public-show chain for prev/next nav. Private
+    # events are excluded from the chain (they have no public page to link
+    # to). Sort by date so the chain is monotonic regardless of shows.json
+    # ordering.
+    public_shows = [s for s in shows if not s.get("private", False)]
+    public_shows_sorted = sorted(public_shows, key=lambda s: s["date"])
+    chain_index = {(s["venue"], s["date"]): i for i, s in enumerate(public_shows_sorted)}
+
     for show in shows:
         # Skip private events
         if show.get("private", False):
             skipped.append(show["date"] + " " + show.get("title", "Private"))
             continue
 
-        filename, html = build_show_page(show)
+        idx = chain_index.get((show["venue"], show["date"]))
+        prev_show = public_shows_sorted[idx - 1] if idx is not None and idx > 0 else None
+        next_show = public_shows_sorted[idx + 1] if idx is not None and idx + 1 < len(public_shows_sorted) else None
+
+        filename, html = build_show_page(show, prev_show=prev_show, next_show=next_show)
         filepath = SHOWS_DIR / filename
         filepath.write_text(html, encoding="utf-8")
         built.append(filename)
