@@ -316,7 +316,7 @@ def build_show_page(show, prev_show=None, next_show=None):
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
   <!-- Styles -->
-  <link rel="stylesheet" href="../css/style.css?v=42">
+  <link rel="stylesheet" href="../css/style.css?v=43">
   <script type="application/ld+json">{jsonld}</script>
 </head>
 <body>

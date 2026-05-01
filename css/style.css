@@ -1890,6 +1890,7 @@ textarea.form-input {
 }
 .show-prevnext-next {
   margin-left: auto;
+  justify-content: flex-end;
   text-align: right;
   flex-direction: row;
 }

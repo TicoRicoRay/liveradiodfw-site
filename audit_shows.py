@@ -94,7 +94,7 @@ for slug in slugs:
         warn(path, "missing og tags")
 
     # cache-buster
-    if 'style.css?v=42' not in html:
+    if 'style.css?v=43' not in html:
         warn(path, "CSS not v=40")
 
     # full date with year (show-page-meta should contain 4-digit year)
@@ -177,7 +177,7 @@ for p in ["/shows.html", "/past-shows.html", "/index.html", "/sitemap.xml"]:
         if n != 95:
             warn(p, f"sitemap has {n} show URLs, expected 95")
     else:
-        if 'style.css?v=42' not in html:
+        if 'style.css?v=43' not in html:
             warn(p, "CSS not v=40")
         if p == "/shows.html":
             # should contain exactly 9 upcoming cards (10 - 1 private filtered out if private hidden)
