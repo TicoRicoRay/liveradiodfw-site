@@ -94,7 +94,9 @@ def short_date(date_str):
         d = datetime.strptime(date_str, "%Y-%m-%d").date()
     except ValueError:
         return date_str
-    return d.strftime("%b %-d") if hasattr(d, "strftime") else date_str
+    # Cross-platform day-without-leading-zero. %-d is POSIX-only (fails on
+    # Windows); %#d is Windows-only. Format with %d then lstrip the zero.
+    return d.strftime("%b ") + d.strftime("%d").lstrip("0") if hasattr(d, "strftime") else date_str
 
 
 def build_show_page(show, prev_show=None, next_show=None):
