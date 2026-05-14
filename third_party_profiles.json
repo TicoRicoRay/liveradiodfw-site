@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-04-16",
+  "last_updated": "2026-05-01",
   "profiles": [
     {
       "platform": "Google Business Profile",
@@ -9,7 +9,11 @@
       "category": "local_seo",
       "notes": "Full keyword-rich description, all categories, service area set. Critical for local search rankings.",
       "backlink": true,
-      "action_items": ["Check approval status", "Add photos once approved", "Post weekly GBP updates"]
+      "action_items": [
+        "Check approval status",
+        "Add photos once approved",
+        "Post weekly GBP updates"
+      ]
     },
     {
       "platform": "GigSalad",
@@ -19,7 +23,11 @@
       "category": "booking_leads",
       "notes": "Free PromoKit. Profile draft saved to Dropbox (LiveRadioDFW/gigsalad_profile_draft.md). Old band profiles (Jackson Crossing, Risky Business) need cleanup — Ray handling. Only 1 free PromoKit allowed; must delete or upgrade old ones.",
       "backlink": true,
-      "action_items": ["Check approval status", "Clean up Jackson Crossing & Risky Business profiles", "Fill in profile once approved"]
+      "action_items": [
+        "Check approval status",
+        "Clean up Jackson Crossing & Risky Business profiles",
+        "Fill in profile once approved"
+      ]
     },
     {
       "platform": "Bark.com",
@@ -29,7 +37,9 @@
       "category": "booking_leads",
       "notes": "Buck handles third-party leads from Bark.",
       "backlink": false,
-      "action_items": ["Verify profile has current website URL and phone (469) 606-0798"]
+      "action_items": [
+        "Verify profile has current website URL and phone (469) 606-0798"
+      ]
     },
     {
       "platform": "AllEvents.in",
@@ -39,7 +49,12 @@
       "category": "event_discovery",
       "notes": "Created 2026-04-16. Pulling events from Facebook feed. Currently missing: description, photos, links. 0 followers.",
       "backlink": true,
-      "action_items": ["Add band description", "Add photos", "Add website link (liveradiodfw.com)", "Verify Facebook event feed is populating correctly"]
+      "action_items": [
+        "Add band description",
+        "Add photos",
+        "Add website link (liveradiodfw.com)",
+        "Verify Facebook event feed is populating correctly"
+      ]
     },
     {
       "platform": "Bandsintown",
@@ -49,7 +64,13 @@
       "category": "event_discovery",
       "notes": "Artist account on artists.bandsintown.com (info@liveradiodfw.com). Separate fan account also exists. 95M+ users. Add shows manually or via bulk upload. May auto-import from Eventbrite once that's set up. Has embeddable widget for liveradiodfw.com.",
       "backlink": true,
-      "action_items": ["Add upcoming shows", "Complete artist bio and photos", "Add website link (liveradiodfw.com)", "Explore embeddable events widget for website", "Connect Music Sync if applicable"]
+      "action_items": [
+        "Add upcoming shows",
+        "Complete artist bio and photos",
+        "Add website link (liveradiodfw.com)",
+        "Explore embeddable events widget for website",
+        "Connect Music Sync if applicable"
+      ]
     },
     {
       "platform": "Eventbrite",
@@ -59,7 +80,11 @@
       "category": "event_discovery",
       "notes": "Account created with info@liveradiodfw.com but organization failed to provision (known Eventbrite issue with re-used emails). Retry tomorrow. Once working, can automate event creation from Google Calendar via connector. Free events only — no ticket fees.",
       "backlink": true,
-      "action_items": ["Retry organization setup 2026-04-17", "Set up organizer profile once org exists", "Wire into sync_calendar.py for automated event creation"]
+      "action_items": [
+        "Retry organization setup 2026-04-17",
+        "Set up organizer profile once org exists",
+        "Wire into sync_calendar.py for automated event creation"
+      ]
     },
     {
       "platform": "TheBash",
@@ -79,7 +104,9 @@
       "category": "social_media",
       "notes": "Donna handles social media posts. Facebook feed is source for AllEvents.in event sync.",
       "backlink": true,
-      "action_items": ["Verify website URL and phone are current"]
+      "action_items": [
+        "Verify website URL and phone are current"
+      ]
     },
     {
       "platform": "Instagram",
@@ -89,7 +116,9 @@
       "category": "social_media",
       "notes": "Donna handles social media posts.",
       "backlink": true,
-      "action_items": ["Verify website URL and phone are current"]
+      "action_items": [
+        "Verify website URL and phone are current"
+      ]
     },
     {
       "platform": "YouTube",
@@ -99,7 +128,9 @@
       "category": "social_media",
       "notes": "Overview video linked from GigSalad draft. Embedded videos improve SEO dwell time.",
       "backlink": true,
-      "action_items": ["Name video files with keywords: '80s Cover Band Dallas Live Radio DFW'"]
+      "action_items": [
+        "Name video files with keywords: '80s Cover Band Dallas Live Radio DFW'"
+      ]
     }
   ],
   "not_yet_created": [
@@ -138,7 +169,6 @@
       "priority": "high",
       "notes": "Appears in search results for '80s cover band Dallas' and 'cover bands Frisco TX'. Create under 'Musician' category."
     },
-
     {
       "platform": "Songkick",
       "url": "https://www.songkick.com",

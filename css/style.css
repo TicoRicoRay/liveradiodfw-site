@@ -744,6 +744,113 @@ button { cursor: pointer; background: none; border: none; }
   flex-wrap: wrap;
 }
 
+/* === HERO TRUST STRIP === */
+.hero-trust {
+  margin: var(--space-6) 0 0;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.92);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  letter-spacing: 0.02em;
+}
+.hero-stars {
+  color: #ffc107;
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+}
+.hero-trust-text {
+  font-weight: 500;
+}
+
+/* === REVIEWS SECTION === */
+.reviews-section {
+  background-color: var(--light-bg);
+  padding: var(--space-16) 0;
+}
+.reviews-section h2 {
+  color: var(--text-primary);
+  margin-bottom: var(--space-10);
+}
+.reviews-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-6);
+  margin-bottom: var(--space-8);
+  max-width: var(--content-wide);
+  margin-left: auto;
+  margin-right: auto;
+}
+.review-card {
+  background-color: #ffffff;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  transition: transform var(--transition), box-shadow var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+.review-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.review-stars {
+  color: #ffc107;
+  font-size: 1.125rem;
+  letter-spacing: 0.1em;
+  line-height: 1;
+}
+.review-quote {
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0;
+  color: var(--text-primary);
+  font-style: italic;
+  flex: 1;
+}
+.review-author {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+.review-author strong {
+  font-weight: 600;
+}
+.review-meta {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+.reviews-sources {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+.reviews-sources a {
+  color: var(--red);
+  text-decoration: underline;
+}
+[data-theme="dark"] .review-card {
+  background-color: #1e1e30;
+  border-color: #2a2a40;
+}
+[data-theme="dark"] .review-quote,
+[data-theme="dark"] .review-author strong {
+  color: #e0e0e8;
+}
+@media (max-width: 600px) {
+  .reviews-grid {
+    grid-template-columns: 1fr;
+  }
+  .review-card {
+    padding: 1.25rem;
+  }
+}
+
 /* === SHOWS STRIP === */
 .shows-strip {
   background-color: var(--navy);
