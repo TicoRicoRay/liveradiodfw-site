@@ -34,4 +34,4 @@ jobs:
           git diff --cached --quiet || git commit -m "chore: auto-rebuild shows ($(date -u +%Y-%m-%d))"
 
       - name: Push changes
-        run: git push
+        run: git push || echo "Nothing to push"
