@@ -12,34 +12,13 @@
   },
   "pending": [
     {
-      "token": "236b0bef50a6",
-      "show_date": "2026-06-20",
-      "venue": "FRESH by Brookshire's",
-      "title": "Test Event",
-      "draft": "[DRAFT - machine-generated from calendar fields; review and enrich with venue-specific details before publish.] Live Radio DFW heads to FRESH by Brookshire's in Tyler, TX for a Saturday evening of live music. We'll be playing our mix of 70s, 80s, classic rock, and oldies covers across the set. A solid night out for the Tyler, TX crowd and the surrounding DFW Metroplex communities.",
-      "emailed_at": "2026-04-26T18:16:52.453273",
+      "token": "0e3fe7cef372",
+      "show_date": "2026-10-17",
+      "venue": "Watters Creek Village",
+      "title": "Watters Creek",
+      "draft": "[DRAFT - machine-generated from calendar fields; review and enrich with venue-specific details before publish.] Catch Live Radio DFW at Watters Creek Village in Allen, TX for a Saturday evening of live music. We'll be playing our mix of 70s, 80s, classic rock, and oldies covers across the set. No cover charge, no tickets needed. A solid night out for the Allen, TX crowd and the surrounding DFW Metroplex communities.",
+      "emailed_at": "2026-06-12T18:12:05.813027",
       "status": "pending"
-    },
-    {
-      "token": "c63952352fd5",
-      "show_date": "2026-06-20",
-      "venue": "FRESH by Brookshire's",
-      "title": "Test Event",
-      "draft": "[DRAFT - machine-generated from calendar fields; review and enrich with venue-specific details before publish.] Live Radio DFW heads to FRESH by Brookshire's in Fate, TX for a Saturday evening of live music. We'll be playing our mix of 70s, 80s, classic rock, and oldies covers across the set. A solid night out for the Fate, TX crowd and the surrounding DFW Metroplex communities.",
-      "emailed_at": "2026-04-29T11:58:53.461835",
-      "status": "pending"
-    },
-    {
-      "token": "9cf2ca68d693",
-      "show_date": "2026-09-11",
-      "venue": "Harvest Hall",
-      "title": "Third Rail in Harvest Hall",
-      "draft": "[DRAFT - machine-generated from calendar fields; review and enrich with venue-specific details before publish.] Live Radio DFW returns to Harvest Hall in Grapevine, TX for a Friday evening of live music. We'll be playing our mix of 70s, 80s, classic rock, and oldies covers across the set. A solid night out for the Grapevine, TX crowd and the surrounding DFW Metroplex communities.",
-      "emailed_at": "2026-04-30T14:30:00.709842",
-      "status": "approved",
-      "approved_at": "2026-04-30T19:45:27.557023",
-      "approved_by": "rmyers@futurebright.com (in-session via Jarvis)",
-      "final_description": "Live Radio DFW returns to the Third Rail stage inside Harvest Hall in downtown Grapevine for a Friday evening show. The Third Rail room is the dedicated live-music space at this 20,000-square-foot food hall - intimate, listening-room-friendly, and a setting where the band sounds the way it should. Make a night of it: eight chef-driven kitchens, two full bars, and the Grapevine TEXRail platform right outside the door if you're coming in from DFW Airport, Fort Worth, or anywhere along the line. Early September in Grapevine is the kind of evening this venue was built for. Grapevine, Colleyville, Southlake, and the rest of the mid-cities crowd, come join us."
     }
   ]
 }
