@@ -1707,21 +1707,6 @@
     "description": "Catch Live Radio DFW on the outdoor stage at Sweetwater Grill, nestled between Royse City and Union Valley on Hwy 276. This locally owned grill and bar has one of the best back patios in the I-30 corridor - full bar, yard games, and plenty of space to enjoy a summer night of live music. The kitchen serves solid American comfort food, and the drinks are strong and affordable. No cover charge. A great night out for folks in Royse City, Rockwall, Heath, Fate, and the surrounding communities - about 30 minutes east of Dallas."
   },
   {
-    "date": "2026-08-01",
-    "day_name": "Sat",
-    "day_num": "1",
-    "month": "Aug",
-    "title": "OG Cellars - 80s Dance Party",
-    "venue": "O G Cellars",
-    "address": "704 Co Rd 1895, Sunset, TX 76270, USA",
-    "address_short": "Sunset, TX",
-    "time": "8:00 PM",
-    "maps_url": "https://maps.google.com/?q=O+G+Cellars%2C+704+Co+Rd+1895%2C+Sunset%2C+TX+76270%2C+USA",
-    "private": false,
-    "ticket_price": "$25",
-    "description": "Live Radio DFW heads back to O G Cellars in Sunset, TX for a Saturday night 80s Dance Party. This boutique winery sits in the rolling hills of Northwest Wise County and pours 100% Texas wines, with an on-site pizzeria that'll be open through the show. Outdoor and indoor seating, OG wine, frozen drinks, and beer on site (no outside alcohol). Tickets are $25, and it's about an hour northwest of Fort Worth on Hwy 287 - a scenic drive out through the Hill-Country-feeling part of North Texas for fans in the DFW Metroplex, Decatur, Bowie, and Wichita Falls."
-  },
-  {
     "date": "2026-08-14",
     "day_name": "Fri",
     "day_num": "14",
@@ -1797,6 +1782,20 @@
     "ticket_price": ""
   },
   {
+    "date": "2026-09-19",
+    "day_name": "Sat",
+    "day_num": "19",
+    "month": "Sep",
+    "title": "Sweetwater Grill",
+    "venue": "Sweetwater Grill",
+    "address": "4884 TX-276, Royse City, TX 75189, USA",
+    "address_short": "Royse City, TX",
+    "time": "8:30 PM",
+    "maps_url": "https://maps.google.com/?q=Sweetwater+Grill%2C+4884+TX-276%2C+Royse+City%2C+TX+75189%2C+USA",
+    "private": false,
+    "ticket_price": "Free"
+  },
+  {
     "date": "2026-09-26",
     "day_name": "Sat",
     "day_num": "26",
@@ -1822,6 +1821,20 @@
     "address_short": "Allen, TX",
     "time": "7:00 PM",
     "maps_url": "https://maps.google.com/?q=Watters+Creek+Village%2C+970+Garden+Park+Dr%2C+Allen%2C+TX+75013%2C+USA",
+    "private": false,
+    "ticket_price": "Free"
+  },
+  {
+    "date": "2026-10-31",
+    "day_name": "Sat",
+    "day_num": "31",
+    "month": "Oct",
+    "title": "Sweetwater Grill",
+    "venue": "Sweetwater Grill",
+    "address": "4884 TX-276, Royse City, TX 75189, USA",
+    "address_short": "Royse City, TX",
+    "time": "8:30 PM",
+    "maps_url": "https://maps.google.com/?q=Sweetwater+Grill%2C+4884+TX-276%2C+Royse+City%2C+TX+75189%2C+USA",
     "private": false,
     "ticket_price": "Free"
   }
