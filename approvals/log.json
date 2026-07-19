@@ -64,5 +64,16 @@
     "applied_at": "2026-04-29T16:47:38Z",
     "applied_by": "info@liveradiodfw.com",
     "source": "consume_approval.py"
+  },
+  {
+    "token": "0e8b2fc4bf72",
+    "action": "APPROVE",
+    "show_date": "2026-09-19",
+    "venue": "Sweetwater Grill",
+    "title": "Sweetwater Grill",
+    "description": "Live Radio DFW takes the stage at Sweetwater Grill in Royse City, TX for a Saturday evening of live music. We'll be playing our mix of 70s, 80s, classic rock, and oldies covers across the set. No cover charge, no tickets needed. A solid night out for the Royse City, TX crowd and the surrounding DFW Metroplex communities.",
+    "applied_at": "2026-07-19T18:56:38Z",
+    "applied_by": "info@liveradiodfw.com",
+    "source": "consume_approval.py"
   }
 ]
