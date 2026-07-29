@@ -1,10 +1,10 @@
 {
-  "last_updated": "2026-05-01",
+  "last_updated": "2026-07-01",
   "profiles": [
     {
       "platform": "Google Business Profile",
       "url": "https://business.google.com",
-      "status": "submitted — pending approval",
+      "status": "submitted \u2014 pending approval",
       "owner": "Ray",
       "category": "local_seo",
       "notes": "Full keyword-rich description, all categories, service area set. Critical for local search rankings.",
@@ -18,10 +18,10 @@
     {
       "platform": "GigSalad",
       "url": "https://www.gigsalad.com/live_radio_dfw_-_70s80s_cover_band_plano",
-      "status": "active — verified and live",
+      "status": "active \u2014 verified and live",
       "owner": "Buck (leads) / Ray (profile setup)",
       "category": "booking_leads",
-      "notes": "Free PromoKit. Profile draft saved to Dropbox (LiveRadioDFW/gigsalad_profile_draft.md). Old band profiles (Jackson Crossing, Risky Business) need cleanup — Ray handling. Only 1 free PromoKit allowed; must delete or upgrade old ones.",
+      "notes": "Free PromoKit. Profile draft saved to Dropbox (LiveRadioDFW/gigsalad_profile_draft.md). Old band profiles (Jackson Crossing, Risky Business) need cleanup \u2014 Ray handling. Only 1 free PromoKit allowed; must delete or upgrade old ones.",
       "backlink": true,
       "action_items": [
         "Check approval status",
@@ -44,7 +44,7 @@
     {
       "platform": "AllEvents.in",
       "url": "https://allevents.in/profile/dfw-cover-band-liveradiodfw/24797256",
-      "status": "active — needs content",
+      "status": "active \u2014 needs content",
       "owner": "Ray",
       "category": "event_discovery",
       "notes": "Created 2026-04-16. Pulling events from Facebook feed. Currently missing: description, photos, links. 0 followers.",
@@ -59,7 +59,7 @@
     {
       "platform": "Bandsintown",
       "url": "https://artists.bandsintown.com/artists/15643524/home",
-      "status": "active — artist page created 2026-04-16",
+      "status": "active \u2014 artist page created 2026-04-16",
       "owner": "Ray",
       "category": "event_discovery",
       "notes": "Artist account on artists.bandsintown.com (info@liveradiodfw.com). Separate fan account also exists. 95M+ users. Add shows manually or via bulk upload. May auto-import from Eventbrite once that's set up. Has embeddable widget for liveradiodfw.com.",
@@ -75,10 +75,10 @@
     {
       "platform": "Eventbrite",
       "url": null,
-      "status": "blocked — organization not provisioned (retry 2026-04-17)",
+      "status": "blocked \u2014 organization not provisioned (retry 2026-04-17)",
       "owner": "Ray",
       "category": "event_discovery",
-      "notes": "Account created with info@liveradiodfw.com but organization failed to provision (known Eventbrite issue with re-used emails). Retry tomorrow. Once working, can automate event creation from Google Calendar via connector. Free events only — no ticket fees.",
+      "notes": "Account created with info@liveradiodfw.com but organization failed to provision (known Eventbrite issue with re-used emails). Retry tomorrow. Once working, can automate event creation from Google Calendar via connector. Free events only \u2014 no ticket fees.",
       "backlink": true,
       "action_items": [
         "Retry organization setup 2026-04-17",
@@ -174,7 +174,7 @@
       "url": "https://www.songkick.com",
       "category": "event_discovery",
       "priority": "low",
-      "notes": "Event discovery — less relevant for cover bands but still a citation source."
+      "notes": "Event discovery \u2014 less relevant for cover bands but still a citation source."
     },
     {
       "platform": "ReverbNation",

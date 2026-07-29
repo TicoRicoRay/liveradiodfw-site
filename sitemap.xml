@@ -9,6 +9,7 @@
   <url><loc>https://www.liveradiodfw.com/members</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://www.liveradiodfw.com/past-shows</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://www.liveradiodfw.com/press-kit</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://www.liveradiodfw.com/privacy</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://www.liveradiodfw.com/private-parties</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://www.liveradiodfw.com/shows</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://www.liveradiodfw.com/songs</loc><priority>0.9</priority><changefreq>monthly</changefreq></url>
@@ -82,7 +83,6 @@
   <url><loc>https://www.liveradiodfw.com/shows/lion-crown-pub-allen-2023-09-02</loc><priority>0.5</priority><changefreq>yearly</changefreq></url>
   <url><loc>https://www.liveradiodfw.com/shows/lion-crown-pub-allen-2023-10-14</loc><priority>0.5</priority><changefreq>yearly</changefreq></url>
   <url><loc>https://www.liveradiodfw.com/shows/lucys-yard-2025-10-18</loc><priority>0.5</priority><changefreq>yearly</changefreq></url>
-  <url><loc>https://www.liveradiodfw.com/shows/o-g-cellars-2026-08-01</loc><priority>0.5</priority><changefreq>yearly</changefreq></url>
   <url><loc>https://www.liveradiodfw.com/shows/plano-sports-tavern-2021-07-23</loc><priority>0.5</priority><changefreq>yearly</changefreq></url>
   <url><loc>https://www.liveradiodfw.com/shows/plano-sports-tavern-2021-10-02</loc><priority>0.5</priority><changefreq>yearly</changefreq></url>
   <url><loc>https://www.liveradiodfw.com/shows/plano-sports-tavern-2021-10-30</loc><priority>0.5</priority><changefreq>yearly</changefreq></url>
@@ -97,6 +97,8 @@
   <url><loc>https://www.liveradiodfw.com/shows/sweetwater-grill-2023-02-24</loc><priority>0.5</priority><changefreq>yearly</changefreq></url>
   <url><loc>https://www.liveradiodfw.com/shows/sweetwater-grill-2023-06-30</loc><priority>0.5</priority><changefreq>yearly</changefreq></url>
   <url><loc>https://www.liveradiodfw.com/shows/sweetwater-grill-2026-06-13</loc><priority>0.5</priority><changefreq>yearly</changefreq></url>
+  <url><loc>https://www.liveradiodfw.com/shows/sweetwater-grill-2026-09-19</loc><priority>0.5</priority><changefreq>yearly</changefreq></url>
+  <url><loc>https://www.liveradiodfw.com/shows/sweetwater-grill-2026-10-31</loc><priority>0.5</priority><changefreq>yearly</changefreq></url>
   <url><loc>https://www.liveradiodfw.com/shows/the-frisco-bar-grill-2021-04-16</loc><priority>0.5</priority><changefreq>yearly</changefreq></url>
   <url><loc>https://www.liveradiodfw.com/shows/the-frisco-bar-grill-2021-07-16</loc><priority>0.5</priority><changefreq>yearly</changefreq></url>
   <url><loc>https://www.liveradiodfw.com/shows/the-frisco-bar-grill-2021-10-08</loc><priority>0.5</priority><changefreq>yearly</changefreq></url>
@@ -118,4 +120,5 @@
   <url><loc>https://www.liveradiodfw.com/shows/watters-creek-village-2021-07-09</loc><priority>0.5</priority><changefreq>yearly</changefreq></url>
   <url><loc>https://www.liveradiodfw.com/shows/watters-creek-village-2025-07-26</loc><priority>0.5</priority><changefreq>yearly</changefreq></url>
   <url><loc>https://www.liveradiodfw.com/shows/watters-creek-village-2026-06-06</loc><priority>0.5</priority><changefreq>yearly</changefreq></url>
+  <url><loc>https://www.liveradiodfw.com/shows/watters-creek-village-2026-10-17</loc><priority>0.5</priority><changefreq>yearly</changefreq></url>
 </urlset>
