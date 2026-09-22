@@ -67,8 +67,8 @@ NOINDEX_PAGES = {
 }
 
 # -- Load templates ------------------------------------------------------------
-nav_html = (INCLUDES / "nav.html").read_text()
-footer_html = (INCLUDES / "footer.html").read_text()
+nav_html = (INCLUDES / "nav.html").read_text(encoding="utf-8")
+footer_html = (INCLUDES / "footer.html").read_text(encoding="utf-8")
 
 # -- Regex patterns for replacement --------------------------------------------
 NAV_PATTERN = re.compile(
@@ -177,7 +177,7 @@ updated = []
 skipped = []
 
 for html_file in html_files:
-    original = html_file.read_text()
+    original = html_file.read_text(encoding="utf-8")
     content = original
 
     # Determine if file is in a subdirectory
@@ -211,7 +211,7 @@ for html_file in html_files:
             )
 
     if content != original:
-        html_file.write_text(content)
+        html_file.write_text(content, encoding="utf-8")
         updated.append(str(rel_path))
         if verbose:
             print(f"  OK {rel_path}")
