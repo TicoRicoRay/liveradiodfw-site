@@ -10,15 +10,5 @@
     "emailed_at": "ISO timestamp when the alert was sent",
     "status": "pending | approved | edited | expired"
   },
-  "pending": [
-    {
-      "token": "0e3fe7cef372",
-      "show_date": "2026-10-17",
-      "venue": "Watters Creek Village",
-      "title": "Watters Creek",
-      "draft": "[DRAFT - machine-generated from calendar fields; review and enrich with venue-specific details before publish.] Catch Live Radio DFW at Watters Creek Village in Allen, TX for a Saturday evening of live music. We'll be playing our mix of 70s, 80s, classic rock, and oldies covers across the set. No cover charge, no tickets needed. A solid night out for the Allen, TX crowd and the surrounding DFW Metroplex communities.",
-      "emailed_at": "2026-06-12T18:12:05.813027",
-      "status": "pending"
-    }
-  ]
+  "pending": []
 }
