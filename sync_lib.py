@@ -484,6 +484,9 @@ def calendar_event_to_show(event):
     if private:
         title = "Private Event"
         venue = "Private Event"
+        # shows.json is public too; hiding the address in HTML is not enough.
+        # Keep the full location only in the source calendar.
+        address = ""
         # For private events, show only city/state for public display.
         # If we couldn't parse a "City, TX" from the address, use "DFW Area"
         # to avoid leaking full venue names or street addresses.
