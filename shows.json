@@ -1826,6 +1826,20 @@
     "ticket_price": ""
   },
   {
+    "date": "2026-10-10",
+    "day_name": "Sat",
+    "day_num": "10",
+    "month": "Oct",
+    "title": "City of Plano - Beatles Night",
+    "venue": "Red Tail Pavilion",
+    "address": "2801 E Spring Creek Pkwy, Plano, TX 75074, USA",
+    "address_short": "Plano, TX",
+    "time": "7:00 PM",
+    "maps_url": "https://maps.google.com/?q=Red+Tail+Pavilion%2C+2801+E+Spring+Creek+Pkwy%2C+Plano%2C+TX+75074%2C+USA",
+    "private": false,
+    "ticket_price": ""
+  },
+  {
     "date": "2026-10-16",
     "day_name": "Fri",
     "day_num": "16",
