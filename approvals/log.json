@@ -97,5 +97,16 @@
     "applied_at": "2026-09-22T22:51:45Z",
     "applied_by": "info@liveradiodfw.com",
     "source": "consume_approval.py"
+  },
+  {
+    "token": "56967ca7a99c",
+    "action": "APPROVE",
+    "show_date": "2026-10-10",
+    "venue": "Red Tail Pavilion",
+    "title": "City of Plano - Beatles Night",
+    "description": "Live Radio DFW returns to Red Tail Pavilion in Plano, TX for a Saturday evening of live music. We'll be playing our mix of 70s, 80s, classic rock, and oldies covers across the set. A solid night out for the Plano, TX crowd and the surrounding DFW Metroplex communities.",
+    "applied_at": "2026-09-23T12:23:52Z",
+    "applied_by": "info@liveradiodfw.com",
+    "source": "consume_approval.py"
   }
 ]
