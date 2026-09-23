@@ -115,6 +115,8 @@ def build_show_page(show, prev_show=None, next_show=None):
     maps_url = show["maps_url"]
     ticket_price = show.get("ticket_price", "Free")
     description = show.get("description", "")
+    page_heading = show.get("page_heading") or f"Live Radio DFW at {venue}"
+    heading_html = html_escape(page_heading) if show.get("page_heading") else page_heading
     # "past" shows (historic imports or dates that have rolled by) get a subtle
     # banner and drop the forward-looking CTAs (Add-to-Calendar, Share). The
     # page itself still exists for SEO / backlink value.
@@ -135,6 +137,8 @@ def build_show_page(show, prev_show=None, next_show=None):
 
     # SEO fields
     page_title = f"Live Radio DFW at {venue} - {long_date} | Live Music {address_short}"
+    if show.get("page_heading"):
+        page_title = f"{page_heading} - {long_date} | Live Radio DFW"
     meta_desc = (
         f"Catch Live Radio DFW live at {venue} in {address_short} on {long_date}. "
         f"{'Free admission. ' if ticket_price == 'Free' else f'{ticket_price} admission. '}"
@@ -143,6 +147,8 @@ def build_show_page(show, prev_show=None, next_show=None):
     # Trim meta description to ~155 chars
     if len(meta_desc) > 160:
         meta_desc = meta_desc[:157] + "..."
+    if show.get("meta_description"):
+        meta_desc = html_escape(show["meta_description"], quote=True)
 
     slug = slugify(venue)
     filename = f"{slug}-{date_str}.html"
@@ -164,10 +170,31 @@ def build_show_page(show, prev_show=None, next_show=None):
     desc_section = ""
     approved = description and not description.lstrip().startswith("[DRAFT")
     if approved:
+        # Blank lines allow longer editorial descriptions without embedding HTML
+        # in shows.json. Preserve existing single-paragraph rendering.
+        paragraphs = description.split("\n\n")
+        description_html = "\n        ".join(
+            (f'<p style="margin-top:var(--space-4)">{p.strip()}</p>' if i else f"<p>{p.strip()}</p>")
+            for i, p in enumerate(paragraphs) if p.strip()
+        )
+        links = []
+        for field, label in (("ticket_url", "Get Tickets"), ("event_url", "Official Event Details")):
+            url = show.get(field, "")
+            if url.startswith("https://"):
+                links.append(
+                    f'<a class="btn {"btn-primary" if field == "ticket_url" else "btn-secondary"}" '
+                    f'href="{html_escape(url, quote=True)}" '
+                    f'target="_blank" rel="noopener noreferrer">{label}</a>'
+                )
+        event_links = (
+            '\n        <div class="show-page-actions" style="margin-top:var(--space-6)">'
+            + " ".join(links) + "</div>"
+            if links else ""
+        )
         desc_section = f"""
       <div class="show-page-description">
         <h2>About This Show</h2>
-        <p>{description}</p>
+        {description_html}{event_links}
       </div>"""
     else:
         desc_section = """
@@ -339,7 +366,7 @@ def build_show_page(show, prev_show=None, next_show=None):
       <span class="month">{show["month"]}</span>
     </div>
     <div class="show-page-info">
-      <h1>Live Radio DFW at {venue}</h1>
+      <h1>{heading_html}</h1>
       <p class="show-page-meta"><span class="show-full-date">{long_date}</span> &middot; {time_str} &middot; {price_html}</p>
       <p class="show-page-venue">{venue}</p>
       <p class="show-page-address">{address}</p>
