@@ -38,6 +38,8 @@
     @media(min-width:1400px){.hero{padding-block:85px 95px}}
     @media(max-width:980px){.wrap{width:calc(100% - 48px)}.hero h1{font-size:clamp(5.5rem,12vw,8rem)}.hero-grid{gap:24px}.hero-art{margin:0}.hero-sticker{right:0;font-size:1.3rem}.cassette{width:108px;right:5px}.art-note{max-width:180px}.nav-links{gap:18px}.section-head{gap:30px}.band-grid,.booking-grid{gap:35px}.booking-form{padding:25px}.form-row{grid-template-columns:1fr;gap:0}.setlist{column-gap:30px}.band-copy h2{font-size:3.5rem}}
     @media(max-width:680px){html{scroll-padding-top:25px}.wrap{width:calc(100% - 40px)}.nav-inner{min-height:74px;gap:12px}.brand{gap:8px}.brand img{width:50px;height:45px}.brand span{font-size:.6rem}.nav-links>a:not(.nav-book){display:none}.nav-links .nav-book{font-size:.72rem;padding:9px 12px}.hero{padding:36px 0 60px}.hero-grid{grid-template-columns:1fr;gap:40px}.hero h1{font-size:clamp(6.1rem,23vw,9.5rem);line-height:.91}.hero .eyebrow{font-size:.67rem;margin-bottom:22px}.hero-copy{font-size:.98rem;margin-top:24px;max-width:38ch}.hero .actions{gap:10px;margin-top:24px}.button{font-size:.81rem;padding:12px 18px}.hero-small{font-size:.65rem}.hero-art{max-width:450px;width:calc(100% - 24px);margin-inline:auto;padding-top:24px;padding-bottom:35px}.photo-frame img{aspect-ratio:1.3}.photo-frame{box-shadow:12px 12px 0 var(--pink)}.hero-sticker{font-size:1.4rem;right:-8px;padding:14px}.cassette{width:98px;bottom:-10px;right:7px}.art-note{padding-top:29px;max-width:210px;font-size:.71rem}.tape-inner{font-size:1.2rem;flex-wrap:wrap;justify-content:center;gap:4px 20px;padding-block:12px}.tape-inner span:nth-child(2n){display:none}.opening,.set-section,.band-section,.booking{padding:60px 0}.section-head,.opening-tracks,.band-grid,.booking-grid{grid-template-columns:1fr;gap:25px}.section-head{margin-bottom:32px}h2{font-size:3.7rem}.opening-track{grid-template-columns:47px 1fr;gap:12px}.track-num{font-size:3rem}.opening-track h3{font-size:1.1rem}.opening-tracks{gap:28px}.setlist{grid-template-columns:1fr;grid-template-rows:none;grid-auto-flow:row;column-gap:0}.setlist li{padding-block:12px}.band-copy{padding-top:10px}.band-copy h2{font-size:3.5rem}.booking h2{font-size:4.2rem}.booking-grid{gap:30px}.booking-form{padding:25px 20px;box-shadow:7px 7px 0 #239ca5}.footer-top{align-items:flex-start;flex-direction:column;gap:16px}.footer-links{gap:18px}.disclaimer{margin-top:23px}}
+    /* The builder sets the row count for two-column lists of any length. */
+    @media(min-width:681px){.setlist{grid-template-rows:repeat(var(--setlist-rows,14),auto)}}
     /* Preserve the full group portrait at every breakpoint. */
     .photo-frame img{aspect-ratio:1.5;object-fit:contain}
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
@@ -108,42 +110,44 @@
       <div class="wrap">
         <div class="section-head">
           <div><p class="eyebrow">The official set list</p><h2 id="setlist-title">NO SKIP<br><span>BUTTON NEEDED.</span></h2></div>
-          <div class="set-intro"><p>Madonna to Prince. Talking Heads to Journey. Here's the show, in order, with the pop hooks, new-wave grooves and rock choruses that make this era worth revisiting.</p><div class="set-meta"><span>28 selections</span><span>One music-video generation</span></div></div>
+          <div class="set-intro"><p>Madonna to Prince. Talking Heads to Journey. Here's the show, in order, with the pop hooks, new-wave grooves and rock choruses that make this era worth revisiting.</p><div class="set-meta"><span><!-- BEGIN_MTV_COUNT -->28 selections<!-- END_MTV_COUNT --></span><span>One music-video generation</span></div></div>
         </div>
-        <!-- Official BandHelper set YIm52J, verified 2026-09-23.
+        <!-- Official BandHelper set YIm52J; maintained by build_mtv_setlist.py.
              Public display only: no internal keys, tags or rehearsal notes.
              Track 1 uses the band-approved opening title. No extras. -->
-        <ol class="setlist" aria-label="Official show running order">
+        <!-- BEGIN_MTV_SETLIST -->
+        <ol class="setlist" aria-label="Official show running order" style="--setlist-rows:14">
           <li><div><span class="song-title">I Want My MTV / Money for Nothing</span><span class="song-artist">Dire Straits</span></div></li>
           <li><div><span class="song-title">Video Killed the Radio Star</span><span class="song-artist">The Buggles</span></div></li>
           <li><div><span class="song-title">Material Girl</span><span class="song-artist">Madonna / Future 86</span></div></li>
           <li><div><span class="song-title">Sledgehammer</span><span class="song-artist">Peter Gabriel</span></div></li>
           <li><div><span class="song-title">Dirty Laundry</span><span class="song-artist">Don Henley</span></div></li>
-          <li><div><span class="song-title">I Love Rock 'N' Roll</span><span class="song-artist">Joan Jett</span></div></li>
+          <li><div><span class="song-title">I Love Rock &#x27;N&#x27; Roll</span><span class="song-artist">Joan Jett</span></div></li>
           <li><div><span class="song-title">I Melt With You</span><span class="song-artist">Modern English</span></div></li>
           <li><div><span class="song-title">Just Like Heaven</span><span class="song-artist">The Cure</span></div></li>
           <li><div><span class="song-title">Only the Lonely</span><span class="song-artist">The Motels</span></div></li>
-          <li><div><span class="song-title">Burning Down the House</span><span class="song-artist">Talking Heads</span></div></li>
-          <li><div><span class="song-title">Addicted to Love</span><span class="song-artist">Robert Palmer</span></div></li>
+          <li><div><span class="song-title">Burning Down The House</span><span class="song-artist">Talking Heads</span></div></li>
+          <li><div><span class="song-title">Addicted To Love</span><span class="song-artist">Robert Palmer</span></div></li>
           <li><div><span class="song-title">Hit Me With Your Best Shot</span><span class="song-artist">Pat Benatar</span></div></li>
-          <li><div><span class="song-title">Don't You Want Me</span><span class="song-artist">The Human League</span></div></li>
+          <li><div><span class="song-title">Don&#x27;t You Want Me</span><span class="song-artist">The Human League</span></div></li>
           <li><div><span class="song-title">White Wedding</span><span class="song-artist">Billy Idol</span></div></li>
-          <li><div><span class="song-title">Walk Like an Egyptian</span><span class="song-artist">The Bangles</span></div></li>
-          <li><div><span class="song-title">I Can't Go for That</span><span class="song-artist">Hall &amp; Oates</span></div></li>
+          <li><div><span class="song-title">Walk Like An Egyptian</span><span class="song-artist">The Bangles</span></div></li>
+          <li><div><span class="song-title">I Can&#x27;t Go For That</span><span class="song-artist">Hall &amp; Oates</span></div></li>
           <li><div><span class="song-title">Freeze Frame</span><span class="song-artist">J. Geils Band</span></div></li>
           <li><div><span class="song-title">Centerfold</span><span class="song-artist">J. Geils Band</span></div></li>
           <li><div><span class="song-title">Venus</span><span class="song-artist">Bananarama</span></div></li>
           <li><div><span class="song-title">Simply Irresistible</span><span class="song-artist">Robert Palmer</span></div></li>
           <li><div><span class="song-title">You May Be Right</span><span class="song-artist">Billy Joel</span></div></li>
-          <li><div><span class="song-title">One Way or Another</span><span class="song-artist">Blondie</span></div></li>
-          <li><div><span class="song-title">Sunglasses at Night</span><span class="song-artist">Corey Hart</span></div></li>
+          <li><div><span class="song-title">One Way Or Another</span><span class="song-artist">Blondie</span></div></li>
+          <li><div><span class="song-title">Sunglasses At Night</span><span class="song-artist">Corey Hart</span></div></li>
           <li><div><span class="song-title">Whip It</span><span class="song-artist">Devo</span></div></li>
-          <li><div><span class="song-title">Livin' on a Prayer / You Give Love</span><span class="song-artist">Bon Jovi</span></div></li>
+          <li><div><span class="song-title">Livin&#x27; On A Prayer/You Give Love</span><span class="song-artist">Bon Jovi</span></div></li>
           <li><div><span class="song-title">1999</span><span class="song-artist">Prince</span></div></li>
           <li><div><span class="song-title">Faithfully</span><span class="song-artist">Journey</span></div></li>
           <li><div><span class="song-title">Separate Ways</span><span class="song-artist">Journey</span></div></li>
         </ol>
-        <p class="set-footer">Official show set list, updated September 23, 2026.</p>
+        <!-- END_MTV_SETLIST -->
+        <p class="set-footer">Official show set list, updated <!-- BEGIN_MTV_DATE -->September 23, 2026<!-- END_MTV_DATE -->.</p>
       </div>
     </section>
     <section class="band-section" aria-labelledby="band-title">

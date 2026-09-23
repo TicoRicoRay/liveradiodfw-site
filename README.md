@@ -143,6 +143,15 @@ The nav is defined once in `nav.html` and stamped into all 16 pages automaticall
 
 ### Updating Song Lists
 
+The daily calendar sync on Dopamine also runs `build_songs.py`. This includes
+the official **I Want My MTV** set from
+https://www.bandhelper.com/feed/set_list/YIm52J via `build_mtv_setlist.py`.
+Edit that set in BandHelper, not the generated `BEGIN_MTV_*` regions of
+`i-want-my-mtv/index.html`. The builder updates song order, count and the
+last-changed date; it excludes Extras and preserves the page on feed failure.
+The operating runbook is maintained in the private marketing repository:
+`docs/runbooks/mtv-setlist-sync.md`.
+
 Song lists are cached from BandHelper. To refresh:
 
 1. Run: `python build_songs.py`

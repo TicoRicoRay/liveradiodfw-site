@@ -25,6 +25,7 @@ import json
 import os
 import sys
 from datetime import datetime, timezone
+from build_mtv_setlist import sync_setlist
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -180,6 +181,24 @@ def main():
     if changed:
         save_hashes(new_hashes)
         print(f"\n[build_songs] Hash file updated: {HASH_FILE}")
+
+    # A main-set-only change must appear in the same summary that Dopamine's
+    # sync_runner uses to decide whether to commit and push song updates.
+    try:
+        # The caller does not publish song-only changes on a failed batch.
+        # Defer MTV writes if another feed failed so the next successful run
+        # still detects the MTV change instead of treating it as a cache hit.
+        if errors:
+            print("  [mtv] deferred: another feed failed; published list retained")
+        elif sync_setlist():
+            changed.append("mtv")
+            print("  [mtv] UPDATED official set list -> i-want-my-mtv/index.html")
+        else:
+            cache_hits.append("mtv")
+            print("  [mtv] cache hit, no change")
+    except (requests.RequestException, ValueError, OSError) as exc:
+        errors.append(("mtv", str(exc)))
+        print(f"  [mtv] ERROR: {exc}; last-good page retained")
 
     # Summary
     print(f"\n[build_songs] Summary:")
