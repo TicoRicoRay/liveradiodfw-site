@@ -425,8 +425,8 @@
         submitButton.disabled=false;
         try{
           const resp=win.JSON.parse(this.responseText);
-          const exc=resp && (resp.exception||resp.exceptionType||'');
-          if(exc===DUPLICATE_PHONE_EXCEPTION||exc===DUPLICATE_EMAIL_EXCEPTION){
+          const exc=resp && (resp.code||resp.exception||resp.exceptionType||'');
+          if(exc==='DuplicateContactPhoneException'||exc===DUPLICATE_PHONE_EXCEPTION||exc===DUPLICATE_EMAIL_EXCEPTION){
             setServerErrorMessage(form,'Looks like you\'re already signed up!');
           } else {
             setServerErrorMessage(form,'Something went wrong. Please try again.');
