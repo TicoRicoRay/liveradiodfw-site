@@ -388,7 +388,7 @@
     function setServerErrorMessage(form,message){
       const el=getFormServerErrorMessage(form);
       el.innerText=message;
-      if(message){el.classList.add('st-hidden');}else{el.classList.remove('st-hidden');}
+      if(message){el.classList.remove('st-hidden');}else{el.classList.add('st-hidden');}
     }
     function isTermsAgreedAccepted(form){return form.querySelector('input[name="terms-agreed"]').checked;}
     function showTermsAgreedError(form){
@@ -423,7 +423,17 @@
         form.reset();
       } else {
         submitButton.disabled=false;
-        setServerErrorMessage(form,'Something went wrong. Please try again.');
+        try{
+          const resp=win.JSON.parse(this.responseText);
+          const exc=resp && (resp.exception||resp.exceptionType||'');
+          if(exc===DUPLICATE_PHONE_EXCEPTION||exc===DUPLICATE_EMAIL_EXCEPTION){
+            setServerErrorMessage(form,'Looks like you\'re already signed up!');
+          } else {
+            setServerErrorMessage(form,'Something went wrong. Please try again.');
+          }
+        }catch(_){
+          setServerErrorMessage(form,'Something went wrong. Please try again.');
+        }
       }
     }
     function handleErrorForm(form){
