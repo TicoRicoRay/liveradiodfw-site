@@ -243,6 +243,18 @@
           <p class="show-time"><span class="show-full-date">Friday October 16, 2026</span> &middot; 6:00 PM</p>
         </div>
       </div>
+      <div class="show-card fade-in">
+        <div class="show-date-badge">
+          <span class="day-name">Fri</span>
+          <span class="day-num">16</span>
+          <span class="month">Oct</span>
+        </div>
+        <div class="show-details">
+          <h3>Private Event</h3>
+          <p class="venue-address">DFW Area</p>
+          <p class="show-time"><span class="show-full-date">Friday October 16, 2026</span> &middot; 6:00 PM</p>
+        </div>
+      </div>
     <!-- END_SHOWS -->
     </div>
     <div class="shows-more">
@@ -388,7 +400,7 @@
     function setServerErrorMessage(form,message){
       const el=getFormServerErrorMessage(form);
       el.innerText=message;
-      if(message){el.classList.add('st-hidden');}else{el.classList.remove('st-hidden');}
+      if(message){el.classList.remove('st-hidden');}else{el.classList.add('st-hidden');}
     }
     function isTermsAgreedAccepted(form){return form.querySelector('input[name="terms-agreed"]').checked;}
     function showTermsAgreedError(form){
@@ -423,7 +435,17 @@
         form.reset();
       } else {
         submitButton.disabled=false;
-        setServerErrorMessage(form,'Something went wrong. Please try again.');
+        try{
+          const resp=win.JSON.parse(this.responseText);
+          const exc=resp && (resp.code||resp.exception||resp.exceptionType||'');
+          if(exc==='DuplicateContactPhoneException'||exc===DUPLICATE_PHONE_EXCEPTION||exc===DUPLICATE_EMAIL_EXCEPTION){
+            setServerErrorMessage(form,'Looks like you\'re already signed up!');
+          } else {
+            setServerErrorMessage(form,'Something went wrong. Please try again.');
+          }
+        }catch(_){
+          setServerErrorMessage(form,'Something went wrong. Please try again.');
+        }
       }
     }
     function handleErrorForm(form){
