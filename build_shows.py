@@ -19,6 +19,7 @@ import sys
 from datetime import date, datetime
 from html import escape as html_escape
 from pathlib import Path
+from website_placeholders import load_placeholders
 
 # Force UTF-8 on stdout/stderr so print() never crashes under Windows Task
 # Scheduler, where stdout defaults to the console code page (cp1252 on a
@@ -78,6 +79,8 @@ def is_past(s):
 
 
 upcoming = [s for s in all_shows if not is_past(s)]
+placeholders = load_placeholders(BASE / "show_placeholders.json", all_shows, today)
+upcoming = sorted(upcoming + placeholders, key=lambda s: s["date"])
 past_shows = [s for s in all_shows if is_past(s)]
 # past-shows list is rendered reverse-chronologically (most recent first).
 past_shows_rev = sorted(past_shows, key=lambda s: s["date"], reverse=True)
@@ -275,7 +278,8 @@ if past_shows_html_path.exists() and past_shows_rev:
     past_shows_html_path.write_text(past_html, encoding="utf-8")
     print(f"OK past-shows.html updated ({len(past_shows_rev)} past shows)")
 
-print(f"\nShows in JSON: {len(all_shows)} total, {len(upcoming)} upcoming, {len(past_shows)} past")
+print(f"\nShows in JSON: {len(all_shows)} total, {len(upcoming) - len(placeholders)} upcoming, {len(past_shows)} past")
+print(f"Website-only private placeholders: {len(placeholders)}")
 for s in upcoming:
     flag = " [PRIVATE]" if s.get("private", False) else ""
     print(f"  {s['date']}  {s['title']}{flag}")

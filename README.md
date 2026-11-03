@@ -113,6 +113,14 @@ liveradiodfw-site/
 
 **Manual override:** You can still edit `shows.json` directly and run `python build_shows.py` + push, but changes may be overwritten by the next sync if they don't match the calendar.
 
+**Website-only private placeholders:** `show_placeholders.json` contains owner-requested
+display dates and times, not confirmed gigs or calendar holds. `build_shows.py`
+renders them as private cards on the shows page and homepage without adding them
+to `shows.json`, public event structured data, individual show pages, or the past-show
+archive. Real shows take precedence on the same date; expired placeholders disappear.
+Remove a row from this file and rebuild to remove its display card. These entries
+must not be used to calculate band availability or sent to event-listing services.
+
 **Show entry format in shows.json:**
 ```json
 {
